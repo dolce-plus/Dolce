@@ -256,3 +256,16 @@ While a staff member has Admin open and on screen, the app tells the database on
 - **Employees → Activity**: "Online now" or "Last seen …" for each person, and a **History** button with their last 40 sessions (start, end, length, device, logged out or closed).
 
 Stored per session: who, start, last seen, end, how it ended, and a short device label ("Mac · Chrome", "iPhone app"). No location and no IP address. Staff can only start/update/close their own sessions; nobody can write rows directly. Database: `supabase_migration_staff_activity.sql` (table `staff_sessions` + 5 functions). Staff should be told this is recorded.
+
+## Home visits (Shatu's request) — 9 Nov 2026 (built, OFF until switched on)
+
+Each brand can now offer some of its services at the client's home.
+
+- **Owner, in Admin → Settings → Home visits:** switch home visits on or off, and set one fixed extra fee per brand (in USD).
+- **Staff, in Admin → Services → edit a service:** tick "Can be booked as a home visit". Only ticked services offer it.
+- **Clients (Dolce and Polished):** the service page says "Also available as a home visit". On the booking screen they choose *At the clinic / At the salon* or *At my home*. If they pick home, they type their area and address (remembered on their phone for next time), and they see the fee and the total. The WhatsApp message includes the address too.
+- **Clients (CORE):** CORE is still never booked in the app. Home-enabled CORE sessions get a second WhatsApp button, "Ask for a session at home", which goes to CORE's reception.
+- **Staff see it in Bookings:** a "🏠 Home visit" badge with the fee, the area and address, and an "Open in Maps" link. Reports count the home fee as part of the visit's price.
+- **Server checks:** the database only accepts a home visit if home visits are on and the service allows it, and only if it has an area and an address. The fee is always taken from the owner's setting, never from the phone (`supabase_migration_home_service.sql`).
+- **Privacy:** the privacy policy now lists "Home address (only for home visits)". Before the iOS update ships, App Store Connect → App Privacy must also declare *Physical Address* (App Functionality, linked to the user, no tracking).
+- **Not yet:** staff adding a home visit by hand from Admin (they can still note it in the booking), and travel-time blocking around home visits (a home visit uses one normal time slot).
