@@ -25,19 +25,18 @@ declare
 begin
   if exists (select 1 from public.clients
               where right(regexp_replace(coalesce(phone,''), '\D', '', 'g'), 10) = '7500000001'
-                and id <> 'app-review-demo') then
+                and id::text <> 'a0000000-0000-4000-8000-0000000000a1') then
     raise exception 'Another client already uses a number ending 750 000 0001 — choose a different demo number.';
   end if;
 
   insert into public.clients (id, phone, name, points)
-  values ('app-review-demo', '9647500000001', 'App Review (Demo)', 0)
+  values ('a0000000-0000-4000-8000-0000000000a1', '9647500000001', 'App Review (Demo)', 0)
   on conflict (id) do nothing;
 
   -- Points history (the points total follows automatically).
-  if not exists (select 1 from public.point_transactions where client_id = 'app-review-demo') then
+  if not exists (select 1 from public.point_transactions where client_id = 'a0000000-0000-4000-8000-0000000000a1') then
     insert into public.point_transactions (client_id, kind, points, spend, brand, reason, staff_name)
-    values ('app-review-demo', 'opening', 150, 0,  '',        'App Review demo — welcome points', 'Demo'),
-           ('app-review-demo', 'earn',    35,  35, 'polished','App Review demo — visit',          'Demo');
+    values ('a0000000-0000-4000-8000-0000000000a1', 'opening', 185, 0, '', 'App Review demo — welcome points', 'Demo');   -- 'earn' needs a real visit
   end if;
 
   -- One upcoming, confirmed appointment at Polished.
@@ -47,18 +46,18 @@ begin
                                  client_name, client_id, client_phone, aftercare_ok, lang, source)
     values ('app-review-demo-1', 'polished', svc.id, svc.name,
             to_char(d, 'Mon FMDD, YYYY'), '11:00 AM', d, 'Confirmed',
-            'App Review (Demo)', 'app-review-demo', '9647500000001', true, 'en', 'admin');
+            'App Review (Demo)', 'a0000000-0000-4000-8000-0000000000a1', '9647500000001', true, 'en', 'admin');
   end if;
 end $$;
 
 -- Check:
-select id, name, phone, points from public.clients where id = 'app-review-demo';
-select id, service_name, date_label, time_label, status from public.bookings where client_id = 'app-review-demo';
+select id, name, phone, points from public.clients where id::text = 'a0000000-0000-4000-8000-0000000000a1';
+select id, service_name, date_label, time_label, status from public.bookings where client_id::text = 'a0000000-0000-4000-8000-0000000000a1';
 
 -- ---------------------------------------------------------------------------
 -- AFTER APPROVAL — remove the demo data (select these lines and run them):
--- delete from public.bookings where client_id = 'app-review-demo';
--- delete from public.point_transactions where client_id = 'app-review-demo';
--- delete from auth.users where id = (select user_id from public.clients where id = 'app-review-demo');
--- delete from public.clients where id = 'app-review-demo';
+-- delete from public.bookings where client_id = 'a0000000-0000-4000-8000-0000000000a1';
+-- delete from public.point_transactions where client_id = 'a0000000-0000-4000-8000-0000000000a1';
+-- delete from auth.users where id = (select user_id from public.clients where id::text = 'a0000000-0000-4000-8000-0000000000a1');
+-- delete from public.clients where id::text = 'a0000000-0000-4000-8000-0000000000a1';
 -- …and delete the test number in Authentication → Providers → Phone.
