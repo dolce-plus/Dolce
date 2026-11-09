@@ -2580,10 +2580,26 @@ let STORE = loadStore();
    what happens when the connection drops. */
 const SUPABASE_URL = 'https://rljfpxxgtuujcdxvcuow.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsamZweHhndHV1amNkeHZjdW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4ODQxNzgsImV4cCI6MjEwNDQ2MDE3OH0.Erg-44Y_4MRyyjQ1zkx3lN3TOc3Uzp5BPnjujsKc-RI';
+/* A request that never answers (seen by App Review on iOS: the login code
+   check hung on "Checking…") must not freeze the app. Every Supabase call
+   gives up after 20 s — 120 s for photo/video uploads — and then fails like
+   any lost connection, so the screen shows "try again" instead. */
+function fetchWithTimeout(input,init){
+  const url=String((input&&input.url)||input||'');
+  const ms=/\/storage\/v1\//.test(url)?120000:20000;
+  if(typeof AbortController==='undefined') return fetch(input,init);
+  const ctl=new AbortController(), outer=init&&init.signal;
+  if(outer){ if(outer.aborted) ctl.abort(); else outer.addEventListener('abort',()=>ctl.abort(),{once:true}); }
+  const timer=setTimeout(()=>ctl.abort(),ms);
+  return fetch(input,Object.assign({},init,{signal:ctl.signal}))
+    .catch(e=>{ throw (ctl.signal.aborted&&!(outer&&outer.aborted))?new TypeError('Failed to fetch (timed out)'):e; })
+    .finally(()=>clearTimeout(timer));
+}
+const SUPA_GLOBAL={global:{fetch:fetchWithTimeout}};
 let supa = null;
 try{
   if(window.supabase && SUPABASE_URL.indexOf('YOUR-PROJECT')===-1){
-    supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, SUPA_GLOBAL);
   }
 }catch(e){ supa=null; }
 
@@ -2861,7 +2877,7 @@ function anonSupa(){
   if(guestClient) return guestClient;
   try{
     guestClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,
-      {auth:{persistSession:false,autoRefreshToken:false}});
+      Object.assign({auth:{persistSession:false,autoRefreshToken:false}},SUPA_GLOBAL));
   }catch(e){ guestClient=null; }
   return guestClient;
 }
@@ -3687,7 +3703,7 @@ function clientSupa(){
   if(clientAuthClient) return clientAuthClient;
   try{
     if(window.supabase) clientAuthClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,
-      {auth:{storageKey:'dolce-client-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+      Object.assign({auth:{storageKey:'dolce-client-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}},SUPA_GLOBAL));
   }catch(e){ clientAuthClient=null; }
   return clientAuthClient;
 }
@@ -3840,8 +3856,9 @@ async function clientAfterLogin(name,phone,birth){
   const row=Array.isArray(res.data)?res.data[0]:res.data;
   if(!row||!row.id) return 'needName';
   setLoggedInClient(row);
-  await loadMyBookings();
-  await loadMyLoyalty(true);
+  // Bookings and points arrive a moment later; logging in never waits on them.
+  const extras=Promise.all([loadMyBookings(),loadMyLoyalty(true)]).then(()=>{ if(['profile','bookings','welcome'].includes(currentScreen)&&clientIn()){ navDirection='none'; render(); } }).catch(()=>{});
+  await Promise.race([extras,new Promise(r=>setTimeout(r,2500))]);
   return 'ok';
 }
 async function loadMyBookings(){
@@ -8042,6 +8059,9 @@ function bindScreen(){
         catch(e){ res={error:{message:'fetch'}}; break; }
         if(!res.error) break;
         if(/fetch|network/i.test(String(res.error.message))) break;
+      }
+      if(res.error && /fetch|network|timed out/i.test(String(res.error.message))){
+        try{ const g=await cs.auth.getSession(); if(g&&g.data&&g.data.session) return {data:g.data,error:null}; }catch(e){}
       }
       if(res.error) console.warn('Login code refused:',res.error.status,res.error.code||'',res.error.message);
       return res;
