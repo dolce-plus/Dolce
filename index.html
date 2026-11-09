@@ -1844,6 +1844,16 @@
   .hr-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
   .hr-chip{background:#f4eee3;border:1px solid var(--line);border-radius:999px;padding:3px 6px 3px 10px;font-size:13px;}
   .hr-chip button{border:0;background:transparent;cursor:pointer;color:#b23b3b;}
+
+/* Home visits */
+.home-tag{display:inline-block;margin:2px 0 12px;padding:6px 12px;border-radius:999px;background:#f3ece1;color:var(--ink-soft);font-size:13px;font-weight:600;}
+.home-seg{display:flex;gap:8px;}
+.home-seg button{flex:1;padding:12px 10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer;}
+.home-seg button.on{border-color:var(--gold);background:#f7f0e4;box-shadow:inset 0 0 0 1px var(--gold);}
+.home-seg .home-fee{font-weight:500;color:var(--muted);font-size:12px;}
+.home-adm{margin-top:6px;font-size:12.5px;color:var(--ink-soft);line-height:1.45;}
+.home-adm a{font-size:12px;}
+.home-badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#f3ece1;font-weight:700;font-size:12px;margin-bottom:3px;}
 </style>
 </head>
 <body>
@@ -2193,6 +2203,7 @@
         <div id="currencySettingsWrap"></div>
         <div id="clientLoginWrap"></div>
         <div id="hoursWrap"></div>
+        <div id="homeServiceWrap"></div>
         <div id="waTemplatesWrap"></div>
         <div id="notifSettingsWrap" class="span2"></div>
         <div id="brandPhotosWrap" class="span2"></div>
@@ -2642,11 +2653,11 @@ const CLOUD_TABLES={
     row:(s,job)=>({id:s.id,brand:job.brand,name:s.n,category:s.cat||'',duration:s.dur||'',
       price_usd:numOr0(s.price),discount_percent:numOr0(s.discount),description:s.desc||'',
       points:s.points||[],image:s.image||'',aftercare:s.aftercare||'',
-      images:Array.isArray(s.images)?s.images:[],
+      images:Array.isArray(s.images)?s.images:[],home_ok:s.homeOk===true,
       sort_order:(STORE.services[job.brand]||[]).indexOf(s)}),
     app:(r)=>({id:r.id,n:r.name,cat:renamedCat(r.category),dur:r.duration,price:Number(r.price_usd),
       discount:r.discount_percent||0,desc:r.description||'',points:r.points||[],image:r.image||'',
-      aftercare:r.aftercare||'',images:Array.isArray(r.images)?r.images:[]}),
+      aftercare:r.aftercare||'',images:Array.isArray(r.images)?r.images:[],homeOk:r.home_ok===true}),
   },
   products:{
     table:'products',
@@ -2688,13 +2699,15 @@ const CLOUD_TABLES={
       date_label:b.date||'',time_label:b.time||'',date_iso:toIsoDate(b.date),
       status:b.status||'Requested',client_name:b.clientName||'',client_id:b.clientId||null,
       client_phone:b.phone||'',aftercare_ok:!!b.aftercareOk,lang:b.lang||'',reminders:b.reminders||{},source:b.source||'',
-      reschedule_log:Array.isArray(b.rescheduleLog)?b.rescheduleLog:[]}),
+      reschedule_log:Array.isArray(b.rescheduleLog)?b.rescheduleLog:[],
+      ...(b.atHome?{at_home:true,home_area:b.homeArea||'',home_address:b.homeAddress||'',home_fee_usd:numOr0(b.homeFee)}:{})}),
     app:(r)=>({id:r.id,brand:r.brand,serviceId:r.service_id||'',serviceName:r.service_name||'',
       date:r.date_label||'',time:r.time_label||'',status:r.status,clientName:r.client_name||'',
       clientId:r.client_id||undefined,phone:r.client_phone||'',aftercareOk:!!r.aftercare_ok,
       lang:r.lang||'',reminders:(r.reminders&&typeof r.reminders==='object')?r.reminders:{},source:r.source||'',
       rescheduleLog:Array.isArray(r.reschedule_log)?r.reschedule_log:[],refundedUsd:Number(r.refunded_usd)||0,
-      dateIso:r.date_iso||'',startAt:r.start_at||''}),
+      dateIso:r.date_iso||'',startAt:r.start_at||'',
+      atHome:r.at_home===true,homeArea:r.home_area||'',homeAddress:r.home_address||'',homeFee:Number(r.home_fee_usd)||0}),
   },
   media:{
     table:'media',
@@ -2769,6 +2782,8 @@ const CLOUD_TABLES={
       ? {key:'destinations',value:JSON.stringify(STORE.destinations||{})}
       : id==='hours'
       ? {key:'hours',value:JSON.stringify(STORE.hours||{})}
+      : id==='home_service'
+      ? {key:'home_service',value:JSON.stringify(homeCfg())}
       : id==='loyalty'
       ? {key:'loyalty',value:JSON.stringify(loyaltySettings())}
       : id==='wa_templates'
@@ -3267,7 +3282,7 @@ async function pullCatalog(){
       selectAllRows('products',q=>q.order('id',{ascending:true})),
       supa.from('offers').select('*'),
       supa.from('brand_images').select('*'),
-      supa.from('settings').select('*').in('key',['usd_to_iqd','image_focus','destinations','client_login','wa_templates','hours','loyalty','client_booking_changes','categories:dolce','categories:polished','categories:core','mindbody']),   // mindbody: CORE's public setup (Site ID, booking page, reception WhatsApp) — no secrets
+      supa.from('settings').select('*').in('key',['usd_to_iqd','image_focus','destinations','client_login','wa_templates','hours','loyalty','client_booking_changes','home_service','categories:dolce','categories:polished','categories:core','mindbody']),   // mindbody: CORE's public setup (Site ID, booking page, reception WhatsApp) — no secrets
     ]);
     if(svc.error||prod.error||off.error) return false;
 
@@ -3306,6 +3321,10 @@ async function pullCatalog(){
       const hrRow=row('hours');
       if(hrRow && hrRow.value){
         try{ const v=typeof hrRow.value==='string'?JSON.parse(hrRow.value):hrRow.value; if(v&&typeof v==='object') STORE.hours=v; }catch(e){}
+      }
+      const hsRow=row('home_service');
+      if(hsRow && hsRow.value){
+        try{ const v=typeof hsRow.value==='string'?JSON.parse(hsRow.value):hsRow.value; if(v&&typeof v==='object') STORE.homeService=v; }catch(e){}
       }
       const cbcRow=row('client_booking_changes');
       if(cbcRow && cbcRow.value){
@@ -4150,6 +4169,27 @@ Object.assign(I18N.ku,{
   noHistory:'هێشتا خاڵ نییە — کاتێک سەردانەکەت تەواو دەبێت زیاد دەکرێن.',
   kEarn:'سەردان',kReverse:'گەڕاندنەوەی پارە',kRedeem:'خەڵات',kAdjust:'ڕاستکردنەوە',kBonus:'خاڵی زیادە',kExpire:'بەسەرچوو',kOpening:'باڵانسی پێشوو',brandAll:'هەموو بەشەکان'
 });
+/* ---- Home visits ----------------------------------------------------------
+   Owner switches it on in Admin → Settings → Home visits and sets one fixed
+   extra fee per brand (USD). Each service is marked "can be done at home" in
+   Admin → Services. Dolce and Polished: booked in the app like any other
+   appointment, with the client's area + address. CORE: a WhatsApp request
+   to reception (CORE is never booked with the in-app form). The database
+   re-checks all of it and sets the fee itself (supabase_migration_home_service.sql). */
+function homeCfg(){
+  const h=STORE.homeService||{}; const f=h.fee||{};
+  return {enabled:h.enabled===true,fee:{dolce:numOr0(f.dolce),polished:numOr0(f.polished),core:numOr0(f.core)}};
+}
+function homeOn(){ return homeCfg().enabled; }
+function homeFeeOf(brand){ return homeCfg().fee[brand]||0; }
+function svcHomeOk(brand,s){ return !!(s && s.homeOk===true && homeOn()); }
+const HOME_KEY='odc_home_addr_v1';
+function loadHomeAddr(){ try{ return JSON.parse(localStorage.getItem(HOME_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function saveHomeAddr(d){ try{ localStorage.setItem(HOME_KEY,JSON.stringify(d)); }catch(e){} }
+let bookAtHome=false;
+Object.assign(I18N.en,{whereLabel:'Where',atPlace_dolce:'At the clinic',atPlace_polished:'At the salon',atPlace_core:'At the studio',atHome:'At my home',homeArea:'Area / neighbourhood',homeAreaPh:'e.g. Ankawa, Dream City, 100m Street',homeAddress:'Address & directions',homeAddressPh:'Street, building / house no., floor, nearest landmark',homeNeedArea:'Please enter your area.',homeNeedAddress:'Please enter your address so our team can find you.',homeFee:'Home visit fee',homeVisit:'Home visit',homeAvailable:'Also available as a home visit',homeNote:'Our team will call or WhatsApp you to confirm the visit and directions.',homeYour:'Your home',coreHomeBtn:'Ask for a session at home',coreHomeMsg:'Hello CORE, I\'d like a private session at home: {name}',coreHomeNote:'CORE\'s reception will reply on WhatsApp to arrange the time and your address.'});
+Object.assign(I18N.ar,{whereLabel:'المكان',atPlace_dolce:'في العيادة',atPlace_polished:'في الصالون',atPlace_core:'في الاستوديو',atHome:'في منزلي',homeArea:'المنطقة / الحي',homeAreaPh:'مثال: عنكاوا، دريم سيتي، شارع 100',homeAddress:'العنوان والوصف',homeAddressPh:'الشارع، رقم البناية / المنزل، الطابق، أقرب معلم',homeNeedArea:'يرجى إدخال منطقتك.',homeNeedAddress:'يرجى إدخال عنوانك ليتمكن فريقنا من الوصول إليك.',homeFee:'رسوم الزيارة المنزلية',homeVisit:'زيارة منزلية',homeAvailable:'متوفرة أيضاً كزيارة منزلية',homeNote:'سيتصل بك فريقنا أو يراسلك على واتساب لتأكيد الزيارة والعنوان.',homeYour:'منزلك',coreHomeBtn:'اطلب جلسة في المنزل',coreHomeMsg:'مرحباً CORE، أرغب بجلسة خاصة في المنزل: {name}',coreHomeNote:'سيرد عليك استقبال CORE عبر واتساب لترتيب الموعد والعنوان.'});
+Object.assign(I18N.ku,{whereLabel:'شوێن',atPlace_dolce:'لە کلینیک',atPlace_polished:'لە سالۆن',atPlace_core:'لە ستۆدیۆ',atHome:'لە ماڵەکەم',homeArea:'ناوچە / گەڕەک',homeAreaPh:'بۆ نموونە: عەنکاوە، درێم سیتی، شەقامی ١٠٠',homeAddress:'ناونیشان و ڕێنمایی',homeAddressPh:'شەقام، ژمارەی بینا / ماڵ، نهۆم، نزیکترین شوێنی ناسراو',homeNeedArea:'تکایە ناوچەکەت بنووسە.',homeNeedAddress:'تکایە ناونیشانەکەت بنووسە بۆ ئەوەی تیمەکەمان بتدۆزێتەوە.',homeFee:'کرێی سەردانی ماڵەوە',homeVisit:'سەردانی ماڵەوە',homeAvailable:'وەک سەردانی ماڵەوەش بەردەستە',homeNote:'تیمەکەمان پەیوەندیت پێوە دەکات یان لە واتساپ نامەت بۆ دەنێرێت بۆ پشتڕاستکردنەوەی سەردان و ناونیشان.',homeYour:'ماڵەکەت',coreHomeBtn:'داوای وانە لە ماڵەوە بکە',coreHomeMsg:'سڵاو CORE، دەمەوێت وانەیەکی تایبەت لە ماڵەوە: {name}',coreHomeNote:'پێشوازیی CORE لە واتساپ وەڵامت دەداتەوە بۆ ڕێکخستنی کات و ناونیشان.'});
 function t(k){return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;}
 
 /* ---------------- i18n apply (static text outside phone) ---------------- */
@@ -4350,6 +4390,7 @@ function renderDetail(){
     ${serviceGalleryHtml(s)}
     <div class="detail-title">${esc(s.n)}</div>
     <div class="detail-meta"><b>${esc(fmtDur(s.dur))}</b><span class="sep"></span><b>${priceHtml(s)}</b></div>
+    ${svcHomeOk(currentBrand,s)?`<div class="home-tag">🏠 ${t('homeAvailable')}${homeFeeOf(currentBrand)>0?` · <bdi dir="ltr">+${fmtMoney(homeFeeOf(currentBrand))}</bdi>`:''}</div>`:''}
     <div class="detail-desc desc-rich">${descHtml(s.desc,s.n)}</div>
     ${pts?`<div class="section-label" style="margin-top:0;">${t('whatsInc')}</div>
     ${pts}`:''}
@@ -4358,6 +4399,28 @@ function renderDetail(){
   `;
 }
 
+// The WhatsApp message for a booking request (also used when the client taps send).
+function bookingWaText(s,dateStr,time,home){
+  const b=BRANDS[currentBrand];
+  let txt=`Hi! I'd like to book ${s.n} at ${b.name} — ${fmtMoney(effectivePrice(s))}, ${fmtDur(s.dur,true)}. Preferred: ${dateStr}${time?' at '+time:''}.`;
+  if(home){
+    const fee=homeFeeOf(currentBrand);
+    txt+=`\n🏠 Home visit${fee>0?' (+'+fmtMoney(fee)+')':''}`;
+    if(home.area) txt+=`\nArea: ${home.area}`;
+    if(home.address) txt+=`\nAddress: ${home.address}`;
+  }
+  return txt;
+}
+// Reads the home-visit fields; complains plainly when something is missing.
+function readHomeAddr(){
+  const a=document.getElementById('homeArea'), d=document.getElementById('homeAddress');
+  if(!a||!d) return null;
+  const area=a.value.trim(), address=d.value.trim();
+  if(!area){ toast(t('homeNeedArea')); a.focus(); return null; }
+  if(address.length<6){ toast(t('homeNeedAddress')); d.focus(); return null; }
+  saveHomeAddr({area,address});
+  return {area,address};
+}
 function renderBooking(){
   const b=BRANDS[currentBrand];
   const s=svcList(currentBrand).find(x=>x.id===currentService);
@@ -4375,15 +4438,32 @@ function renderBooking(){
   const timeChips=slots.filter(sl=>!sl.past).map(sl=>`
     <button class="time-chip ${sl.time===selectedTime?'active':''} ${sl.taken?'taken':''}" ${sl.taken?'disabled':''} data-time="${sl.time}">${sl.time}${sl.taken?` · ${t('bookedTag')||'Booked'}`:''}</button>`).join('');
   const canBook=!!selectedTime;
-  const waText=encodeURIComponent(`Hi! I'd like to book ${esc(s.n)} at ${b.name} — ${fmtMoney(effectivePrice(s))}, ${esc(fmtDur(s.dur,true))}. Preferred: ${dateStr}${selectedTime?' at '+selectedTime:''}.`);
-  const waHref=`https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${waText}`;
+  const homeOk=svcHomeOk(currentBrand,s); if(!homeOk) bookAtHome=false;
+  const atHome=homeOk&&bookAtHome, fee=atHome?homeFeeOf(currentBrand):0;
+  const ha=loadHomeAddr();
+  const waHref=`https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(bookingWaText(s,dateStr,selectedTime,atHome?ha:null))}`;
+  const homeInput="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:16px;box-sizing:border-box;font-family:inherit;background:#fff;";
   return `
     <div class="section-label" style="margin-top:0;">${t('bookingSummary')}</div>
     <div class="book-card">
       <div class="book-row"><span class="k">${b.name}</span><span class="v">${esc(s.n)}</span></div>
       <div class="book-row"><span class="k">Price</span><span class="v">${priceHtml(s)}</span></div>
-      <div class="book-row"><span class="k">${t('location')}</span><span class="v">${b.name} — Erbil</span></div>
+      ${atHome?`<div class="book-row"><span class="k">${t('homeFee')}</span><span class="v">${fee>0?`<bdi dir="ltr">+${fmtMoney(fee)}</bdi>`:'—'}</span></div>
+      <div class="book-row"><span class="k">${t('total')}</span><span class="v"><b>${fmtMoney(effectivePrice(s)+fee)}</b></span></div>`:''}
+      <div class="book-row"><span class="k">${t('location')}</span><span class="v">${atHome?`🏠 ${t('homeYour')}`:`${b.name} — Erbil`}</span></div>
     </div>
+    ${homeOk?`<div class="section-label">${t('whereLabel')}</div>
+    <div class="home-seg" role="group" aria-label="${attr(t('whereLabel'))}">
+      <button type="button" data-home-pick="0" class="${atHome?'':'on'}" aria-pressed="${!atHome}">${t('atPlace_'+currentBrand)}</button>
+      <button type="button" data-home-pick="1" class="${atHome?'on':''}" aria-pressed="${atHome}">🏠 ${t('atHome')}${homeFeeOf(currentBrand)>0?` <span class="home-fee"><bdi dir="ltr">+${fmtMoney(homeFeeOf(currentBrand))}</bdi></span>`:''}</button>
+    </div>
+    ${atHome?`<div class="book-card" style="margin-top:10px;">
+      <label for="homeArea" style="font-size:13px;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:6px;">${t('homeArea')}</label>
+      <input id="homeArea" type="text" maxlength="80" autocomplete="address-level3" value="${attr(ha.area||'')}" placeholder="${attr(t('homeAreaPh'))}" style="${homeInput}">
+      <label for="homeAddress" style="font-size:13px;font-weight:700;color:var(--ink-soft);display:block;margin:12px 0 6px;">${t('homeAddress')}</label>
+      <textarea id="homeAddress" rows="3" maxlength="300" autocomplete="street-address" placeholder="${attr(t('homeAddressPh'))}" style="${homeInput}resize:vertical;">${esc(ha.address||'')}</textarea>
+      <div style="font-size:13px;color:var(--muted);margin-top:8px;">${t('homeNote')}</div>
+    </div>`:''}`:''}
     <div class="section-label">${t('preferredDate')}</div>
     <div class="date-chip-row">${dateChips}</div>
     <div class="section-label">${t('preferredTime')}</div>
@@ -7606,7 +7686,7 @@ function bindScreen(){
   screenEl.querySelectorAll('[data-cat]').forEach(el=>el.addEventListener('click',()=>CatGlass.select(el.dataset.cat)));
   screenEl.querySelectorAll('[data-svc]').forEach(el=>el.addEventListener('click',()=>{currentService=el.dataset.svc;goto('detail');}));
   screenEl.querySelectorAll('[data-sr-open]').forEach(el=>el.addEventListener('click',()=>openSearch(el.dataset.srOpen)));
-  const toBooking=document.getElementById('toBooking'); if(toBooking) toBooking.addEventListener('click',()=>{ if(currentBrand==='core') return; selectedDateObj=null;selectedTime=null;goto('booking');});
+  const toBooking=document.getElementById('toBooking'); if(toBooking) toBooking.addEventListener('click',()=>{ if(currentBrand==='core') return; selectedDateObj=null;selectedTime=null;bookAtHome=false;goto('booking');});
   // The on-screen back arrow goes through history too, so it and the phone's
   // own Back button behave identically instead of drifting apart.
   const backBtn=document.getElementById('backBtn');
@@ -7653,6 +7733,13 @@ function bindScreen(){
   // Books the appointment directly in the app — no WhatsApp required. The
   // slot is re-checked against STORE.bookings first in case someone (e.g.
   // via the WhatsApp button, or an admin) grabbed it in the meantime.
+  screenEl.querySelectorAll('[data-home-pick]').forEach(el=>el.addEventListener('click',()=>{
+    bookAtHome=el.dataset.homePick==='1'; redrawInPlace();
+  }));
+  ['homeArea','homeAddress'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.addEventListener('input',()=>saveHomeAddr({area:(document.getElementById('homeArea')||{}).value||'',address:(document.getElementById('homeAddress')||{}).value||''}));
+  });
   // Choosing a different date or time redraws this screen, which would throw
   // away anything already typed. Keeping it on the device as it is typed means
   // the fields come back filled in.
@@ -7682,6 +7769,9 @@ function bindScreen(){
     }
     const b=BRANDS[currentBrand]; const s=svcList(currentBrand).find(x=>x.id===currentService);
     const dateStr=fmtDate(selectedDateObj);
+    let home=null;
+    if(bookAtHome && svcHomeOk(currentBrand,s)){ home=readHomeAddr(); if(!home) return; }
+    const homeFields=home?{atHome:true,homeArea:home.area,homeAddress:home.address,homeFee:homeFeeOf(currentBrand)}:{};
     // Ask the database once more which times are booked (others' bookings
     // included) — the slot may have gone while this screen was open.
     confirmBtn.dataset.busy='1'; confirmBtn.disabled=true;
@@ -7696,10 +7786,10 @@ function bindScreen(){
     const req=guest
       ? {id:nextId('b',STORE.bookings),brand:currentBrand,serviceId:currentService,serviceName:s.n,
          date:dateStr,time:selectedTime,status:'Requested',clientName:guest.name,
-         phone:guest.phone,aftercareOk:true,lang,source:'app'}
+         phone:guest.phone,aftercareOk:true,lang,source:'app',...homeFields}
       : {id:nextId('b',STORE.bookings),brand:currentBrand,serviceId:currentService,serviceName:s.n,
          date:dateStr,time:selectedTime,status:'Requested',clientName:loggedInClient.name,clientId:loggedInClient.id,
-         phone:loggedInClient.phone,aftercareOk:true,lang,source:'app'};
+         phone:loggedInClient.phone,aftercareOk:true,lang,source:'app',...homeFields};
     STORE.bookings.push(req);
     const ok=saveStore();
     if(!ok){ STORE.bookings.pop(); toast("This browser's demo storage is full."); return; }
@@ -7707,7 +7797,7 @@ function bindScreen(){
     const note=document.getElementById('waNote');
     note.style.display='block';
     // A guest has no account, so there is no "My Bookings" for them to look in.
-    note.innerHTML=`<b>${guest?t('bookedNoteGuest'):t('bookedNote')}</b><br><br>${esc(s.n)} — ${b.name}<br>${dateStr} at ${selectedTime}`;
+    note.innerHTML=`<b>${guest?t('bookedNoteGuest'):t('bookedNote')}</b><br><br>${esc(s.n)} — ${b.name}<br>${dateStr} at ${selectedTime}${home?`<br>🏠 ${t('homeVisit')}: ${esc(home.area)}`:''}`;
     toast(`Booked — ${dateStr} at ${selectedTime}.`);
     if(!guest) setTimeout(maybeAskPush,1200);
   });
@@ -7725,6 +7815,10 @@ function bindScreen(){
     }
     const b=BRANDS[currentBrand]; const s=svcList(currentBrand).find(x=>x.id===currentService);
     const dateStr=fmtDate(selectedDateObj);
+    let waHome=null;
+    if(bookAtHome && svcHomeOk(currentBrand,s)){ waHome=readHomeAddr(); if(!waHome){ e.preventDefault(); return; } }
+    sendWA.href=`https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(bookingWaText(s,dateStr,selectedTime,waHome))}`;
+    const waHomeFields=waHome?{atHome:true,homeArea:waHome.area,homeAddress:waHome.address,homeFee:homeFeeOf(currentBrand)}:{};
     const already=STORE.bookings.some(bk=>bk.brand===currentBrand&&bk.date===dateStr&&bk.time===selectedTime
       && (clientIn() ? bk.clientId===loggedInClient.id : bk.phone===waGuest.phone)
       && bk.status!=='Cancelled');
@@ -7732,16 +7826,16 @@ function bindScreen(){
       const waReq=waGuest
         ? {id:nextId('b',STORE.bookings),brand:currentBrand,serviceId:currentService,serviceName:s.n,
            date:dateStr,time:selectedTime,status:'Requested',clientName:waGuest.name,
-           phone:waGuest.phone,aftercareOk:true,lang,source:'app'}
+           phone:waGuest.phone,aftercareOk:true,lang,source:'app',...waHomeFields}
         : {id:nextId('b',STORE.bookings),brand:currentBrand,serviceId:currentService,serviceName:s.n,
            date:dateStr,time:selectedTime,status:'Requested',clientName:loggedInClient.name,clientId:loggedInClient.id,
-           phone:loggedInClient.phone,aftercareOk:true,lang,source:'app'};
+           phone:loggedInClient.phone,aftercareOk:true,lang,source:'app',...waHomeFields};
       STORE.bookings.push(waReq);
       saveStore(); cloudSave('bookings',waReq.id,null,waGuest?{guest:true}:{clientAuth:true});
     }
     const note=document.getElementById('waNote');
     note.style.display='block';
-    note.innerHTML=`<b>${t('waSent')}</b><br><br>"Hi! I'd like to book <b>${esc(s.n)}</b> at <b>${b.name}</b> — ${fmtMoney(effectivePrice(s))}, ${esc(fmtDur(s.dur,true))}. Preferred: ${dateStr} at ${selectedTime}."`;
+    note.innerHTML=`<b>${t('waSent')}</b><br><br>"${esc(bookingWaText(s,dateStr,selectedTime,waHome)).replace(/\n/g,'<br>')}"`;
   });
   bindLux();
   // Galleries (product + service): keep the dots in step with the photo on
@@ -9615,7 +9709,7 @@ function shortRole(u){
   return 'Staff';
 }
 function updateSettingsEmpty(){
-  const ids=['currencySettingsWrap','clientLoginWrap','hoursWrap','waTemplatesWrap','notifSettingsWrap','brandPhotosWrap','photoMoveWrap'];
+  const ids=['currencySettingsWrap','clientLoginWrap','hoursWrap','homeServiceWrap','waTemplatesWrap','notifSettingsWrap','brandPhotosWrap','photoMoveWrap'];
   const any=ids.some(id=>{ const el=document.getElementById(id); return el&&el.innerHTML.trim(); });
   const e=document.getElementById('settingsEmpty'); if(e) e.style.display=any?'none':'';
 }
@@ -10164,7 +10258,7 @@ function showAdminForRole(){
   });
   if(!canSeeBrand(currentUser,svcBrandTab)) svcBrandTab=userBrands(currentUser)[0];
   document.querySelectorAll('#svcBrandTabs [data-svc-brand-tab]').forEach(x=>x.classList.toggle('active',x.dataset.svcBrandTab===svcBrandTab));
-  renderAdminProducts(); renderAdminServices(); renderAdminOffers(); renderAdminGallery(); renderAdminBookings(); renderBrandPhotos(); renderPhotoMove(); renderCurrencySettings(); renderClientLoginSetting(); renderWaTemplates(); renderNotifSettings(); renderHoursAdmin(); renderAdminEmployees(); renderAdminPurchases(); renderAdminReports(); renderAdminLoyalty(); renderOverviewStats(); pullLoyaltyIssued(); updateSettingsEmpty(); updateAdmMenuLabel(); if(adminTab==='clients') renderAdminClients(); if(adminTab==='orders') renderAdminOrders();
+  renderAdminProducts(); renderAdminServices(); renderAdminOffers(); renderAdminGallery(); renderAdminBookings(); renderBrandPhotos(); renderPhotoMove(); renderCurrencySettings(); renderClientLoginSetting(); renderWaTemplates(); renderNotifSettings(); renderHoursAdmin(); renderHomeServiceAdmin(); renderAdminEmployees(); renderAdminPurchases(); renderAdminReports(); renderAdminLoyalty(); renderOverviewStats(); pullLoyaltyIssued(); updateSettingsEmpty(); updateAdmMenuLabel(); if(adminTab==='clients') renderAdminClients(); if(adminTab==='orders') renderAdminOrders();
   if(adminTab==='classes'){ renderAdminClasses(); pullClasses().then(()=>{ if(adminTab==='classes') renderAdminClasses(); }); }
   if(currentUser.isOwner) pullNotifications(true).then(ok=>{ if(ok){ renderNotifSettings(); updateSettingsEmpty(); } });
 }
@@ -10664,6 +10758,8 @@ function openServiceForm(editId){
       <div class="field"><label>Duration</label><input id="sf_dur" type="text" value="${esc(s.dur)}" placeholder="e.g. 45 min"></div>
       <div class="field"><label>Price ($)</label><input id="sf_price" type="number" min="0" step="1" value="${s.price}"></div>
       <div class="field"><label>Discount % (optional)</label><input id="sf_discount" type="number" min="0" max="99" step="1" placeholder="0 — no discount" value="${s.discount||''}"></div>
+      <div class="field full" style="grid-column:1/-1;"><label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input id="sf_home" type="checkbox" ${s.homeOk===true?'checked':''} style="width:auto;"> 🏠 Can be booked as a home visit</label>
+        <div class="note">${homeOn()?`Clients can choose "At my home" for this service${homeFeeOf(brand)>0?` (+${fmtMoney(homeFeeOf(brand))} home visit fee)`:''}.`:'Home visits are switched off — turn them on in Settings → Home visits.'}</div></div>
       <div class="field full" style="grid-column:1/-1;"><label>Description</label><textarea id="sf_desc" rows="6" placeholder="Short client-facing description">${esc(s.desc||'')}</textarea>
         <div class="rem-meta" style="margin-top:6px;">Start a line with <b>*</b> for a bullet, end a short line with <b>:</b> for a label (e.g. "Best For:"), leave an empty line between paragraphs. Duration: a plain number is shown in minutes (e.g. "45-60" → "45–60 min").</div>
         <div class="desc-pv-l">Preview — as clients see it</div>
@@ -10698,6 +10794,7 @@ function openServiceForm(editId){
     const discount=Math.min(99,Math.max(0,parseInt(document.getElementById('sf_discount').value)||0));
     const desc=document.getElementById('sf_desc').value.trim();
     const aftercare=document.getElementById('sf_aftercare').value.trim();
+    const homeOk=!!(document.getElementById('sf_home')||{}).checked;
     if(!n){ document.getElementById('sf_name').focus(); return; }
     const saveBtn=document.getElementById('sf_save'); saveBtn.disabled=true; saveBtn.textContent='Saving…';
     if(sfPos) await sfPos.settled();
@@ -10714,11 +10811,11 @@ function openServiceForm(editId){
     const at=editing?idxById(list,s.id):-1;
     const prevItem = at>=0 ? {...list[at]} : null;
     if(at>=0){
-      list[at]={...list[at],n,cat,dur,price,discount,desc,image,aftercare,images};
+      list[at]={...list[at],n,cat,dur,price,discount,desc,image,aftercare,images,homeOk};
     } else if(editing){
-      list.push({...s,n,cat,dur,price,discount,desc,image,aftercare,images});   // removed elsewhere meanwhile: keep the edit
+      list.push({...s,n,cat,dur,price,discount,desc,image,aftercare,images,homeOk});   // removed elsewhere meanwhile: keep the edit
     } else {
-      list.push({id:nextId('svc_'+brand+'_',list),n,cat,dur,price,discount,desc,image,aftercare,images,points:[]});
+      list.push({id:nextId('svc_'+brand+'_',list),n,cat,dur,price,discount,desc,image,aftercare,images,homeOk,points:[]});
     }
     const ok=saveStore();
     if(!ok){
@@ -11052,6 +11149,14 @@ function renderBookingDayBar(all){
   document.getElementById('bkPick').onchange=(e)=>go(e.target.value);
   const nr=document.getElementById('bkNextReq'); if(nr) nr.onclick=()=>go(waiting[0]);
 }
+// A home visit, as staff see it: badge, fee, area and the address with a Maps link.
+function homeVisitHtml(bk){
+  if(!bk||!bk.atHome) return '';
+  const q=encodeURIComponent([bk.homeAddress,bk.homeArea,'Erbil'].filter(Boolean).join(', '));
+  return `<div class="home-adm"><span class="home-badge">🏠 Home visit${bk.homeFee>0?` · +${fmtMoney(bk.homeFee)}`:''}</span>
+    <div><b>${esc(bk.homeArea||'')}</b>${bk.homeAddress?` — ${esc(bk.homeAddress)}`:''}</div>
+    <a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Open in Maps ↗</a></div>`;
+}
 function renderAdminBookings(){
   // Anyone the Bookings section is shared with can manage it fully — access
   // is granted per section (see Employees tab), not split into finer
@@ -11102,7 +11207,7 @@ function renderAdminBookings(){
     return `<tr>
       <td>${currentAllowedTabs.includes('clients')?`<button class="bk-client" data-bk-client="${esc(String(bk.id))}" title="See this client's details">${esc(bk.clientName)}</button>`:esc(bk.clientName)}</td>
       <td><span class="brand-tag" style="background:${brandColor[bk.brand]}">${BRANDS[bk.brand].name}</span></td>
-      <td>${esc(bk.serviceName)}</td>
+      <td>${esc(bk.serviceName)}${homeVisitHtml(bk)}</td>
       <td>${esc(bk.date)}<br><span style="color:var(--muted);font-size:13px;">${esc(bk.time)}</span></td>
       <td><span class="status-badge ${esc(bk.status)}">${esc(bk.status)}</span>${bookingMsgHtml(bk)}${bk.refundedUsd>0?`<div style="font-size:12px;color:var(--muted);margin-top:3px;">Refunded ${fmtMoney(bk.refundedUsd)}</div>`:''}${(bk.rescheduleLog||[]).length?`<div style="font-size:12px;color:var(--muted);margin-top:3px;" title="${esc((bk.rescheduleLog||[]).map(x=>x.from?`${x.from.date} ${x.from.time} → ${x.to?x.to.date+' '+x.to.time:x.action||''} (${x.by||''})`:(x.note||x.action||'')).join(' | '))}">Moved ${(bk.rescheduleLog||[]).length}×</div>`:''}</td>
       <td>${actions}${ptsBtn}</td>
@@ -12144,6 +12249,30 @@ function renderReminders(){
 }
 setInterval(()=>{ try{ if(currentUser) renderReminders(); }catch(e){} },60*1000);
 
+/* Admin → Settings: home visits on/off and the fixed extra fee per brand (owner only). */
+function renderHomeServiceAdmin(){
+  const wrap=document.getElementById('homeServiceWrap'); if(!wrap) return;
+  if(!currentUser || !currentUser.isOwner){ wrap.innerHTML=''; return; }
+  const c=homeCfg();
+  const marked=Object.keys(BRANDS).map(b=>`${BRANDS[b].name}: ${(svcList(b)||[]).filter(s=>s.homeOk===true).length}`).join(' · ');
+  wrap.innerHTML=`
+    <div class="section-label" style="margin:0 0 10px;">🏠 Home visits</div>
+    <div class="admin-form" style="max-width:620px;">
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="hs_on" ${c.enabled?'checked':''} style="width:auto;"> Offer home visits in the client app</label>
+      <div style="font-size:14px;font-weight:600;margin:14px 0 6px;">Extra fee per home visit (USD)</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">${Object.keys(BRANDS).map(b=>`<label style="font-size:14px;">${esc(BRANDS[b].name)}<br><input type="number" id="hs_fee_${b}" min="0" step="1" value="${c.fee[b]||0}" style="width:110px;"></label>`).join('')}</div>
+      <div style="font-size:13px;color:var(--muted);margin:10px 0 12px;">Only services ticked "Can be booked as a home visit" (Services → edit) offer it. Ticked now — ${esc(marked)}. Dolce and Polished clients book in the app with their area and address; CORE clients message reception on WhatsApp.</div>
+      <button class="btn btn-primary btn-sm" id="hs_save">Save home visits</button>
+    </div>
+    <div style="margin-bottom:22px;"></div>`;
+  document.getElementById('hs_save').addEventListener('click',()=>{
+    const fee={}; Object.keys(BRANDS).forEach(b=>{ fee[b]=Math.max(0,Math.round(Number(document.getElementById('hs_fee_'+b).value)||0)); });
+    STORE.homeService={enabled:document.getElementById('hs_on').checked,fee};
+    saveStore(); cloudSave('settings','home_service');
+    toast(STORE.homeService.enabled?'Home visits are on.':'Home visits are off.'); renderHomeServiceAdmin(); render();
+  });
+}
+
 /* Admin → Overview: opening hours and days off, per brand (owner only). */
 let hoursEditBrand='dolce';
 function renderHoursAdmin(){
@@ -12746,8 +12875,11 @@ function coreContactHtml(s){
   const msg=t(group?'corePkgMsg':'coreSessionMsg').replace('{name}',s.n);
   if(!coreReceptionWa()) return `<button class="primary-btn" disabled style="opacity:.45;cursor:default;" data-core-wa-off>💬 ${t('contactReceptionWa')}</button>
     <div class="mb-note" style="margin-top:10px;">${t('coreWaMissing')}</div>`;
+  const home=!group&&svcHomeOk('core',s), hf=homeFeeOf('core');
   return `<a class="primary-btn" style="display:block;text-align:center;text-decoration:none;" href="${attr(coreWaHref(msg))}" target="_blank" rel="noopener" data-core-wa>💬 ${t('contactReceptionWa')}</a>
-    <div class="mb-note" style="margin-top:10px;">${t(group?'corePkgNote':'coreSessionNote')}</div>`;
+    <div class="mb-note" style="margin-top:10px;">${t(group?'corePkgNote':'coreSessionNote')}</div>
+    ${home?`<a class="wa-btn" style="display:block;text-align:center;text-decoration:none;margin-top:12px;" href="${attr(coreWaHref(t('coreHomeMsg').replace('{name}',s.n)+(hf>0?` (+${fmtMoney(hf)})`:'')))}" target="_blank" rel="noopener" data-core-wa>🏠 ${t('coreHomeBtn')}${hf>0?` · <bdi dir="ltr">+${fmtMoney(hf)}</bdi>`:''}</a>
+    <div class="mb-note" style="margin-top:10px;">${t('coreHomeNote')}</div>`:''}`;
 }
 function coreDailyHtml(){
   const url=mbBookingUrl();
@@ -13680,7 +13812,7 @@ function reportDateToFmt(iso){
 }
 function bookingPrice(bk){
   const s=svcList(bk.brand).find(x=>x.id===bk.serviceId);
-  return s?effectivePrice(s):null;
+  return s?effectivePrice(s)+(bk.atHome?Math.max(0,Number(bk.homeFee)||0):0):null;
 }
 // Register close: a per-brand, per-day cash-up. `brands` on each record is
 // exactly the department scope that was closed (an Owner closing all three
