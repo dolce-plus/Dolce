@@ -1552,8 +1552,8 @@
      small hand of cards, gather into one square, and that square shows the
      check (gold while checking, soft green once the server accepts). */
   .otp{position:relative;margin:4px auto 0;max-width:380px;height:var(--otp-h,74px);}
-  .otp-row{display:grid;grid-template-columns:repeat(var(--otp-n,6),1fr);gap:clamp(6px,2.4vw,11px);height:100%;align-items:center;}
-  .otp-box{position:relative;aspect-ratio:1/1.16;max-height:100%;border-radius:15px;
+  .otp-row{display:grid;grid-template-columns:repeat(var(--otp-n,6),minmax(0,1fr));gap:clamp(6px,2.4vw,11px);height:100%;align-items:center;}
+  .otp-box{position:relative;aspect-ratio:1/1.16;max-height:100%;width:100%;min-width:0;justify-self:center;border-radius:15px;
     background:linear-gradient(180deg,#f8f2e7,#efe4d1);border:1px solid rgba(195,163,106,.42);
     box-shadow:0 8px 16px -12px rgba(58,42,31,.45),inset 0 1px 0 rgba(255,255,255,.7);
     display:flex;align-items:center;justify-content:center;transform-origin:50% 120%;
