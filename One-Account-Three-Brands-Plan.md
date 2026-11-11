@@ -269,3 +269,14 @@ Each brand can now offer some of its services at the client's home.
 - **Server checks:** the database only accepts a home visit if home visits are on and the service allows it, and only if it has an area and an address. The fee is always taken from the owner's setting, never from the phone (`supabase_migration_home_service.sql`).
 - **Privacy:** the privacy policy now lists "Home address (only for home visits)". Before the iOS update ships, App Store Connect → App Privacy must also declare *Physical Address* (App Functionality, linked to the user, no tracking).
 - **Not yet:** staff adding a home visit by hand from Admin (they can still note it in the booking), and travel-time blocking around home visits (a home visit uses one normal time slot).
+
+## "At Dolce / Home Services" cards on each business page — 11 Nov 2026 (built, hidden while home visits are OFF)
+
+Above each business's service list, two rounded cards with gold line illustrations: **At Dolce / At Polished / At CORE** (drawings of each place — Dolce's lounge with its mosaic tree, mirrored columns and bar; a salon mirror and chair; a studio with arched windows and a reformer) and **Home Services** (the same house for all three). The selected card gets a gold outline, a check and its brand tint (pale blue / soft tan / soft sage).
+
+- Starts on the business location every time a business is opened. Its normal services and prices show as before.
+- **Home Services** shows only that business's services ticked "Can be booked as a home visit", with their normal prices, and a note that the area's home fee is added **once** on the booking screen (Dolce/Polished). The fee is never added to the list price.
+- The choice carries into the service page ("Request home visit") and the booking screen (area list, price + fee = total). Back to the list keeps it.
+- **CORE:** Home Services lists the ticked private sessions as "Price on request"; the service page has only "Ask for a session at home" on WhatsApp to reception. No in-app CORE booking.
+- The cards appear only when that business has home visits ON, at least one ticked service, and (Dolce/Polished) at least one covered area. Otherwise the page looks exactly as before.
+- English, Arabic and Kurdish, with right-to-left layout.
