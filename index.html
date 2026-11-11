@@ -1857,6 +1857,7 @@
 .hs-st-row{display:flex;gap:10px;align-items:flex-start;}
 .hs-pill{flex:none;display:inline-block;padding:2px 10px;border-radius:999px;background:#efe6d6;color:#6b5a44;font-size:12px;font-weight:700;white-space:nowrap;}
 .hs-pill.on{background:#e3eedc;color:#3f6b35;}
+.home-todo{margin:4px 0;padding:6px 9px;border-radius:8px;background:#f6e3d6;color:#7a3a1c;font-size:12.5px;}
 .hs-pill.warn{background:#f6e3d6;color:#9a4a25;}
 .hs-muted{color:var(--muted);font-weight:500;}
 .hs-mini{font-size:12px;color:#8a6a3f;margin-top:2px;}
@@ -4326,7 +4327,9 @@ function homeAreaById(b,id){ return homeAreas(b).find(a=>a.id===String(id))||nul
 function homeAreaName(a){ return (lang==='ar'&&a.name_ar)||(lang==='ku'&&a.name_ku)||a.name; }
 function homeMinFee(b){ const f=homeAreas(b).map(a=>a.fee); return f.length?Math.min(...f):0; }
 // Dolce/Polished need at least one covered area; CORE only arranges on WhatsApp.
-function svcHomeOk(b,s){ return !!(homeOffered(b,s)&&homeOn(b)&&(b==='core'||homeAreas(b).length)); }
+// No covered areas = the client types their area and reception sets the travel fee.
+function homeFeeByReception(b){ return b!=='core' && !homeAreas(b).length; }
+function svcHomeOk(b,s){ return !!(homeOffered(b,s)&&homeOn(b)); }
 const HOME_KEY='odc_home_addr_v2';
 function loadHomeAddr(){ try{ return JSON.parse(localStorage.getItem(HOME_KEY)||'null'); }catch(e){ return null; } }
 function saveHomeAddr(d){ try{ if(d) localStorage.setItem(HOME_KEY,JSON.stringify(d)); else localStorage.removeItem(HOME_KEY); }catch(e){} }
@@ -4335,7 +4338,7 @@ try{ localStorage.removeItem('odc_home_addr_v1'); }catch(e){}   // the first ver
 // on the phone only if the client ticks "Remember").
 let bookAtHome=false, homeDraft=null;
 function homeDraftNow(){
-  if(!homeDraft){ const saved=loadHomeAddr(); homeDraft=saved?{areaId:saved.areaId||'',address:saved.address||'',other:'',remember:true}:{areaId:'',address:'',other:'',remember:false}; }
+  if(!homeDraft){ const saved=loadHomeAddr(); homeDraft=saved?{areaId:saved.areaId||'',areaText:saved.areaText||'',address:saved.address||'',other:'',remember:true}:{areaId:'',areaText:'',address:'',other:'',remember:false}; }
   return homeDraft;
 }
 // The request this screen already sent, so Confirm + WhatsApp never make two.
@@ -4353,7 +4356,7 @@ Object.assign(I18N.ku,{whereLabel:'شوێن',atPlace_dolce:'لە کلینیک',a
    its own location again. */
 let homePickBrand=null;
 function syncHomePick(){ if(homePickBrand!==currentBrand){ homePickBrand=currentBrand; bookAtHome=false; } }
-function homeSelectorOn(b){ return !!(b && homeOn(b) && (b==='core'||homeAreas(b).length) && (svcList(b)||[]).some(x=>homeOffered(b,x))); }
+function homeSelectorOn(b){ return !!(b && homeOn(b) && (svcList(b)||[]).some(x=>homeOffered(b,x))); }
 function atHomeNow(){ syncHomePick(); return homeSelectorOn(currentBrand) && bookAtHome===true; }
 // Gold line art (no photos), drawn on a 200×120 canvas so all four sit the same size.
 const PLACE_ART={
@@ -4425,13 +4428,14 @@ function placeCardsHtml(){
 function homeListNoteHtml(){
   if(!atHomeNow()) return '';
   if(currentBrand==='core') return `<div class="home-list-note">🏠 ${t('homeListNoteCore')}</div>`;
+  if(homeFeeByReception(currentBrand)) return `<div class="home-list-note">🏠 ${t('homeListNoteRec')}</div>`;
   const f=homeAreas(currentBrand).map(a=>a.fee), lo=f.length?Math.min(...f):0, hi=f.length?Math.max(...f):0;
   const fee=lo===hi?`<bdi dir="ltr">+${fmtMoney(lo)}</bdi>`:`<bdi dir="ltr">+${fmtMoney(lo)}–${fmtMoney(hi)}</bdi>`;
   return `<div class="home-list-note">🏠 ${t('homeListNote').replace('{fee}',fee)}</div>`;
 }
-Object.assign(I18N.en,{homeFromNote:'Starting price — reception confirms the final price before your visit and asks you first if it is higher.',homeServicePrice:'Home-service price',placeAt_dolce:'At Dolce',placeAt_polished:'At Polished',placeAt_core:'At CORE',homeServices:'Home Services',homeListNote:'Home-service prices. A travel fee of {fee}, depending on your area, is added once and shown before you request.',homeListNoteCore:"Home sessions are arranged by CORE's reception on WhatsApp — they confirm the time, your address and the price.",homeNoServices:'No home services here yet.',homeDetailNote:'Home-service price. The travel fee for your area is added once on the next screen, before you request.',homePriceOnRequest:'Price on request'});
-Object.assign(I18N.ar,{homeFromNote:'سعر يبدأ من — يؤكد الاستقبال السعر النهائي قبل زيارتك ويسألك أولاً إذا كان أعلى.',homeServicePrice:'سعر الخدمة المنزلية',placeAt_dolce:'في Dolce',placeAt_polished:'في Polished',placeAt_core:'في CORE',homeServices:'الخدمات المنزلية',homeListNote:'أسعار الخدمة المنزلية. تُضاف رسوم تنقل بقيمة {fee} حسب منطقتك مرة واحدة، وتظهر قبل إرسال الطلب.',homeListNoteCore:'يرتّب استقبال CORE الجلسات المنزلية عبر واتساب — ويؤكدون الموعد والعنوان والسعر.',homeNoServices:'لا توجد خدمات منزلية هنا بعد.',homeDetailNote:'سعر الخدمة المنزلية. تُضاف رسوم التنقل لمنطقتك مرة واحدة في الشاشة التالية، قبل إرسال الطلب.',homePriceOnRequest:'السعر عند الطلب'});
-Object.assign(I18N.ku,{homeFromNote:'نرخی دەستپێک — پێشوازی نرخی کۆتایی پێش سەردانەکەت پشتڕاست دەکاتەوە و ئەگەر زیاتر بوو پێشتر لێت دەپرسێت.',homeServicePrice:'نرخی خزمەتگوزاریی ماڵەوە',placeAt_dolce:'لە Dolce',placeAt_polished:'لە Polished',placeAt_core:'لە CORE',homeServices:'خزمەتگوزاریی ماڵەوە',homeListNote:'نرخەکانی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆ {fee} بەپێی ناوچەکەت یەک جار زیاد دەکرێت و پێش ناردنی داواکاری پیشان دەدرێت.',homeListNoteCore:'پێشوازیی CORE وانەکانی ماڵەوە لە واتساپ ڕێک دەخات — کات، ناونیشان و نرخ پشتڕاست دەکەنەوە.',homeNoServices:'هێشتا خزمەتگوزاریی ماڵەوە لێرە نییە.',homeDetailNote:'نرخی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆی ناوچەکەت یەک جار لە شاشەی داهاتوو زیاد دەکرێت، پێش ناردنی داواکاری.',homePriceOnRequest:'نرخ بە داواکاری'});
+Object.assign(I18N.en,{homeListNoteRec:'Home-service prices. Reception confirms the travel fee for your address on WhatsApp before your visit.',homeDetailNoteRec:'Home-service price. The travel fee for your address is confirmed by reception before your visit.',homeFeeRec:'Confirmed by reception',homePlusTravel:'+ travel fee',homeAreaPhFree:'e.g. Ankawa, Dream City, 100m Street',homeRecNote:'Reception will tell you the travel fee for your address and confirm it with you first.',homeFromNote:'Starting price — reception confirms the final price before your visit and asks you first if it is higher.',homeServicePrice:'Home-service price',placeAt_dolce:'At Dolce',placeAt_polished:'At Polished',placeAt_core:'At CORE',homeServices:'Home Services',homeListNote:'Home-service prices. A travel fee of {fee}, depending on your area, is added once and shown before you request.',homeListNoteCore:"Home sessions are arranged by CORE's reception on WhatsApp — they confirm the time, your address and the price.",homeNoServices:'No home services here yet.',homeDetailNote:'Home-service price. The travel fee for your area is added once on the next screen, before you request.',homePriceOnRequest:'Price on request'});
+Object.assign(I18N.ar,{homeListNoteRec:'أسعار الخدمة المنزلية. يؤكد الاستقبال رسوم التنقل لعنوانك عبر واتساب قبل زيارتك.',homeDetailNoteRec:'سعر الخدمة المنزلية. يؤكد الاستقبال رسوم التنقل لعنوانك قبل زيارتك.',homeFeeRec:'يؤكدها الاستقبال',homePlusTravel:'+ رسوم التنقل',homeAreaPhFree:'مثال: عنكاوا، دريم سيتي، شارع 100',homeRecNote:'سيخبرك الاستقبال برسوم التنقل لعنوانك ويؤكدها معك أولاً.',homeFromNote:'سعر يبدأ من — يؤكد الاستقبال السعر النهائي قبل زيارتك ويسألك أولاً إذا كان أعلى.',homeServicePrice:'سعر الخدمة المنزلية',placeAt_dolce:'في Dolce',placeAt_polished:'في Polished',placeAt_core:'في CORE',homeServices:'الخدمات المنزلية',homeListNote:'أسعار الخدمة المنزلية. تُضاف رسوم تنقل بقيمة {fee} حسب منطقتك مرة واحدة، وتظهر قبل إرسال الطلب.',homeListNoteCore:'يرتّب استقبال CORE الجلسات المنزلية عبر واتساب — ويؤكدون الموعد والعنوان والسعر.',homeNoServices:'لا توجد خدمات منزلية هنا بعد.',homeDetailNote:'سعر الخدمة المنزلية. تُضاف رسوم التنقل لمنطقتك مرة واحدة في الشاشة التالية، قبل إرسال الطلب.',homePriceOnRequest:'السعر عند الطلب'});
+Object.assign(I18N.ku,{homeListNoteRec:'نرخەکانی خزمەتگوزاریی ماڵەوە. پێشوازی کرێی هاتوچۆی ناونیشانەکەت لە واتساپ پێش سەردانەکەت پشتڕاست دەکاتەوە.',homeDetailNoteRec:'نرخی خزمەتگوزاریی ماڵەوە. پێشوازی کرێی هاتوچۆی ناونیشانەکەت پێش سەردانەکەت پشتڕاست دەکاتەوە.',homeFeeRec:'پێشوازی پشتڕاستی دەکاتەوە',homePlusTravel:'+ کرێی هاتوچۆ',homeAreaPhFree:'بۆ نموونە: عەنکاوە، درێم سیتی، شەقامی ١٠٠',homeRecNote:'پێشوازی کرێی هاتوچۆی ناونیشانەکەت پێت دەڵێت و پێشتر لەگەڵت پشتڕاستی دەکاتەوە.',homeFromNote:'نرخی دەستپێک — پێشوازی نرخی کۆتایی پێش سەردانەکەت پشتڕاست دەکاتەوە و ئەگەر زیاتر بوو پێشتر لێت دەپرسێت.',homeServicePrice:'نرخی خزمەتگوزاریی ماڵەوە',placeAt_dolce:'لە Dolce',placeAt_polished:'لە Polished',placeAt_core:'لە CORE',homeServices:'خزمەتگوزاریی ماڵەوە',homeListNote:'نرخەکانی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆ {fee} بەپێی ناوچەکەت یەک جار زیاد دەکرێت و پێش ناردنی داواکاری پیشان دەدرێت.',homeListNoteCore:'پێشوازیی CORE وانەکانی ماڵەوە لە واتساپ ڕێک دەخات — کات، ناونیشان و نرخ پشتڕاست دەکەنەوە.',homeNoServices:'هێشتا خزمەتگوزاریی ماڵەوە لێرە نییە.',homeDetailNote:'نرخی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆی ناوچەکەت یەک جار لە شاشەی داهاتوو زیاد دەکرێت، پێش ناردنی داواکاری.',homePriceOnRequest:'نرخ بە داواکاری'});
 function t(k){return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;}
 
 /* ---------------- i18n apply (static text outside phone) ---------------- */
@@ -4638,7 +4642,7 @@ function renderDetail(){
     <div class="detail-title">${esc(s.n)}</div>
     <div class="detail-meta"><b>${esc(fmtDur(s.dur))}</b><span class="sep"></span><b>${atHomeNow()&&homeOffered(currentBrand,s)?(currentBrand==='core'&&!hasHomePrice(s)?`<span class="price-req">${t('homePriceOnRequest')}</span>`:homePriceText(s)):priceHtml(s)}</b></div>
     ${atHomeNow()&&homeOffered(currentBrand,s)
-      ? `<div class="home-tag on">🏠 ${t('homeServices')}${currentBrand!=='core'&&homeMinFee(currentBrand)>0?` · ${t('homeFrom')} <bdi dir="ltr">+${fmtMoney(homeMinFee(currentBrand))}</bdi>`:''}</div><div class="home-small" style="margin:-6px 0 12px;">${t(currentBrand==='core'?'homeListNoteCore':'homeDetailNote')}</div>`
+      ? `<div class="home-tag on">🏠 ${t('homeServices')}${currentBrand!=='core'&&!homeFeeByReception(currentBrand)&&homeMinFee(currentBrand)>0?` · ${t('homeFrom')} <bdi dir="ltr">+${fmtMoney(homeMinFee(currentBrand))}</bdi>`:''}</div><div class="home-small" style="margin:-6px 0 12px;">${t(currentBrand==='core'?'homeListNoteCore':homeFeeByReception(currentBrand)?'homeDetailNoteRec':'homeDetailNote')}</div>`
       : homeSelectorOn(currentBrand)&&homeOffered(currentBrand,s)?`<div class="home-tag">🏠 ${t('homeAvailable')}${currentBrand!=='core'&&homeMinFee(currentBrand)>0?` · ${t('homeFrom')} <bdi dir="ltr">+${fmtMoney(homeMinFee(currentBrand))}</bdi>`:''}</div>`:''}
     <div class="detail-desc desc-rich">${descHtml(s.desc,s.n)}</div>
     ${pts?`<div class="section-label" style="margin-top:0;">${t('whatsInc')}</div>
@@ -4656,7 +4660,9 @@ function bookingWaText(s,dateStr,time,home){
     : `Hi! I'd like to book ${s.n} at ${b.name} — ${fmtMoney(effectivePrice(s))}, ${fmtDur(s.dur,true)}. Preferred: ${dateStr}${time?' at '+time:''}.`;
   if(home){
     txt+=`\n🏠 Area: ${home.areaName}\nAddress: ${home.address}`;
-    txt+=home.from
+    txt+=home.feePending
+      ? `\nHome-service price ${home.from?'from ':''}${fmtMoney(home.servicePrice)} + travel fee (reception confirms)`
+      : home.from
       ? `\nHome-service price from ${fmtMoney(home.servicePrice)} + travel fee ${fmtMoney(home.fee)} = from ${fmtMoney(home.total)} (final price to confirm)`
       : `\nHome-service price ${fmtMoney(home.servicePrice)} + travel fee ${fmtMoney(home.fee)} = ${fmtMoney(home.total)}`;
   }
@@ -4666,7 +4672,18 @@ function bookingWaText(s,dateStr,time,home){
 // Returns null when the request cannot go ahead.
 function readHomeAddr(s){
   const d=homeDraftNow();
-  const sel=document.getElementById('homeAreaSel'), ad=document.getElementById('homeAddress');
+  const ad=document.getElementById('homeAddress');
+  if(homeFeeByReception(currentBrand)){
+    const at=document.getElementById('homeAreaText'); if(!at||!ad) return null;
+    const areaName=at.value.trim(), address=ad.value.trim();
+    if(!areaName){ toast(t('homeNeedArea')); at.focus(); return null; }
+    if(address.length<6){ toast(t('homeNeedAddress')); ad.focus(); return null; }
+    d.areaText=areaName; d.address=address;
+    saveHomeAddr(d.remember?{areaId:'',areaText:areaName,address}:null);
+    const sp=homePriceOf(s);
+    return {areaId:'',areaName,address,fee:0,servicePrice:sp,total:sp,from:s.homePriceFrom===true,feePending:true};
+  }
+  const sel=document.getElementById('homeAreaSel');
   if(!sel||!ad) return null;
   if(sel.value==='__other'){ toast(t('homeQuoteBody')); return null; }
   const area=homeAreaById(currentBrand,sel.value);
@@ -4708,8 +4725,9 @@ function renderBooking(){
   syncHomePick();
   const homeOk=svcHomeOk(currentBrand,s);
   const atHome=homeOk&&bookAtHome, hd=homeDraftNow();
-  const area=atHome?homeAreaById(currentBrand,hd.areaId):null;
-  const quote=atHome&&hd.areaId==='__other';
+  const rec=atHome&&homeFeeByReception(currentBrand);
+  const area=atHome&&!rec?homeAreaById(currentBrand,hd.areaId):null;
+  const quote=atHome&&!rec&&hd.areaId==='__other';
   const svcPrice=atHome?homePriceOf(s):effectivePrice(s), fee=area?area.fee:0;
   const waHref=`https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(bookingWaText(s,dateStr,selectedTime,null))}`;
   const homeInput="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:16px;box-sizing:border-box;font-family:inherit;background:#fff;";
@@ -4720,6 +4738,8 @@ function renderBooking(){
     <div class="book-card">
       <div class="book-row"><span class="k">${b.name}</span><span class="v">${esc(s.n)}</span></div>
       <div class="book-row"><span class="k">${atHome?t('homeServicePrice'):'Price'}</span><span class="v">${atHome?homePriceText(s):priceHtml(s)}</span></div>
+      ${rec?`<div class="book-row"><span class="k">${t('homeFee')}</span><span class="v">${t('homeFeeRec')}</span></div>
+      <div class="book-row"><span class="k">${t('total')}</span><span class="v"><b>${s.homePriceFrom===true?t('homeFrom')+' ':''}${fmtMoney(svcPrice)}</b> ${t('homePlusTravel')}</span></div>`:''}
       ${atHome&&area?`<div class="book-row"><span class="k">${t('homeFee')} · ${esc(homeAreaName(area))}</span><span class="v">${fee>0?`<bdi dir="ltr">+${fmtMoney(fee)}</bdi>`:'—'}</span></div>
       <div class="book-row"><span class="k">${t('total')}</span><span class="v"><b>${s.homePriceFrom===true?t('homeFrom')+' ':''}${fmtMoney(svcPrice+fee)}</b></span></div>
       ${s.homePriceFrom===true?`<div class="home-small" style="margin-top:6px;">${t('homeFromNote')}</div>`:''}`:''}
@@ -4731,12 +4751,13 @@ function renderBooking(){
       <button type="button" data-home-pick="1" class="${atHome?'on':''}" aria-pressed="${atHome}">🏠 ${t('atHome')}</button>
     </div>
     ${atHome?`<div class="book-card" style="margin-top:10px;">
-      <label for="homeAreaSel" style="${lbl}margin-top:0;">${t('homeArea')}</label>
+      ${rec?`<label for="homeAreaText" style="${lbl}margin-top:0;">${t('homeArea')}</label>
+      <input id="homeAreaText" type="text" maxlength="80" autocomplete="address-level3" value="${attr(hd.areaText||'')}" placeholder="${attr(t('homeAreaPhFree'))}" style="${homeInput}">`:`<label for="homeAreaSel" style="${lbl}margin-top:0;">${t('homeArea')}</label>
       <select id="homeAreaSel" style="${homeInput}">
         <option value="" ${hd.areaId?'':'selected'} disabled>${esc(t('homeChooseArea'))}</option>
         ${homeAreas(currentBrand).map(a=>`<option value="${attr(a.id)}" ${a.id===hd.areaId?'selected':''}>${esc(homeAreaName(a))} — \u200e+${esc(fmtMoney(a.fee))}\u200e</option>`).join('')}
         <option value="__other" ${quote?'selected':''}>${esc(t('homeAreaOther'))}</option>
-      </select>
+      </select>`}
       ${quote?`<div class="home-quote"><b>${t('homeQuoteTitle')}</b><div>${t('homeQuoteBody')}</div>
         <input id="homeOther" type="text" maxlength="80" value="${attr(hd.other)}" placeholder="${attr(t('homeOtherAreaPh'))}" style="${homeInput}margin-top:8px;">
         <a class="wa-btn" id="homeQuoteWA" href="https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(quoteMsg)}" target="_blank" rel="noopener">💬 ${t('homeQuoteBtn')}</a>
@@ -4745,7 +4766,7 @@ function renderBooking(){
       <textarea id="homeAddress" rows="3" maxlength="300" autocomplete="street-address" placeholder="${attr(t('homeAddressPh'))}" style="${homeInput}resize:vertical;">${esc(hd.address)}</textarea>
       <label class="home-remember"><input type="checkbox" id="homeRemember" ${hd.remember?'checked':''}> ${t('homeRemember')}</label>
       ${loadHomeAddr()?`<button type="button" class="lux-link home-forget" id="homeForget">${t('homeForget')}</button>`:''}
-      <div class="home-small">${t('homeNote')}${area?' '+t('homePriceNote'):''}</div>`}
+      <div class="home-small">${t('homeNote')}${area?' '+t('homePriceNote'):''}${rec?' '+t('homeRecNote'):''}</div>`}
     </div>`:''}`:''}
     ${quote?'':`<div class="section-label">${t('preferredDate')}</div>
     <div class="date-chip-row">${dateChips}</div>
@@ -4916,7 +4937,8 @@ function clientHomeHtml(b){
   if(!b||!b.atHome) return '';
   const total=b.totalUsd!=null?b.totalUsd:null;
   return `<div class="home-mine"><b>🏠 ${t('homeVisit')}</b> · ${esc(b.homeArea||'')}<br>${esc(b.homeAddress||'')}
-    ${total!=null?`<br>${b.servicePriceUsd!=null?`${fmtMoney(b.servicePriceUsd)} + ${t('homeFee')} ${fmtMoney(b.homeFee||0)} = `:''}<b>${fmtMoney(total)}</b>`:''}
+    ${!b.homeAreaId&&!(b.homeFee>0)&&b.status==='Requested'&&b.servicePriceUsd!=null?`<br>${fmtMoney(b.servicePriceUsd)} ${t('homePlusTravel')}`
+      :total!=null?`<br>${b.servicePriceUsd!=null?`${fmtMoney(b.servicePriceUsd)} + ${t('homeFee')} ${fmtMoney(b.homeFee||0)} = `:''}<b>${fmtMoney(total)}</b>`:''}
     ${b.status==='Requested'?`<br><span class="home-wait">${t('homeStatusRequested')}</span>`:''}</div>`;
 }
 function splitBookings(list){
@@ -8035,9 +8057,11 @@ function bindScreen(){
     const sel=document.getElementById('homeAreaSel');
     if(sel) sel.addEventListener('change',()=>{ hd.areaId=sel.value; if(hd.remember&&sel.value!=='__other'&&hd.address) saveHomeAddr({areaId:hd.areaId,address:hd.address}); redrawInPlace(); });
     const ad=document.getElementById('homeAddress');
-    if(ad) ad.addEventListener('input',()=>{ hd.address=ad.value; if(hd.remember) saveHomeAddr({areaId:hd.areaId,address:hd.address}); });
+    if(ad) ad.addEventListener('input',()=>{ hd.address=ad.value; if(hd.remember) saveHomeAddr({areaId:hd.areaId,areaText:hd.areaText||'',address:hd.address}); });
+    const at=document.getElementById('homeAreaText');
+    if(at) at.addEventListener('input',()=>{ hd.areaText=at.value; if(hd.remember) saveHomeAddr({areaId:'',areaText:hd.areaText,address:hd.address}); });
     const rm=document.getElementById('homeRemember');
-    if(rm) rm.addEventListener('change',()=>{ hd.remember=rm.checked; saveHomeAddr(rm.checked&&hd.areaId&&hd.areaId!=='__other'?{areaId:hd.areaId,address:hd.address}:null); redrawInPlace(); });
+    if(rm) rm.addEventListener('change',()=>{ hd.remember=rm.checked; saveHomeAddr(rm.checked&&((hd.areaId&&hd.areaId!=='__other')||hd.areaText)?{areaId:hd.areaId==='__other'?'':hd.areaId,areaText:hd.areaText||'',address:hd.address}:null); redrawInPlace(); });
     const fg=document.getElementById('homeForget');
     if(fg) fg.addEventListener('click',()=>{ saveHomeAddr(null); homeDraft={areaId:'',address:'',other:'',remember:false}; toast(t('homeForgotten')); redrawInPlace(); });
     const ot=document.getElementById('homeOther'), qw=document.getElementById('homeQuoteWA');
@@ -8115,7 +8139,7 @@ function bindScreen(){
     note.style.display='block';
     // A guest has no account, so there is no "My Bookings" for them to look in.
     note.innerHTML=home
-      ? `<b>${t('homeReqReceived')}</b><br><br>${esc(s.n)} — ${b.name}<br>${dateStr} · ${selectedTime}<br>🏠 ${esc(home.areaName)} · ${t('total')} ${home.from?t('homeFrom')+' ':''}${fmtMoney(home.total)}`
+      ? `<b>${t('homeReqReceived')}</b><br><br>${esc(s.n)} — ${b.name}<br>${dateStr} · ${selectedTime}<br>🏠 ${esc(home.areaName)} · ${home.feePending?`${home.from?t('homeFrom')+' ':''}${fmtMoney(home.servicePrice)} ${t('homePlusTravel')}`:`${t('total')} ${home.from?t('homeFrom')+' ':''}${fmtMoney(home.total)}`}`
       : `<b>${guest?t('bookedNoteGuest'):t('bookedNote')}</b><br><br>${esc(s.n)} — ${b.name}<br>${dateStr} at ${selectedTime}`;
     toast(home?t('homeReqReceived'):`Booked — ${dateStr} at ${selectedTime}.`);
     if(!guest) setTimeout(maybeAskPush,1200);
@@ -11059,7 +11083,7 @@ function renderAdminHomeServices(){
     <div class="hs-st-row"><span class="hs-pill">Travel fee</span><span>${core
       ?'None in the app — CORE home sessions are requested on WhatsApp; reception confirms the time, address and any extra cost.'
       :areas.length?`Added <b>once</b> per visit, on top of the home-service price, by area: ${areas.map(a=>`${esc(a.name)} <b>+${fmtMoney(a.fee)}</b>`).join(' · ')}.`
-      :`No covered areas yet (Settings → Home visits${currentUser.isOwner?'':', owner'}). Clients can only request a home visit once at least one area is set.`}</span></div>
+      :`Set by reception for each visit — clients type their area and address, reception agrees the travel fee on WhatsApp and adds it in Bookings → Change price before confirming. (Or add fixed fees by area in Settings → Home visits.)`}</span></div>
   </div>`;
   const add=document.getElementById('hsAddBtn'); add.onclick=()=>{ hsAdding=!hsAdding; hsEditId=null; renderAdminHomeServices(); };
   add.textContent=hsAdding?'Close':'+ Add services';
@@ -11583,6 +11607,7 @@ function homeVisitHtml(bk){
   const lastChange=(bk.priceLog||[]).slice(-1)[0];
   return `<div class="home-adm"><span class="home-badge">🏠 Home visit</span>
     <div><b>${esc(bk.homeArea||'')}</b>${bk.homeAddress?` — ${esc(bk.homeAddress)}`:''}</div>
+    ${!bk.homeAreaId&&!(bk.homeFee>0)&&bk.status==='Requested'?`<div class="home-todo">Travel fee not set — agree it with the client (WhatsApp), then tap <b>Change price</b>.</div>`:''}
     <div>${sp!=null?`Home price ${fmtMoney(sp)} + travel ${fmtMoney(bk.homeFee||0)} = <b>${fmtMoney(tot!=null?tot:sp+(bk.homeFee||0))}</b>`:`Travel fee ${fmtMoney(bk.homeFee||0)} (price not saved yet)`}</div>
     ${lastChange?`<div class="home-small">Price changed ${esc(String(lastChange.at||'').slice(0,10))} by ${esc(lastChange.by||'')}: client agreed (${esc(lastChange.note||'')})</div>`:''}
     <a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Open in Maps ↗</a>
@@ -11596,7 +11621,7 @@ function openHomePriceForm(bk){
   box.innerHTML=`<div class="full"><b>Change price — ${esc(bk.clientName||'')}</b> · ${esc(bk.serviceName||'')} · 🏠 ${esc(bk.homeArea||'')}
       <div class="note">Only before the visit is confirmed. Agree the new price with the client first.</div></div>
     <label>Service price (USD)<input id="hp_sp" type="number" min="0" step="1" value="${sp}"></label>
-    <label>Home visit fee (USD)<input id="hp_fee" type="number" min="0" step="1" value="${bk.homeFee||0}"></label>
+    <label>Travel fee (USD)<input id="hp_fee" type="number" min="0" step="1" value="${bk.homeFee||0}"></label>
     <label class="full">How did the client agree? <input id="hp_note" type="text" maxlength="200" placeholder="e.g. agreed on WhatsApp 10 Nov, 3pm"></label>
     <label class="full" style="display:flex;gap:8px;align-items:center;"><input id="hp_ok" type="checkbox" style="width:auto;"> The client has agreed to the new total</label>
     <div class="full rowbtns"><button class="btn btn-ghost btn-sm" id="hp_cancel">Cancel</button><button class="btn btn-primary btn-sm" id="hp_save">Save new price</button></div>`;
@@ -12744,7 +12769,7 @@ function renderHomeServiceAdmin(){
         <td><button class="btn btn-ghost btn-sm" data-hs-del="${i}" aria-label="Remove">✕</button></td></tr>`).join('')||`<tr><td colspan="6" class="note">No areas yet — clients cannot request a home visit until you add at least one.</td></tr>`}
       </tbody></table>
       <button class="btn btn-ghost btn-sm" id="hs_add" style="margin-top:8px;">+ Add area</button>
-      <div class="note" style="margin:10px 0 0;">Clients pick their area from this list and see the service price, this fee and the total before they request. An area not on the list gets "Contact reception for a quote". A fee change applies to new requests only — requests already made keep the price they were given. "Offered" off hides an area without deleting it.</div>`}
+      <div class="note" style="margin:10px 0 0;"><b>No areas?</b> Leave the list empty: clients type their own area and address, and reception agrees the travel fee with them on WhatsApp and adds it in Bookings → Change price before confirming.<br>With areas: clients pick their area from this list and see the service price, this fee and the total before they request. An area not on the list gets "Contact reception for a quote". A fee change applies to new requests only — requests already made keep the price they were given. "Offered" off hides an area without deleting it.</div>`}
       <div style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="hs_save">Save ${esc(BRANDS[b].name)} home visits</button></div>
     </div></div>
     <div style="margin-bottom:22px;"></div>`;
@@ -12759,7 +12784,7 @@ function renderHomeServiceAdmin(){
     const names=clean.map(a=>a.name.toLowerCase()); if(new Set(names).size!==names.length){ toast('Two areas have the same name.'); return; }
     clean.forEach(a=>{ if(!a.id) a.id=slugArea(a.name,clean); });
     const cfg=homeCfg(); cfg.brands[b]={enabled:document.getElementById('hs_on').checked,areas:b==='core'?[]:clean};
-    if(cfg.brands[b].enabled && b!=='core' && !clean.some(a=>a.active!==false)){ toast('Add at least one offered area first.'); return; }
+    // No areas is fine: clients then type their area and reception sets the travel fee.
     STORE.homeService=cfg; homeEditAreas=null;
     saveStore(); cloudSave('settings','home_service');
     toast(`${BRANDS[b].name}: home visits ${cfg.brands[b].enabled?'on':'off'} · ${clean.length} area${clean.length===1?'':'s'}.`); renderHomeServiceAdmin(); render();
