@@ -19,7 +19,22 @@ values ('home_service', '{"version":2,"brands":{"dolce":{"enabled":false,"areas"
 on conflict (key) do nothing;
 update public.settings
    set value = '{"version":2,"brands":{"dolce":{"enabled":false,"areas":[]},"polished":{"enabled":false,"areas":[]},"core":{"enabled":false,"areas":[]}}}'
- where key = 'home_service' and value not like '%"version":2%';
+ where key = 'home_service' and value::text not like '%version%2%';
+
+-- Reads a settings row as JSON, however it is stored: a text column, a JSON
+-- column, or JSON saved as a quoted string by the app. Unreadable → null.
+create or replace function public.setting_json(p_key text)
+returns jsonb language plpgsql stable security definer set search_path = public, pg_temp as $$
+declare t text; j jsonb;
+begin
+  select value::text into t from public.settings where key = p_key;
+  if t is null then return null; end if;
+  begin j := t::jsonb; exception when others then return null; end;
+  if jsonb_typeof(j) = 'string' then
+    begin j := (j #>> '{}')::jsonb; exception when others then return null; end;
+  end if;
+  return j;
+end; $$;
 
 -- ---- 3. A service's price today (after its own discount), as the app shows it
 create or replace function public.service_price_now(p_brand text, p_service_id text)
@@ -58,7 +73,7 @@ begin
 
   if coalesce(new.at_home, false) then
     begin
-      select value::jsonb into cfg from public.settings where key = 'home_service';
+      cfg := public.setting_json('home_service');
     exception when others then cfg := null; end;
     bcfg := cfg -> 'brands' -> new.brand;
     if new.brand = 'core' or bcfg is null or coalesce((bcfg->>'enabled')::boolean, false) is not true

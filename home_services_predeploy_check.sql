@@ -22,9 +22,13 @@ select * from (values
        where table_schema='public' and table_name='services' and column_name='home_price_usd'), ''),
   ('Home visits switched on (must be none)',
      (select coalesce(string_agg(b.key, ', '), 'none') from public.settings s,
-        lateral jsonb_each(case when s.value like '{%' then s.value::jsonb->'brands' else '{}'::jsonb end) b
+        lateral (select case when jsonb_typeof(x)='string' then (x #>> '{}')::jsonb else x end as j
+                   from (select s.value::text::jsonb as x) q) c,
+        lateral jsonb_each(case when jsonb_typeof(c.j->'brands')='object' then c.j->'brands' else '{}'::jsonb end) b
        where s.key='home_service' and coalesce((b.value->>'enabled')::boolean,false)),
-     (select coalesce(left(value,120),'(no setting yet)') from public.settings where key='home_service')),
+     (select coalesce(left(value::text,140),'(no setting yet)') from public.settings where key='home_service')),
+  ('settings.value stored as',
+     (select data_type from information_schema.columns where table_schema='public' and table_name='settings' and column_name='value'), ''),
   ('Services marked for home (home_ok)',
      (select count(*)::text from public.services where coalesce(home_ok,false)), ''),
   ('Bookings in total (unchanged by v3)',

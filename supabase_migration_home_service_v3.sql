@@ -33,6 +33,21 @@ do $$ begin
   end if;
 end $$;
 
+-- Reads a settings row as JSON, however it is stored: a text column, a JSON
+-- column, or JSON saved as a quoted string by the app. Unreadable → null.
+create or replace function public.setting_json(p_key text)
+returns jsonb language plpgsql stable security definer set search_path = public, pg_temp as $$
+declare t text; j jsonb;
+begin
+  select value::text into t from public.settings where key = p_key;
+  if t is null then return null; end if;
+  begin j := t::jsonb; exception when others then return null; end;
+  if jsonb_typeof(j) = 'string' then
+    begin j := (j #>> '{}')::jsonb; exception when others then return null; end;
+  end if;
+  return j;
+end; $$;
+
 -- ---- 2. Booking guard: a home visit uses the HOME price ------------------------
 create or replace function public.booking_request_guard()
 returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
@@ -59,7 +74,7 @@ begin
 
   if coalesce(new.at_home, false) then
     begin
-      select value::jsonb into cfg from public.settings where key = 'home_service';
+      cfg := public.setting_json('home_service');
     exception when others then cfg := null; end;
     bcfg := cfg -> 'brands' -> new.brand;
     if new.brand = 'core' or bcfg is null or coalesce((bcfg->>'enabled')::boolean, false) is not true
