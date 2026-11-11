@@ -1871,6 +1871,7 @@
 .admin-form.hs-add{display:block;}
 #adminView .admin-form label.hs-add-row{display:flex;flex-direction:row;align-items:center;gap:12px;margin:0;font-weight:600;}
 #adminView .admin-form .hs-add-row input[type=number]{width:110px;flex:none;height:auto;}
+.hs-from{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--muted);flex:none;}
 .hs-edit input[type=number],.hs-add-row input[type=number]{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:15px;background:#fff;box-sizing:border-box;}
 .hs-edit input[type=number]:focus,.hs-add-row input[type=number]:focus{outline:none;border-color:#c8a24f;box-shadow:0 0 0 3px rgba(200,162,79,.15);}
 .hs-add > div{margin-bottom:12px;}
@@ -2755,12 +2756,12 @@ const CLOUD_TABLES={
       price_usd:numOr0(s.price),discount_percent:numOr0(s.discount),description:s.desc||'',
       points:s.points||[],image:s.image||'',aftercare:s.aftercare||'',
       images:Array.isArray(s.images)?s.images:[],home_ok:s.homeOk===true,
-      home_price_usd:(s.homePrice==null||s.homePrice==='')?null:Math.max(0,numOr0(s.homePrice)),
+      home_price_usd:(s.homePrice==null||s.homePrice==='')?null:Math.max(0,numOr0(s.homePrice)),home_price_from:s.homePriceFrom===true,
       sort_order:(STORE.services[job.brand]||[]).indexOf(s)}),
     app:(r)=>({id:r.id,n:r.name,cat:renamedCat(r.category),dur:r.duration,price:Number(r.price_usd),
       discount:r.discount_percent||0,desc:r.description||'',points:r.points||[],image:r.image||'',
       aftercare:r.aftercare||'',images:Array.isArray(r.images)?r.images:[],homeOk:r.home_ok===true,
-      homePrice:r.home_price_usd==null?null:Number(r.home_price_usd)}),
+      homePrice:r.home_price_usd==null?null:Number(r.home_price_usd),homePriceFrom:r.home_price_from===true}),
   },
   products:{
     table:'products',
@@ -4312,6 +4313,10 @@ function homeBrand(b){ return homeCfg().brands[b]||{enabled:false,areas:[]}; }
    fee for the client's area is separate and added once, on the booking screen. */
 function hasHomePrice(x){ return !!x && x.homePrice!=null && x.homePrice!=='' && isFinite(Number(x.homePrice)); }
 function homePriceOf(x){ return hasHomePrice(x)?Math.max(0,Number(x.homePrice)):null; }   // no home price → none (never the clinic price)
+// "from $60": a starting price (ranges, "starts from"). The request is saved at
+// this price; reception confirms the final price before confirming, and any
+// change needs the client's agreement (staff_change_home_price).
+function homePriceText(x){ if(!hasHomePrice(x)) return ''; const m=fmtMoney(homePriceOf(x)); return x.homePriceFrom===true?`${t('homeFrom')} ${m}`:m; }
 // Offered to clients: marked Offered, and (Dolce, Polished) a home price saved — $0 counts only when typed.
 // CORE may have no price: it shows "Price on request" and goes to reception on WhatsApp.
 function homeOffered(b,x){ return !!x && x.homeOk===true && (b==='core'||hasHomePrice(x)); }
@@ -4424,9 +4429,9 @@ function homeListNoteHtml(){
   const fee=lo===hi?`<bdi dir="ltr">+${fmtMoney(lo)}</bdi>`:`<bdi dir="ltr">+${fmtMoney(lo)}–${fmtMoney(hi)}</bdi>`;
   return `<div class="home-list-note">🏠 ${t('homeListNote').replace('{fee}',fee)}</div>`;
 }
-Object.assign(I18N.en,{homeServicePrice:'Home-service price',placeAt_dolce:'At Dolce',placeAt_polished:'At Polished',placeAt_core:'At CORE',homeServices:'Home Services',homeListNote:'Home-service prices. A travel fee of {fee}, depending on your area, is added once and shown before you request.',homeListNoteCore:"Home sessions are arranged by CORE's reception on WhatsApp — they confirm the time, your address and the price.",homeNoServices:'No home services here yet.',homeDetailNote:'Home-service price. The travel fee for your area is added once on the next screen, before you request.',homePriceOnRequest:'Price on request'});
-Object.assign(I18N.ar,{homeServicePrice:'سعر الخدمة المنزلية',placeAt_dolce:'في Dolce',placeAt_polished:'في Polished',placeAt_core:'في CORE',homeServices:'الخدمات المنزلية',homeListNote:'أسعار الخدمة المنزلية. تُضاف رسوم تنقل بقيمة {fee} حسب منطقتك مرة واحدة، وتظهر قبل إرسال الطلب.',homeListNoteCore:'يرتّب استقبال CORE الجلسات المنزلية عبر واتساب — ويؤكدون الموعد والعنوان والسعر.',homeNoServices:'لا توجد خدمات منزلية هنا بعد.',homeDetailNote:'سعر الخدمة المنزلية. تُضاف رسوم التنقل لمنطقتك مرة واحدة في الشاشة التالية، قبل إرسال الطلب.',homePriceOnRequest:'السعر عند الطلب'});
-Object.assign(I18N.ku,{homeServicePrice:'نرخی خزمەتگوزاریی ماڵەوە',placeAt_dolce:'لە Dolce',placeAt_polished:'لە Polished',placeAt_core:'لە CORE',homeServices:'خزمەتگوزاریی ماڵەوە',homeListNote:'نرخەکانی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆ {fee} بەپێی ناوچەکەت یەک جار زیاد دەکرێت و پێش ناردنی داواکاری پیشان دەدرێت.',homeListNoteCore:'پێشوازیی CORE وانەکانی ماڵەوە لە واتساپ ڕێک دەخات — کات، ناونیشان و نرخ پشتڕاست دەکەنەوە.',homeNoServices:'هێشتا خزمەتگوزاریی ماڵەوە لێرە نییە.',homeDetailNote:'نرخی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆی ناوچەکەت یەک جار لە شاشەی داهاتوو زیاد دەکرێت، پێش ناردنی داواکاری.',homePriceOnRequest:'نرخ بە داواکاری'});
+Object.assign(I18N.en,{homeFromNote:'Starting price — reception confirms the final price before your visit and asks you first if it is higher.',homeServicePrice:'Home-service price',placeAt_dolce:'At Dolce',placeAt_polished:'At Polished',placeAt_core:'At CORE',homeServices:'Home Services',homeListNote:'Home-service prices. A travel fee of {fee}, depending on your area, is added once and shown before you request.',homeListNoteCore:"Home sessions are arranged by CORE's reception on WhatsApp — they confirm the time, your address and the price.",homeNoServices:'No home services here yet.',homeDetailNote:'Home-service price. The travel fee for your area is added once on the next screen, before you request.',homePriceOnRequest:'Price on request'});
+Object.assign(I18N.ar,{homeFromNote:'سعر يبدأ من — يؤكد الاستقبال السعر النهائي قبل زيارتك ويسألك أولاً إذا كان أعلى.',homeServicePrice:'سعر الخدمة المنزلية',placeAt_dolce:'في Dolce',placeAt_polished:'في Polished',placeAt_core:'في CORE',homeServices:'الخدمات المنزلية',homeListNote:'أسعار الخدمة المنزلية. تُضاف رسوم تنقل بقيمة {fee} حسب منطقتك مرة واحدة، وتظهر قبل إرسال الطلب.',homeListNoteCore:'يرتّب استقبال CORE الجلسات المنزلية عبر واتساب — ويؤكدون الموعد والعنوان والسعر.',homeNoServices:'لا توجد خدمات منزلية هنا بعد.',homeDetailNote:'سعر الخدمة المنزلية. تُضاف رسوم التنقل لمنطقتك مرة واحدة في الشاشة التالية، قبل إرسال الطلب.',homePriceOnRequest:'السعر عند الطلب'});
+Object.assign(I18N.ku,{homeFromNote:'نرخی دەستپێک — پێشوازی نرخی کۆتایی پێش سەردانەکەت پشتڕاست دەکاتەوە و ئەگەر زیاتر بوو پێشتر لێت دەپرسێت.',homeServicePrice:'نرخی خزمەتگوزاریی ماڵەوە',placeAt_dolce:'لە Dolce',placeAt_polished:'لە Polished',placeAt_core:'لە CORE',homeServices:'خزمەتگوزاریی ماڵەوە',homeListNote:'نرخەکانی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆ {fee} بەپێی ناوچەکەت یەک جار زیاد دەکرێت و پێش ناردنی داواکاری پیشان دەدرێت.',homeListNoteCore:'پێشوازیی CORE وانەکانی ماڵەوە لە واتساپ ڕێک دەخات — کات، ناونیشان و نرخ پشتڕاست دەکەنەوە.',homeNoServices:'هێشتا خزمەتگوزاریی ماڵەوە لێرە نییە.',homeDetailNote:'نرخی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆی ناوچەکەت یەک جار لە شاشەی داهاتوو زیاد دەکرێت، پێش ناردنی داواکاری.',homePriceOnRequest:'نرخ بە داواکاری'});
 function t(k){return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;}
 
 /* ---------------- i18n apply (static text outside phone) ---------------- */
@@ -4540,7 +4545,7 @@ function renderServices(){
     <div class="svc-row" data-svc="${attr(String(s.id))}">
       ${mediaHtml(s.image||STORE.brandImages[currentBrand]||'','thumbnail',{cls:'swatch',fallback:brandFallback(currentBrand),alt:s.n})}
       <div class="info"><div class="n">${esc(s.n)}</div><div class="m">${esc(fmtDur(s.dur))} · ${esc(s.cat)}</div></div>
-      <div class="price">${home?(core&&!hasHomePrice(s)?`<span class="price-req">${t('homePriceOnRequest')}</span>`:fmtMoney(homePriceOf(s))):priceHtml(s)}</div><div class="chev">›</div>
+      <div class="price">${home?(core&&!hasHomePrice(s)?`<span class="price-req">${t('homePriceOnRequest')}</span>`:homePriceText(s)):priceHtml(s)}</div><div class="chev">›</div>
     </div>`).join('');
   // An empty brand (or an empty category) should say so, rather than looking
   // like the app failed to load.
@@ -4631,7 +4636,7 @@ function renderDetail(){
   return `
     ${serviceGalleryHtml(s)}
     <div class="detail-title">${esc(s.n)}</div>
-    <div class="detail-meta"><b>${esc(fmtDur(s.dur))}</b><span class="sep"></span><b>${atHomeNow()&&homeOffered(currentBrand,s)?(currentBrand==='core'&&!hasHomePrice(s)?`<span class="price-req">${t('homePriceOnRequest')}</span>`:fmtMoney(homePriceOf(s))):priceHtml(s)}</b></div>
+    <div class="detail-meta"><b>${esc(fmtDur(s.dur))}</b><span class="sep"></span><b>${atHomeNow()&&homeOffered(currentBrand,s)?(currentBrand==='core'&&!hasHomePrice(s)?`<span class="price-req">${t('homePriceOnRequest')}</span>`:homePriceText(s)):priceHtml(s)}</b></div>
     ${atHomeNow()&&homeOffered(currentBrand,s)
       ? `<div class="home-tag on">🏠 ${t('homeServices')}${currentBrand!=='core'&&homeMinFee(currentBrand)>0?` · ${t('homeFrom')} <bdi dir="ltr">+${fmtMoney(homeMinFee(currentBrand))}</bdi>`:''}</div><div class="home-small" style="margin:-6px 0 12px;">${t(currentBrand==='core'?'homeListNoteCore':'homeDetailNote')}</div>`
       : homeSelectorOn(currentBrand)&&homeOffered(currentBrand,s)?`<div class="home-tag">🏠 ${t('homeAvailable')}${currentBrand!=='core'&&homeMinFee(currentBrand)>0?` · ${t('homeFrom')} <bdi dir="ltr">+${fmtMoney(homeMinFee(currentBrand))}</bdi>`:''}</div>`:''}
@@ -4651,7 +4656,9 @@ function bookingWaText(s,dateStr,time,home){
     : `Hi! I'd like to book ${s.n} at ${b.name} — ${fmtMoney(effectivePrice(s))}, ${fmtDur(s.dur,true)}. Preferred: ${dateStr}${time?' at '+time:''}.`;
   if(home){
     txt+=`\n🏠 Area: ${home.areaName}\nAddress: ${home.address}`;
-    txt+=`\nHome-service price ${fmtMoney(home.servicePrice)} + travel fee ${fmtMoney(home.fee)} = ${fmtMoney(home.total)}`;
+    txt+=home.from
+      ? `\nHome-service price from ${fmtMoney(home.servicePrice)} + travel fee ${fmtMoney(home.fee)} = from ${fmtMoney(home.total)} (final price to confirm)`
+      : `\nHome-service price ${fmtMoney(home.servicePrice)} + travel fee ${fmtMoney(home.fee)} = ${fmtMoney(home.total)}`;
   }
   return txt;
 }
@@ -4669,7 +4676,7 @@ function readHomeAddr(s){
   d.areaId=area.id; d.address=address;
   saveHomeAddr(d.remember?{areaId:area.id,address}:null);
   const servicePrice=homePriceOf(s);
-  return {areaId:area.id,areaName:area.name,address,fee:area.fee,servicePrice,total:servicePrice+area.fee};
+  return {areaId:area.id,areaName:area.name,address,fee:area.fee,servicePrice,total:servicePrice+area.fee,from:s.homePriceFrom===true};
 }
 function homeFieldsOf(h){
   return h?{atHome:true,homeAreaId:h.areaId,homeArea:h.areaName,homeAddress:h.address,homeFee:h.fee,servicePriceUsd:h.servicePrice,totalUsd:h.total}:{};
@@ -4712,9 +4719,10 @@ function renderBooking(){
     <div class="section-label" style="margin-top:0;">${t('bookingSummary')}</div>
     <div class="book-card">
       <div class="book-row"><span class="k">${b.name}</span><span class="v">${esc(s.n)}</span></div>
-      <div class="book-row"><span class="k">${atHome?t('homeServicePrice'):'Price'}</span><span class="v">${atHome?fmtMoney(svcPrice):priceHtml(s)}</span></div>
+      <div class="book-row"><span class="k">${atHome?t('homeServicePrice'):'Price'}</span><span class="v">${atHome?homePriceText(s):priceHtml(s)}</span></div>
       ${atHome&&area?`<div class="book-row"><span class="k">${t('homeFee')} · ${esc(homeAreaName(area))}</span><span class="v">${fee>0?`<bdi dir="ltr">+${fmtMoney(fee)}</bdi>`:'—'}</span></div>
-      <div class="book-row"><span class="k">${t('total')}</span><span class="v"><b>${fmtMoney(svcPrice+fee)}</b></span></div>`:''}
+      <div class="book-row"><span class="k">${t('total')}</span><span class="v"><b>${s.homePriceFrom===true?t('homeFrom')+' ':''}${fmtMoney(svcPrice+fee)}</b></span></div>
+      ${s.homePriceFrom===true?`<div class="home-small" style="margin-top:6px;">${t('homeFromNote')}</div>`:''}`:''}
       <div class="book-row"><span class="k">${t('location')}</span><span class="v">${atHome?`🏠 ${t('homeYour')}`:`${b.name} — Erbil`}</span></div>
     </div>
     ${homeOk?`<div class="section-label">${t('whereLabel')}</div>
@@ -8107,7 +8115,7 @@ function bindScreen(){
     note.style.display='block';
     // A guest has no account, so there is no "My Bookings" for them to look in.
     note.innerHTML=home
-      ? `<b>${t('homeReqReceived')}</b><br><br>${esc(s.n)} — ${b.name}<br>${dateStr} · ${selectedTime}<br>🏠 ${esc(home.areaName)} · ${t('total')} ${fmtMoney(home.total)}`
+      ? `<b>${t('homeReqReceived')}</b><br><br>${esc(s.n)} — ${b.name}<br>${dateStr} · ${selectedTime}<br>🏠 ${esc(home.areaName)} · ${t('total')} ${home.from?t('homeFrom')+' ':''}${fmtMoney(home.total)}`
       : `<b>${guest?t('bookedNoteGuest'):t('bookedNote')}</b><br><br>${esc(s.n)} — ${b.name}<br>${dateStr} at ${selectedTime}`;
     toast(home?t('homeReqReceived'):`Booked — ${dateStr} at ${selectedTime}.`);
     if(!guest) setTimeout(maybeAskPush,1200);
@@ -11063,6 +11071,7 @@ function renderAdminHomeServices(){
       <div class="note">Tick the services to offer at home and type their home-service price (USD). The ${core?'studio':b==='dolce'?'clinic':'salon'} price stays as it is.${core?' Leave the price empty for "Price on request".':''}</div></div>
       <div class="full hs-add-list">${pool.length?pool.map(x=>`<label class="hs-add-row"><input type="checkbox" data-hs-pick="${attr(String(x.id))}">
         <span class="hs-add-n">${esc(x.n)}<small>${esc(x.cat||'')} · ${esc(fmtDur(x.dur,true))} · in-place ${fmtMoney(effectivePrice(x))}</small></span>
+        <span class="hs-from"><input type="checkbox" data-hs-from="${attr(String(x.id))}"> from</span>
         <input type="number" min="0" step="0.01" inputmode="decimal" placeholder="Home $" data-hs-price="${attr(String(x.id))}"></label>`).join('')
         :`<div class="admin-empty">Every ${esc(name)} service is already in the list.</div>`}</div>
       <div class="full rowbtns"><button class="btn btn-ghost btn-sm" id="hsAddCancel">Cancel</button>${pool.length?'<button class="btn btn-primary btn-sm" id="hsAddSave">Add selected</button>':''}</div></div>`;
@@ -11074,7 +11083,8 @@ function renderAdminHomeServices(){
       const missing=[];
       const vals=picks.map(id=>{ const v=fw.querySelector(`[data-hs-price="${CSS.escape(id)}"]`).value.trim(); if(v===''&&!core) missing.push(id); return [id,v]; });
       if(missing.length){ toast('Type a home-service price for each ticked service.'); fw.querySelector(`[data-hs-price="${CSS.escape(missing[0])}"]`).focus(); return; }
-      let n=0; vals.forEach(([id,v])=>{ if(hsSaveService(b,id,{homeOk:true,homePrice:v===''?null:Math.max(0,Math.round(Number(v)*100)/100)})) n++; });
+      let n=0; vals.forEach(([id,v])=>{ const fr=!!(fw.querySelector(`[data-hs-from="${CSS.escape(id)}"]`)||{}).checked;
+        if(hsSaveService(b,id,{homeOk:true,homePrice:v===''?null:Math.max(0,Math.round(Number(v)*100)/100),homePriceFrom:v!==''&&fr})) n++; });
       hsAdding=false; toast(`${n} service${n===1?'':'s'} added to ${name} Home Services.`); hsAfterChange();
     };
   } else fw.innerHTML='';
@@ -11082,7 +11092,7 @@ function renderAdminHomeServices(){
   if(!list.length){ rows.innerHTML=`<tr><td colspan="7"><div class="admin-empty">No ${esc(name)} home services yet — tap “+ Add services”.</div></td></tr>`; return; }
   rows.innerHTML=list.map(x=>{
     const id=attr(String(x.id)), editing=hsEditId===String(x.id);
-    const home=hasHomePrice(x)?fmtMoney(homePriceOf(x)):`<span class="hs-muted">${core?'On request':'Not set'}</span>`;
+    const home=hasHomePrice(x)?homePriceText(x):`<span class="hs-muted">${core?'On request':'Not set'}</span>`;
     // Marked Offered but no home price (only possible from the first test version): clients don't see it.
     const avail=x.homeOk===true?(homeOffered(b,x)?'<span class="hs-pill on">Offered</span>':'<span class="hs-pill warn">Needs a price</span>'):'<span class="hs-pill">Paused</span>';
     const row=`<tr class="${editing?'hs-editing':''}">
@@ -11093,6 +11103,7 @@ function renderAdminHomeServices(){
     if(!editing) return row;
     return row+`<tr class="hs-form-row"><td colspan="7"><div class="hs-edit">
       <label>Home-service price (USD)<input type="number" min="0" step="0.01" inputmode="decimal" id="hsEdPrice" value="${hasHomePrice(x)?homePriceOf(x):''}" placeholder="${core?'Empty = price on request':'e.g. 60'}"></label>
+      <label class="hs-check"><input type="checkbox" id="hsEdFrom" ${x.homePriceFrom===true?'checked':''}> Starting price (shows “from”)</label>
       <label class="hs-check"><input type="checkbox" id="hsEdOn" ${x.homeOk===true?'checked':''}> Offered to clients</label>
       <div class="hs-ed-note">In-place price stays ${fmtMoney(effectivePrice(x))} (edit it in Services).${core?'':' Clients pay this home price + the travel fee for their area, added once.'}</div>
       <div class="rowbtns"><button class="btn btn-danger btn-sm" id="hsEdRemove">Remove from Home Services</button><button class="btn btn-primary btn-sm" id="hsEdSave">Save</button></div>
@@ -11104,12 +11115,13 @@ function renderAdminHomeServices(){
     const v=document.getElementById('hsEdPrice').value.trim(), on=document.getElementById('hsEdOn').checked;
     if(v===''&&!core&&on){ toast('Type a home-service price, or untick "Offered".'); document.getElementById('hsEdPrice').focus(); return; }
     if(v!==''&&!(Number(v)>=0)){ toast('Type a valid price.'); return; }
-    if(hsSaveService(b,hsEditId,{homeOk:on,homePrice:v===''?null:Math.round(Number(v)*100)/100})){ hsEditId=null; toast('Home service saved.'); hsAfterChange(); }
+    const fr=document.getElementById('hsEdFrom').checked;
+    if(hsSaveService(b,hsEditId,{homeOk:on,homePrice:v===''?null:Math.round(Number(v)*100)/100,homePriceFrom:v!==''&&fr})){ hsEditId=null; toast('Home service saved.'); hsAfterChange(); }
   };
   const rm=document.getElementById('hsEdRemove');
   if(rm) rm.onclick=()=>{
     if(!confirmTap(rm,'Remove? (the service itself stays)')) return;
-    if(hsSaveService(b,hsEditId,{homeOk:false,homePrice:null})){ hsEditId=null; toast('Removed from Home Services. The normal service is unchanged.'); hsAfterChange(); }
+    if(hsSaveService(b,hsEditId,{homeOk:false,homePrice:null,homePriceFrom:false})){ hsEditId=null; toast('Removed from Home Services. The normal service is unchanged.'); hsAfterChange(); }
   };
 }
 function renderAdminServices(){
@@ -11139,7 +11151,7 @@ function renderAdminServices(){
       <td><span class="swdot" style="${s.image&&safeImgUrl(s.image)?cssBg(s.image):`background:linear-gradient(140deg,${BRANDS[svcBrandTab].c1},${BRANDS[svcBrandTab].c2})`}"></span>${esc(s.n)}</td>
       <td>${esc(s.cat)}</td>
       <td>${esc(fmtDur(s.dur,true))}</td>
-      <td>${priceHtml(s)}${s.homeOk===true?`<div class="hs-mini">🏠 ${hasHomePrice(s)?fmtMoney(homePriceOf(s)):(svcBrandTab==='core'?'on request':'no home price')}</div>`:''}</td>
+      <td>${priceHtml(s)}${s.homeOk===true?`<div class="hs-mini">🏠 ${hasHomePrice(s)?homePriceText(s):(svcBrandTab==='core'?'on request':'no home price')}</div>`:''}</td>
       <td><div class="rowbtns">
         <button class="btn btn-ghost btn-sm" data-edit-svc="${esc(String(s.id))}">Edit</button>
         <button class="btn btn-danger btn-sm" data-del-svc="${esc(String(s.id))}">Delete</button>
@@ -13357,7 +13369,7 @@ function coreContactHtml(s){
   if(!coreReceptionWa()) return `<button class="primary-btn" disabled style="opacity:.45;cursor:default;" data-core-wa-off>💬 ${t('contactReceptionWa')}</button>
     <div class="mb-note" style="margin-top:10px;">${t('coreWaMissing')}</div>`;
   const home=!group&&svcHomeOk('core',s);
-  if(home && atHomeNow()) return `<a class="primary-btn" style="display:block;text-align:center;text-decoration:none;" href="${attr(coreWaHref(t('coreHomeMsg').replace('{name}',s.n+(hasHomePrice(s)?` (${fmtMoney(homePriceOf(s))})`:''))))}" target="_blank" rel="noopener" data-core-wa>🏠 ${t('coreHomeBtn')}</a>
+  if(home && atHomeNow()) return `<a class="primary-btn" style="display:block;text-align:center;text-decoration:none;" href="${attr(coreWaHref(t('coreHomeMsg').replace('{name}',s.n+(hasHomePrice(s)?` (${homePriceText(s)})`:''))))}" target="_blank" rel="noopener" data-core-wa>🏠 ${t('coreHomeBtn')}</a>
     <div class="mb-note" style="margin-top:10px;">${t('coreHomeNote')}</div>`;
   return `<a class="primary-btn" style="display:block;text-align:center;text-decoration:none;" href="${attr(coreWaHref(msg))}" target="_blank" rel="noopener" data-core-wa>💬 ${t('contactReceptionWa')}</a>
     <div class="mb-note" style="margin-top:10px;">${t(group?'corePkgNote':'coreSessionNote')}</div>
