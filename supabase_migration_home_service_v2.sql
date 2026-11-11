@@ -6,6 +6,8 @@
 --  Home visits stay OFF (nothing here switches them on).
 -- ============================================================================
 
+begin;   -- all or nothing: an error anywhere below changes nothing
+
 -- ---- 1. New columns --------------------------------------------------------
 alter table public.bookings add column if not exists home_area_id      text          not null default '';
 alter table public.bookings add column if not exists service_price_usd numeric(10,2);          -- saved when requested
@@ -23,7 +25,7 @@ update public.settings
 
 -- Reads a settings row as JSON, however it is stored: a text column, a JSON
 -- column, or JSON saved as a quoted string by the app. Unreadable → null.
-create or replace function public.setting_json(p_key text)
+create or replace function public.home_setting_json(p_key text)
 returns jsonb language plpgsql stable security definer set search_path = public, pg_temp as $$
 declare t text; j jsonb;
 begin
@@ -73,7 +75,7 @@ begin
 
   if coalesce(new.at_home, false) then
     begin
-      cfg := public.setting_json('home_service');
+      cfg := public.home_setting_json('home_service');
     exception when others then cfg := null; end;
     bcfg := cfg -> 'brands' -> new.brand;
     if new.brand = 'core' or bcfg is null or coalesce((bcfg->>'enabled')::boolean, false) is not true
@@ -216,6 +218,8 @@ begin
 end; $$;
 revoke all on function public.refund_booking(text, text, numeric, text) from public;
 grant execute on function public.refund_booking(text, text, numeric, text) to authenticated;
+
+commit;
 
 -- Check (should list 4 rows):
 select column_name from information_schema.columns

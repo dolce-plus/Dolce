@@ -35,7 +35,7 @@ end $$;
 
 -- Reads a settings row as JSON, however it is stored: a text column, a JSON
 -- column, or JSON saved as a quoted string by the app. Unreadable → null.
-create or replace function public.setting_json(p_key text)
+create or replace function public.home_setting_json(p_key text)
 returns jsonb language plpgsql stable security definer set search_path = public, pg_temp as $$
 declare t text; j jsonb;
 begin
@@ -74,7 +74,7 @@ begin
 
   if coalesce(new.at_home, false) then
     begin
-      cfg := public.setting_json('home_service');
+      cfg := public.home_setting_json('home_service');
     exception when others then cfg := null; end;
     bcfg := cfg -> 'brands' -> new.brand;
     if new.brand = 'core' or bcfg is null or coalesce((bcfg->>'enabled')::boolean, false) is not true
