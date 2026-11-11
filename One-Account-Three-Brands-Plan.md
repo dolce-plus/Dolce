@@ -280,3 +280,14 @@ Above each business's service list, two rounded cards with gold line illustratio
 - **CORE:** Home Services lists the ticked private sessions as "Price on request"; the service page has only "Ask for a session at home" on WhatsApp to reception. No in-app CORE booking.
 - The cards appear only when that business has home visits ON, at least one ticked service, and (Dolce/Polished) at least one covered area. Otherwise the page looks exactly as before.
 - English, Arabic and Kurdish, with right-to-left layout.
+
+## Admin → Home Services (prices per service) — 12 Nov 2026 (built, home visits still OFF)
+
+New Admin section directly below Services, with Dolce / Polished / CORE tabs. Same service records — nothing duplicated.
+- Table: Service | Category | Duration | In-place price | Home-service price | Availability | Edit.
+- **+ Add services**: tick existing services and type their home-service price. **Edit**: change the price, Offered / Paused. **Remove from Home Services**: the normal service listing is untouched.
+- The home price is used exactly as entered — clinic/salon discounts never apply to it. **No fallback**: for Dolce and Polished a service needs a saved home price before it can be Offered ($0 only when typed). Older ticked services without a price show "Needs a price" and are hidden from clients. CORE may have no price: clients see "Price on request" and use WhatsApp.
+- Client: At Dolce/Polished/CORE shows normal prices; Home Services shows only Offered services at their home price. Booking: home-service price + **travel fee** for the chosen area (Settings → Home visits) = total; the travel fee is added once.
+- Server (`supabase_migration_home_service_v3.sql`, needs v1 + v2, all-or-nothing): a client home request is accepted only if home visits are on, the service is Offered and has a home price (Dolce/Polished), the area is on the list and active, and the address is filled. The server saves the home price, travel fee and total itself; prices sent from a phone are ignored. Editing home prices needs the Services section for that business (existing database rule `can_write('services', brand)`).
+- Points: on the home-service price actually charged, never on the travel fee. Reports and refunds use the saved total.
+- `home_services_predeploy_check.sql` (read-only) shows which home-visit migrations are installed, that every business is OFF, and the live permission rules.

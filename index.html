@@ -1853,6 +1853,35 @@
 .home-seg .home-fee{font-weight:500;color:var(--muted);font-size:12px;}
 .home-adm{margin-top:6px;font-size:12.5px;color:var(--ink-soft);line-height:1.45;}
 .home-adm a{font-size:12px;}
+.hs-status{display:flex;flex-direction:column;gap:8px;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:#fbf7f1;border:1px solid rgba(200,169,106,.35);font-size:13.5px;line-height:1.45;color:var(--ink-soft);}
+.hs-st-row{display:flex;gap:10px;align-items:flex-start;}
+.hs-pill{flex:none;display:inline-block;padding:2px 10px;border-radius:999px;background:#efe6d6;color:#6b5a44;font-size:12px;font-weight:700;white-space:nowrap;}
+.hs-pill.on{background:#e3eedc;color:#3f6b35;}
+.hs-pill.warn{background:#f6e3d6;color:#9a4a25;}
+.hs-muted{color:var(--muted);font-weight:500;}
+.hs-mini{font-size:12px;color:#8a6a3f;margin-top:2px;}
+.hs-table tr.hs-editing td{background:#fbf5ea;}
+.hs-form-row td{background:#fbf5ea;border-top:0;}
+.hs-edit{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;padding:4px 0 8px;}
+.hs-edit label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--ink-soft);}
+.hs-edit input[type=number]{width:170px;}
+.hs-edit .hs-check{flex-direction:row;align-items:center;gap:8px;padding-bottom:8px;}
+.hs-edit .hs-check input{width:auto;}
+.hs-ed-note{flex-basis:100%;font-size:12.5px;color:var(--muted);}
+.admin-form.hs-add{display:block;}
+#adminView .admin-form label.hs-add-row{display:flex;flex-direction:row;align-items:center;gap:12px;margin:0;font-weight:600;}
+#adminView .admin-form .hs-add-row input[type=number]{width:110px;flex:none;height:auto;}
+.hs-edit input[type=number],.hs-add-row input[type=number]{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:15px;background:#fff;box-sizing:border-box;}
+.hs-edit input[type=number]:focus,.hs-add-row input[type=number]:focus{outline:none;border-color:#c8a24f;box-shadow:0 0 0 3px rgba(200,162,79,.15);}
+.hs-add > div{margin-bottom:12px;}
+.hs-add-row input[type=checkbox]{width:18px!important;height:18px;flex:none;margin:0;}
+.hs-add-row input[type=number]{width:110px!important;flex:none;margin:0;}
+.hs-add-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow:auto;}
+.hs-add-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid var(--line);cursor:pointer;}
+.hs-add-row input[type=checkbox]{width:auto;}
+.hs-add-n{flex:1;display:flex;flex-direction:column;font-size:14px;font-weight:600;}
+.hs-add-n small{font-weight:400;color:var(--muted);font-size:12px;}
+.hs-add-row input[type=number]{width:96px;}
 .place-pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 14px;}
 .place-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;
   aspect-ratio:1.22/1;padding:12px 8px 12px;border-radius:24px;cursor:pointer;font:inherit;
@@ -2006,6 +2035,7 @@
       <button data-admin-tab="clients"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/></svg><span>Clients</span></button>
       <button data-admin-tab="products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12.5H6.2z"/><path d="M9 8V6.5a3 3 0 016 0V8"/></svg><span>Products</span></button>
       <button data-admin-tab="services"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z"/><path d="M18.5 16v4M16.5 18h4"/></svg><span>Services</span></button>
+      <button data-admin-tab="homeservices"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg><span>Home Services</span></button>
       <button data-admin-tab="offers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.2V4.5a1 1 0 011-1h7.7l8.3 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.4"/></svg><span>Offers</span></button>
       <button data-admin-tab="gallery"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 16l-5-5-8 8.5"/></svg><span>Photos &amp; Video</span></button>
       <button data-admin-tab="employees"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.8" cy="9.2" r="2.5"/><path d="M15.8 14.6c2.4.1 4.1 1.8 4.7 4.4"/></svg><span>Employees</span></button>
@@ -2101,6 +2131,25 @@
         <table class="admin-table">
           <thead><tr><th>Service</th><th>Category</th><th>Duration</th><th>Price</th><th></th></tr></thead>
           <tbody id="serviceRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="adminHomeservices">
+      <div class="admin-toolbar">
+        <div class="cat-tabs" id="hsBrandTabs" style="margin-bottom:0;">
+          <button data-hs-brand-tab="dolce" class="active">Dolce</button>
+          <button data-hs-brand-tab="polished">Polished</button>
+          <button data-hs-brand-tab="core">Core</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary" id="hsAddBtn">+ Add services</button></div>
+      </div>
+      <div id="hsStatus"></div>
+      <div id="hsFormWrap"></div>
+      <div class="admin-table-wrap">
+        <table class="admin-table hs-table">
+          <thead><tr><th>Service</th><th>Category</th><th>Duration</th><th>In-place price</th><th>Home-service price</th><th>Availability</th><th>Edit</th></tr></thead>
+          <tbody id="hsRows"></tbody>
         </table>
       </div>
     </div>
@@ -2706,10 +2755,12 @@ const CLOUD_TABLES={
       price_usd:numOr0(s.price),discount_percent:numOr0(s.discount),description:s.desc||'',
       points:s.points||[],image:s.image||'',aftercare:s.aftercare||'',
       images:Array.isArray(s.images)?s.images:[],home_ok:s.homeOk===true,
+      home_price_usd:(s.homePrice==null||s.homePrice==='')?null:Math.max(0,numOr0(s.homePrice)),
       sort_order:(STORE.services[job.brand]||[]).indexOf(s)}),
     app:(r)=>({id:r.id,n:r.name,cat:renamedCat(r.category),dur:r.duration,price:Number(r.price_usd),
       discount:r.discount_percent||0,desc:r.description||'',points:r.points||[],image:r.image||'',
-      aftercare:r.aftercare||'',images:Array.isArray(r.images)?r.images:[],homeOk:r.home_ok===true}),
+      aftercare:r.aftercare||'',images:Array.isArray(r.images)?r.images:[],homeOk:r.home_ok===true,
+      homePrice:r.home_price_usd==null?null:Number(r.home_price_usd)}),
   },
   products:{
     table:'products',
@@ -4256,13 +4307,21 @@ function homeCfg(){
   return {version:2,brands:out};
 }
 function homeBrand(b){ return homeCfg().brands[b]||{enabled:false,areas:[]}; }
+/* A service's home-service price (Admin → Home Services). The clinic / salon /
+   studio price is untouched. No home price set → the normal price. The travel
+   fee for the client's area is separate and added once, on the booking screen. */
+function hasHomePrice(x){ return !!x && x.homePrice!=null && x.homePrice!=='' && isFinite(Number(x.homePrice)); }
+function homePriceOf(x){ return hasHomePrice(x)?Math.max(0,Number(x.homePrice)):null; }   // no home price → none (never the clinic price)
+// Offered to clients: marked Offered, and (Dolce, Polished) a home price saved — $0 counts only when typed.
+// CORE may have no price: it shows "Price on request" and goes to reception on WhatsApp.
+function homeOffered(b,x){ return !!x && x.homeOk===true && (b==='core'||hasHomePrice(x)); }
 function homeOn(b){ return homeBrand(b).enabled===true; }
 function homeAreas(b){ return homeBrand(b).areas.filter(a=>a.active); }
 function homeAreaById(b,id){ return homeAreas(b).find(a=>a.id===String(id))||null; }
 function homeAreaName(a){ return (lang==='ar'&&a.name_ar)||(lang==='ku'&&a.name_ku)||a.name; }
 function homeMinFee(b){ const f=homeAreas(b).map(a=>a.fee); return f.length?Math.min(...f):0; }
 // Dolce/Polished need at least one covered area; CORE only arranges on WhatsApp.
-function svcHomeOk(b,s){ return !!(s&&s.homeOk===true&&homeOn(b)&&(b==='core'||homeAreas(b).length)); }
+function svcHomeOk(b,s){ return !!(homeOffered(b,s)&&homeOn(b)&&(b==='core'||homeAreas(b).length)); }
 const HOME_KEY='odc_home_addr_v2';
 function loadHomeAddr(){ try{ return JSON.parse(localStorage.getItem(HOME_KEY)||'null'); }catch(e){ return null; } }
 function saveHomeAddr(d){ try{ if(d) localStorage.setItem(HOME_KEY,JSON.stringify(d)); else localStorage.removeItem(HOME_KEY); }catch(e){} }
@@ -4276,9 +4335,9 @@ function homeDraftNow(){
 }
 // The request this screen already sent, so Confirm + WhatsApp never make two.
 let lastReqKey='', lastReqId='';
-Object.assign(I18N.en,{whereLabel:'Where',atPlace_dolce:'At the clinic',atPlace_polished:'At the salon',atPlace_core:'At the studio',atHome:'At my home',homeArea:'Your area',homeChooseArea:'Choose your area',homeAreaOther:'My area is not on the list',homeOtherAreaPh:'Type your area',homeAddress:'Address & directions',homeAddressPh:'Street, building / house no., floor, nearest landmark',homeNeedArea:'Please choose your area.',homeNeedAddress:'Please enter your address so our team can find you.',homeFee:'Home visit fee',homeVisit:'Home visit',homeAvailable:'Also available as a home visit',homeFrom:'from',homeYour:'Your home',homeRemember:'Remember this address on this phone',homeForget:'Clear saved address',homeForgotten:'Saved address cleared.',homePriceNote:'This is the total for your request. If the price ever needs to change, reception will ask you first.',homeNote:'This is a request. Reception will check your area and the time, and contact you to confirm.',requestHomeBtn:'Request home visit',homeReqReceived:'Request received — reception will confirm availability.',homeQuoteTitle:'No set price for your area yet',homeQuoteBody:'Contact reception for a quote. They will agree the price with you before anything is confirmed.',homeQuoteBtn:'Contact reception for a quote',homeQuoteMsg:"Hi! I'd like a home visit for {name} ({brand}). My area: {area}. Could you give me a price?",waOpened:'WhatsApp opened — please press Send in WhatsApp so reception gets your message.',homeAlready:'We already have this request — reception will confirm availability.',homeStatusRequested:'Waiting for reception to confirm',errHomeNotAvailable:'Home visits are not available for this service right now. Please contact reception.',errHomeArea:'That area is no longer on our list. Please choose again or contact reception.',errHomeAddress:'Please enter your full address and area.',coreHomeBtn:'Ask for a session at home',coreHomeMsg:"Hello CORE, I'd like a private session at home: {name}. My area: ",coreHomeNote:"CORE's reception will reply on WhatsApp to arrange the time, your address and the price."});
-Object.assign(I18N.ar,{whereLabel:'المكان',atPlace_dolce:'في العيادة',atPlace_polished:'في الصالون',atPlace_core:'في الاستوديو',atHome:'في منزلي',homeArea:'منطقتك',homeChooseArea:'اختر منطقتك',homeAreaOther:'منطقتي غير موجودة في القائمة',homeOtherAreaPh:'اكتب منطقتك',homeAddress:'العنوان والوصف',homeAddressPh:'الشارع، رقم البناية / المنزل، الطابق، أقرب معلم',homeNeedArea:'يرجى اختيار منطقتك.',homeNeedAddress:'يرجى إدخال عنوانك ليتمكن فريقنا من الوصول إليك.',homeFee:'رسوم الزيارة المنزلية',homeVisit:'زيارة منزلية',homeAvailable:'متوفرة أيضاً كزيارة منزلية',homeFrom:'من',homeYour:'منزلك',homeRemember:'احفظ هذا العنوان على هذا الهاتف',homeForget:'امسح العنوان المحفوظ',homeForgotten:'تم مسح العنوان المحفوظ.',homePriceNote:'هذا هو المجموع لطلبك. إذا احتاج السعر إلى تغيير، سيسألك الاستقبال أولاً.',homeNote:'هذا طلب. سيتحقق الاستقبال من منطقتك والموعد ويتواصل معك للتأكيد.',requestHomeBtn:'اطلب زيارة منزلية',homeReqReceived:'تم استلام الطلب — سيؤكد الاستقبال التوفر.',homeQuoteTitle:'لا يوجد سعر محدد لمنطقتك بعد',homeQuoteBody:'تواصل مع الاستقبال للحصول على عرض سعر. سيتفقون معك على السعر قبل تأكيد أي شيء.',homeQuoteBtn:'تواصل مع الاستقبال لعرض سعر',homeQuoteMsg:'مرحباً! أرغب بزيارة منزلية لـ {name} ({brand}). منطقتي: {area}. هل يمكن إعطائي السعر؟',waOpened:'تم فتح واتساب — يرجى الضغط على إرسال في واتساب ليصل طلبك إلى الاستقبال.',homeAlready:'وصلنا هذا الطلب مسبقاً — سيؤكد الاستقبال التوفر.',homeStatusRequested:'بانتظار تأكيد الاستقبال',errHomeNotAvailable:'الزيارات المنزلية غير متاحة لهذه الخدمة حالياً. يرجى التواصل مع الاستقبال.',errHomeArea:'هذه المنطقة لم تعد في قائمتنا. يرجى الاختيار مجدداً أو التواصل مع الاستقبال.',errHomeAddress:'يرجى إدخال عنوانك ومنطقتك كاملين.',coreHomeBtn:'اطلب جلسة في المنزل',coreHomeMsg:'مرحباً CORE، أرغب بجلسة خاصة في المنزل: {name}. منطقتي: ',coreHomeNote:'سيرد عليك استقبال CORE عبر واتساب لترتيب الموعد والعنوان والسعر.'});
-Object.assign(I18N.ku,{whereLabel:'شوێن',atPlace_dolce:'لە کلینیک',atPlace_polished:'لە سالۆن',atPlace_core:'لە ستۆدیۆ',atHome:'لە ماڵەکەم',homeArea:'ناوچەکەت',homeChooseArea:'ناوچەکەت هەڵبژێرە',homeAreaOther:'ناوچەکەم لە لیستەکەدا نییە',homeOtherAreaPh:'ناوچەکەت بنووسە',homeAddress:'ناونیشان و ڕێنمایی',homeAddressPh:'شەقام، ژمارەی بینا / ماڵ، نهۆم، نزیکترین شوێنی ناسراو',homeNeedArea:'تکایە ناوچەکەت هەڵبژێرە.',homeNeedAddress:'تکایە ناونیشانەکەت بنووسە بۆ ئەوەی تیمەکەمان بتدۆزێتەوە.',homeFee:'کرێی سەردانی ماڵەوە',homeVisit:'سەردانی ماڵەوە',homeAvailable:'وەک سەردانی ماڵەوەش بەردەستە',homeFrom:'لە',homeYour:'ماڵەکەت',homeRemember:'ئەم ناونیشانە لەسەر ئەم مۆبایلە بیرت بمێنێت',homeForget:'سڕینەوەی ناونیشانی پاشەکەوتکراو',homeForgotten:'ناونیشانی پاشەکەوتکراو سڕایەوە.',homePriceNote:'ئەمە کۆی گشتیی داواکارییەکەتە. ئەگەر نرخەکە پێویستی بە گۆڕین بوو، پێشوازی پێشتر لێت دەپرسێت.',homeNote:'ئەمە داواکارییە. پێشوازی ناوچەکەت و کاتەکە دەپشکنێت و پەیوەندیت پێوە دەکات بۆ پشتڕاستکردنەوە.',requestHomeBtn:'داوای سەردانی ماڵەوە بکە',homeReqReceived:'داواکارییەکە گەیشت — پێشوازی بەردەستبوون پشتڕاست دەکاتەوە.',homeQuoteTitle:'هێشتا نرخی دیاریکراو بۆ ناوچەکەت نییە',homeQuoteBody:'پەیوەندی بە پێشوازییەوە بکە بۆ نرخ. پێش پشتڕاستکردنەوەی هەر شتێک لەسەر نرخەکە لەگەڵت ڕێک دەکەون.',homeQuoteBtn:'پەیوەندی بە پێشوازی بکە بۆ نرخ',homeQuoteMsg:'سڵاو! سەردانی ماڵەوەم دەوێت بۆ {name} ({brand}). ناوچەکەم: {area}. دەتوانن نرخەکەم پێ بڵێن؟',waOpened:'واتساپ کرایەوە — تکایە لە واتساپ دوگمەی ناردن دابگرە بۆ ئەوەی نامەکەت بگاتە پێشوازی.',homeAlready:'ئەم داواکارییەمان پێشتر پێگەیشتووە — پێشوازی بەردەستبوون پشتڕاست دەکاتەوە.',homeStatusRequested:'چاوەڕێی پشتڕاستکردنەوەی پێشوازی',errHomeNotAvailable:'سەردانی ماڵەوە ئێستا بۆ ئەم خزمەتگوزارییە بەردەست نییە. تکایە پەیوەندی بە پێشوازی بکە.',errHomeArea:'ئەم ناوچەیە ئیتر لە لیستەکەماندا نییە. تکایە دووبارە هەڵبژێرە یان پەیوەندی بە پێشوازی بکە.',errHomeAddress:'تکایە ناونیشان و ناوچەکەت بە تەواوی بنووسە.',coreHomeBtn:'داوای وانە لە ماڵەوە بکە',coreHomeMsg:'سڵاو CORE، دەمەوێت وانەیەکی تایبەت لە ماڵەوە: {name}. ناوچەکەم: ',coreHomeNote:'پێشوازیی CORE لە واتساپ وەڵامت دەداتەوە بۆ ڕێکخستنی کات، ناونیشان و نرخ.'});
+Object.assign(I18N.en,{whereLabel:'Where',atPlace_dolce:'At the clinic',atPlace_polished:'At the salon',atPlace_core:'At the studio',atHome:'At my home',homeArea:'Your area',homeChooseArea:'Choose your area',homeAreaOther:'My area is not on the list',homeOtherAreaPh:'Type your area',homeAddress:'Address & directions',homeAddressPh:'Street, building / house no., floor, nearest landmark',homeNeedArea:'Please choose your area.',homeNeedAddress:'Please enter your address so our team can find you.',homeFee:'Travel fee',homeVisit:'Home visit',homeAvailable:'Also available as a home visit',homeFrom:'from',homeYour:'Your home',homeRemember:'Remember this address on this phone',homeForget:'Clear saved address',homeForgotten:'Saved address cleared.',homePriceNote:'This is the total for your request. If the price ever needs to change, reception will ask you first.',homeNote:'This is a request. Reception will check your area and the time, and contact you to confirm.',requestHomeBtn:'Request home visit',homeReqReceived:'Request received — reception will confirm availability.',homeQuoteTitle:'No set price for your area yet',homeQuoteBody:'Contact reception for a quote. They will agree the price with you before anything is confirmed.',homeQuoteBtn:'Contact reception for a quote',homeQuoteMsg:"Hi! I'd like a home visit for {name} ({brand}). My area: {area}. Could you give me a price?",waOpened:'WhatsApp opened — please press Send in WhatsApp so reception gets your message.',homeAlready:'We already have this request — reception will confirm availability.',homeStatusRequested:'Waiting for reception to confirm',errHomeNotAvailable:'Home visits are not available for this service right now. Please contact reception.',errHomeArea:'That area is no longer on our list. Please choose again or contact reception.',errHomeAddress:'Please enter your full address and area.',coreHomeBtn:'Ask for a session at home',coreHomeMsg:"Hello CORE, I'd like a private session at home: {name}. My area: ",coreHomeNote:"CORE's reception will reply on WhatsApp to arrange the time, your address and the price."});
+Object.assign(I18N.ar,{whereLabel:'المكان',atPlace_dolce:'في العيادة',atPlace_polished:'في الصالون',atPlace_core:'في الاستوديو',atHome:'في منزلي',homeArea:'منطقتك',homeChooseArea:'اختر منطقتك',homeAreaOther:'منطقتي غير موجودة في القائمة',homeOtherAreaPh:'اكتب منطقتك',homeAddress:'العنوان والوصف',homeAddressPh:'الشارع، رقم البناية / المنزل، الطابق، أقرب معلم',homeNeedArea:'يرجى اختيار منطقتك.',homeNeedAddress:'يرجى إدخال عنوانك ليتمكن فريقنا من الوصول إليك.',homeFee:'رسوم التنقل',homeVisit:'زيارة منزلية',homeAvailable:'متوفرة أيضاً كزيارة منزلية',homeFrom:'من',homeYour:'منزلك',homeRemember:'احفظ هذا العنوان على هذا الهاتف',homeForget:'امسح العنوان المحفوظ',homeForgotten:'تم مسح العنوان المحفوظ.',homePriceNote:'هذا هو المجموع لطلبك. إذا احتاج السعر إلى تغيير، سيسألك الاستقبال أولاً.',homeNote:'هذا طلب. سيتحقق الاستقبال من منطقتك والموعد ويتواصل معك للتأكيد.',requestHomeBtn:'اطلب زيارة منزلية',homeReqReceived:'تم استلام الطلب — سيؤكد الاستقبال التوفر.',homeQuoteTitle:'لا يوجد سعر محدد لمنطقتك بعد',homeQuoteBody:'تواصل مع الاستقبال للحصول على عرض سعر. سيتفقون معك على السعر قبل تأكيد أي شيء.',homeQuoteBtn:'تواصل مع الاستقبال لعرض سعر',homeQuoteMsg:'مرحباً! أرغب بزيارة منزلية لـ {name} ({brand}). منطقتي: {area}. هل يمكن إعطائي السعر؟',waOpened:'تم فتح واتساب — يرجى الضغط على إرسال في واتساب ليصل طلبك إلى الاستقبال.',homeAlready:'وصلنا هذا الطلب مسبقاً — سيؤكد الاستقبال التوفر.',homeStatusRequested:'بانتظار تأكيد الاستقبال',errHomeNotAvailable:'الزيارات المنزلية غير متاحة لهذه الخدمة حالياً. يرجى التواصل مع الاستقبال.',errHomeArea:'هذه المنطقة لم تعد في قائمتنا. يرجى الاختيار مجدداً أو التواصل مع الاستقبال.',errHomeAddress:'يرجى إدخال عنوانك ومنطقتك كاملين.',coreHomeBtn:'اطلب جلسة في المنزل',coreHomeMsg:'مرحباً CORE، أرغب بجلسة خاصة في المنزل: {name}. منطقتي: ',coreHomeNote:'سيرد عليك استقبال CORE عبر واتساب لترتيب الموعد والعنوان والسعر.'});
+Object.assign(I18N.ku,{whereLabel:'شوێن',atPlace_dolce:'لە کلینیک',atPlace_polished:'لە سالۆن',atPlace_core:'لە ستۆدیۆ',atHome:'لە ماڵەکەم',homeArea:'ناوچەکەت',homeChooseArea:'ناوچەکەت هەڵبژێرە',homeAreaOther:'ناوچەکەم لە لیستەکەدا نییە',homeOtherAreaPh:'ناوچەکەت بنووسە',homeAddress:'ناونیشان و ڕێنمایی',homeAddressPh:'شەقام، ژمارەی بینا / ماڵ، نهۆم، نزیکترین شوێنی ناسراو',homeNeedArea:'تکایە ناوچەکەت هەڵبژێرە.',homeNeedAddress:'تکایە ناونیشانەکەت بنووسە بۆ ئەوەی تیمەکەمان بتدۆزێتەوە.',homeFee:'کرێی هاتوچۆ',homeVisit:'سەردانی ماڵەوە',homeAvailable:'وەک سەردانی ماڵەوەش بەردەستە',homeFrom:'لە',homeYour:'ماڵەکەت',homeRemember:'ئەم ناونیشانە لەسەر ئەم مۆبایلە بیرت بمێنێت',homeForget:'سڕینەوەی ناونیشانی پاشەکەوتکراو',homeForgotten:'ناونیشانی پاشەکەوتکراو سڕایەوە.',homePriceNote:'ئەمە کۆی گشتیی داواکارییەکەتە. ئەگەر نرخەکە پێویستی بە گۆڕین بوو، پێشوازی پێشتر لێت دەپرسێت.',homeNote:'ئەمە داواکارییە. پێشوازی ناوچەکەت و کاتەکە دەپشکنێت و پەیوەندیت پێوە دەکات بۆ پشتڕاستکردنەوە.',requestHomeBtn:'داوای سەردانی ماڵەوە بکە',homeReqReceived:'داواکارییەکە گەیشت — پێشوازی بەردەستبوون پشتڕاست دەکاتەوە.',homeQuoteTitle:'هێشتا نرخی دیاریکراو بۆ ناوچەکەت نییە',homeQuoteBody:'پەیوەندی بە پێشوازییەوە بکە بۆ نرخ. پێش پشتڕاستکردنەوەی هەر شتێک لەسەر نرخەکە لەگەڵت ڕێک دەکەون.',homeQuoteBtn:'پەیوەندی بە پێشوازی بکە بۆ نرخ',homeQuoteMsg:'سڵاو! سەردانی ماڵەوەم دەوێت بۆ {name} ({brand}). ناوچەکەم: {area}. دەتوانن نرخەکەم پێ بڵێن؟',waOpened:'واتساپ کرایەوە — تکایە لە واتساپ دوگمەی ناردن دابگرە بۆ ئەوەی نامەکەت بگاتە پێشوازی.',homeAlready:'ئەم داواکارییەمان پێشتر پێگەیشتووە — پێشوازی بەردەستبوون پشتڕاست دەکاتەوە.',homeStatusRequested:'چاوەڕێی پشتڕاستکردنەوەی پێشوازی',errHomeNotAvailable:'سەردانی ماڵەوە ئێستا بۆ ئەم خزمەتگوزارییە بەردەست نییە. تکایە پەیوەندی بە پێشوازی بکە.',errHomeArea:'ئەم ناوچەیە ئیتر لە لیستەکەماندا نییە. تکایە دووبارە هەڵبژێرە یان پەیوەندی بە پێشوازی بکە.',errHomeAddress:'تکایە ناونیشان و ناوچەکەت بە تەواوی بنووسە.',coreHomeBtn:'داوای وانە لە ماڵەوە بکە',coreHomeMsg:'سڵاو CORE، دەمەوێت وانەیەکی تایبەت لە ماڵەوە: {name}. ناوچەکەم: ',coreHomeNote:'پێشوازیی CORE لە واتساپ وەڵامت دەداتەوە بۆ ڕێکخستنی کات، ناونیشان و نرخ.'});
 /* ---- Where: "At Dolce / At Polished / At CORE" or "Home Services" ----------
    Two cards above a business's service list (approved design: rounded cards,
    champagne-gold outline, gold line illustration, check on the selected one,
@@ -4289,7 +4348,7 @@ Object.assign(I18N.ku,{whereLabel:'شوێن',atPlace_dolce:'لە کلینیک',a
    its own location again. */
 let homePickBrand=null;
 function syncHomePick(){ if(homePickBrand!==currentBrand){ homePickBrand=currentBrand; bookAtHome=false; } }
-function homeSelectorOn(b){ return !!(b && homeOn(b) && (b==='core'||homeAreas(b).length) && (svcList(b)||[]).some(x=>x.homeOk===true)); }
+function homeSelectorOn(b){ return !!(b && homeOn(b) && (b==='core'||homeAreas(b).length) && (svcList(b)||[]).some(x=>homeOffered(b,x))); }
 function atHomeNow(){ syncHomePick(); return homeSelectorOn(currentBrand) && bookAtHome===true; }
 // Gold line art (no photos), drawn on a 200×120 canvas so all four sit the same size.
 const PLACE_ART={
@@ -4365,9 +4424,9 @@ function homeListNoteHtml(){
   const fee=lo===hi?`<bdi dir="ltr">+${fmtMoney(lo)}</bdi>`:`<bdi dir="ltr">+${fmtMoney(lo)}–${fmtMoney(hi)}</bdi>`;
   return `<div class="home-list-note">🏠 ${t('homeListNote').replace('{fee}',fee)}</div>`;
 }
-Object.assign(I18N.en,{placeAt_dolce:'At Dolce',placeAt_polished:'At Polished',placeAt_core:'At CORE',homeServices:'Home Services',homeListNote:'Prices below are for the service. A home visit fee of {fee} is added once, depending on your area, and shown before you request.',homeListNoteCore:"Home sessions are arranged by CORE's reception on WhatsApp — they confirm the time, your address and the price.",homeNoServices:'No home services here yet.',homeDetailNote:'Home visit: the fee for your area is added once on the next screen, before you request.',homePriceOnRequest:'Price on request'});
-Object.assign(I18N.ar,{placeAt_dolce:'في Dolce',placeAt_polished:'في Polished',placeAt_core:'في CORE',homeServices:'الخدمات المنزلية',homeListNote:'الأسعار أدناه للخدمة. تُضاف رسوم زيارة منزلية بقيمة {fee} مرة واحدة حسب منطقتك، وتظهر قبل إرسال الطلب.',homeListNoteCore:'يرتّب استقبال CORE الجلسات المنزلية عبر واتساب — ويؤكدون الموعد والعنوان والسعر.',homeNoServices:'لا توجد خدمات منزلية هنا بعد.',homeDetailNote:'زيارة منزلية: تُضاف رسوم منطقتك مرة واحدة في الشاشة التالية، قبل إرسال الطلب.',homePriceOnRequest:'السعر عند الطلب'});
-Object.assign(I18N.ku,{placeAt_dolce:'لە Dolce',placeAt_polished:'لە Polished',placeAt_core:'لە CORE',homeServices:'خزمەتگوزاریی ماڵەوە',homeListNote:'نرخەکانی خوارەوە بۆ خزمەتگوزارییەکەن. کرێی سەردانی ماڵەوە {fee} یەک جار زیاد دەکرێت بەپێی ناوچەکەت، و پێش ناردنی داواکاری پیشان دەدرێت.',homeListNoteCore:'پێشوازیی CORE وانەکانی ماڵەوە لە واتساپ ڕێک دەخات — کات، ناونیشان و نرخ پشتڕاست دەکەنەوە.',homeNoServices:'هێشتا خزمەتگوزاریی ماڵەوە لێرە نییە.',homeDetailNote:'سەردانی ماڵەوە: کرێی ناوچەکەت یەک جار لە شاشەی داهاتوو زیاد دەکرێت، پێش ناردنی داواکاری.',homePriceOnRequest:'نرخ بە داواکاری'});
+Object.assign(I18N.en,{homeServicePrice:'Home-service price',placeAt_dolce:'At Dolce',placeAt_polished:'At Polished',placeAt_core:'At CORE',homeServices:'Home Services',homeListNote:'Home-service prices. A travel fee of {fee}, depending on your area, is added once and shown before you request.',homeListNoteCore:"Home sessions are arranged by CORE's reception on WhatsApp — they confirm the time, your address and the price.",homeNoServices:'No home services here yet.',homeDetailNote:'Home-service price. The travel fee for your area is added once on the next screen, before you request.',homePriceOnRequest:'Price on request'});
+Object.assign(I18N.ar,{homeServicePrice:'سعر الخدمة المنزلية',placeAt_dolce:'في Dolce',placeAt_polished:'في Polished',placeAt_core:'في CORE',homeServices:'الخدمات المنزلية',homeListNote:'أسعار الخدمة المنزلية. تُضاف رسوم تنقل بقيمة {fee} حسب منطقتك مرة واحدة، وتظهر قبل إرسال الطلب.',homeListNoteCore:'يرتّب استقبال CORE الجلسات المنزلية عبر واتساب — ويؤكدون الموعد والعنوان والسعر.',homeNoServices:'لا توجد خدمات منزلية هنا بعد.',homeDetailNote:'سعر الخدمة المنزلية. تُضاف رسوم التنقل لمنطقتك مرة واحدة في الشاشة التالية، قبل إرسال الطلب.',homePriceOnRequest:'السعر عند الطلب'});
+Object.assign(I18N.ku,{homeServicePrice:'نرخی خزمەتگوزاریی ماڵەوە',placeAt_dolce:'لە Dolce',placeAt_polished:'لە Polished',placeAt_core:'لە CORE',homeServices:'خزمەتگوزاریی ماڵەوە',homeListNote:'نرخەکانی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆ {fee} بەپێی ناوچەکەت یەک جار زیاد دەکرێت و پێش ناردنی داواکاری پیشان دەدرێت.',homeListNoteCore:'پێشوازیی CORE وانەکانی ماڵەوە لە واتساپ ڕێک دەخات — کات، ناونیشان و نرخ پشتڕاست دەکەنەوە.',homeNoServices:'هێشتا خزمەتگوزاریی ماڵەوە لێرە نییە.',homeDetailNote:'نرخی خزمەتگوزاریی ماڵەوە. کرێی هاتوچۆی ناوچەکەت یەک جار لە شاشەی داهاتوو زیاد دەکرێت، پێش ناردنی داواکاری.',homePriceOnRequest:'نرخ بە داواکاری'});
 function t(k){return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;}
 
 /* ---------------- i18n apply (static text outside phone) ---------------- */
@@ -4469,7 +4528,7 @@ function renderServices(){
   const core=currentBrand==='core';
   const home=atHomeNow();
   // Home Services: only that business's ticked services, and only the categories they are in.
-  const pool=home?svcList(currentBrand).filter(x=>x.homeOk===true):svcList(currentBrand);
+  const pool=home?svcList(currentBrand).filter(x=>homeOffered(currentBrand,x)):svcList(currentBrand);
   const cats=home?['All',...catsFor(currentBrand).filter(c=>pool.some(x=>x.cat===c))]:['All',...(core?[DAILY_CAT]:[]),...catsFor(currentBrand)];
   if(!cats.includes(currentCat)) currentCat='All';   // its category was renamed or removed
   const tabs=cats.map(c=>{
@@ -4481,7 +4540,7 @@ function renderServices(){
     <div class="svc-row" data-svc="${attr(String(s.id))}">
       ${mediaHtml(s.image||STORE.brandImages[currentBrand]||'','thumbnail',{cls:'swatch',fallback:brandFallback(currentBrand),alt:s.n})}
       <div class="info"><div class="n">${esc(s.n)}</div><div class="m">${esc(fmtDur(s.dur))} · ${esc(s.cat)}</div></div>
-      <div class="price">${home&&core?`<span class="price-req">${t('homePriceOnRequest')}</span>`:priceHtml(s)}</div><div class="chev">›</div>
+      <div class="price">${home?(core&&!hasHomePrice(s)?`<span class="price-req">${t('homePriceOnRequest')}</span>`:fmtMoney(homePriceOf(s))):priceHtml(s)}</div><div class="chev">›</div>
     </div>`).join('');
   // An empty brand (or an empty category) should say so, rather than looking
   // like the app failed to load.
@@ -4572,10 +4631,10 @@ function renderDetail(){
   return `
     ${serviceGalleryHtml(s)}
     <div class="detail-title">${esc(s.n)}</div>
-    <div class="detail-meta"><b>${esc(fmtDur(s.dur))}</b><span class="sep"></span><b>${currentBrand==='core'&&atHomeNow()&&s.homeOk===true?`<span class="price-req">${t('homePriceOnRequest')}</span>`:priceHtml(s)}</b></div>
-    ${atHomeNow()&&s.homeOk===true
+    <div class="detail-meta"><b>${esc(fmtDur(s.dur))}</b><span class="sep"></span><b>${atHomeNow()&&homeOffered(currentBrand,s)?(currentBrand==='core'&&!hasHomePrice(s)?`<span class="price-req">${t('homePriceOnRequest')}</span>`:fmtMoney(homePriceOf(s))):priceHtml(s)}</b></div>
+    ${atHomeNow()&&homeOffered(currentBrand,s)
       ? `<div class="home-tag on">🏠 ${t('homeServices')}${currentBrand!=='core'&&homeMinFee(currentBrand)>0?` · ${t('homeFrom')} <bdi dir="ltr">+${fmtMoney(homeMinFee(currentBrand))}</bdi>`:''}</div><div class="home-small" style="margin:-6px 0 12px;">${t(currentBrand==='core'?'homeListNoteCore':'homeDetailNote')}</div>`
-      : homeSelectorOn(currentBrand)&&s.homeOk===true?`<div class="home-tag">🏠 ${t('homeAvailable')}${currentBrand!=='core'&&homeMinFee(currentBrand)>0?` · ${t('homeFrom')} <bdi dir="ltr">+${fmtMoney(homeMinFee(currentBrand))}</bdi>`:''}</div>`:''}
+      : homeSelectorOn(currentBrand)&&homeOffered(currentBrand,s)?`<div class="home-tag">🏠 ${t('homeAvailable')}${currentBrand!=='core'&&homeMinFee(currentBrand)>0?` · ${t('homeFrom')} <bdi dir="ltr">+${fmtMoney(homeMinFee(currentBrand))}</bdi>`:''}</div>`:''}
     <div class="detail-desc desc-rich">${descHtml(s.desc,s.n)}</div>
     ${pts?`<div class="section-label" style="margin-top:0;">${t('whatsInc')}</div>
     ${pts}`:''}
@@ -4592,7 +4651,7 @@ function bookingWaText(s,dateStr,time,home){
     : `Hi! I'd like to book ${s.n} at ${b.name} — ${fmtMoney(effectivePrice(s))}, ${fmtDur(s.dur,true)}. Preferred: ${dateStr}${time?' at '+time:''}.`;
   if(home){
     txt+=`\n🏠 Area: ${home.areaName}\nAddress: ${home.address}`;
-    txt+=`\nPrice ${fmtMoney(home.servicePrice)} + home visit ${fmtMoney(home.fee)} = ${fmtMoney(home.total)}`;
+    txt+=`\nHome-service price ${fmtMoney(home.servicePrice)} + travel fee ${fmtMoney(home.fee)} = ${fmtMoney(home.total)}`;
   }
   return txt;
 }
@@ -4609,7 +4668,7 @@ function readHomeAddr(s){
   if(address.length<6){ toast(t('homeNeedAddress')); ad.focus(); return null; }
   d.areaId=area.id; d.address=address;
   saveHomeAddr(d.remember?{areaId:area.id,address}:null);
-  const servicePrice=effectivePrice(s);
+  const servicePrice=homePriceOf(s);
   return {areaId:area.id,areaName:area.name,address,fee:area.fee,servicePrice,total:servicePrice+area.fee};
 }
 function homeFieldsOf(h){
@@ -4644,7 +4703,7 @@ function renderBooking(){
   const atHome=homeOk&&bookAtHome, hd=homeDraftNow();
   const area=atHome?homeAreaById(currentBrand,hd.areaId):null;
   const quote=atHome&&hd.areaId==='__other';
-  const svcPrice=effectivePrice(s), fee=area?area.fee:0;
+  const svcPrice=atHome?homePriceOf(s):effectivePrice(s), fee=area?area.fee:0;
   const waHref=`https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(bookingWaText(s,dateStr,selectedTime,null))}`;
   const homeInput="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:16px;box-sizing:border-box;font-family:inherit;background:#fff;";
   const lbl="font-size:13px;font-weight:700;color:var(--ink-soft);display:block;margin:12px 0 6px;";
@@ -4653,7 +4712,7 @@ function renderBooking(){
     <div class="section-label" style="margin-top:0;">${t('bookingSummary')}</div>
     <div class="book-card">
       <div class="book-row"><span class="k">${b.name}</span><span class="v">${esc(s.n)}</span></div>
-      <div class="book-row"><span class="k">Price</span><span class="v">${priceHtml(s)}</span></div>
+      <div class="book-row"><span class="k">${atHome?t('homeServicePrice'):'Price'}</span><span class="v">${atHome?fmtMoney(svcPrice):priceHtml(s)}</span></div>
       ${atHome&&area?`<div class="book-row"><span class="k">${t('homeFee')} · ${esc(homeAreaName(area))}</span><span class="v">${fee>0?`<bdi dir="ltr">+${fmtMoney(fee)}</bdi>`:'—'}</span></div>
       <div class="book-row"><span class="k">${t('total')}</span><span class="v"><b>${fmtMoney(svcPrice+fee)}</b></span></div>`:''}
       <div class="book-row"><span class="k">${t('location')}</span><span class="v">${atHome?`🏠 ${t('homeYour')}`:`${b.name} — Erbil`}</span></div>
@@ -4849,7 +4908,7 @@ function clientHomeHtml(b){
   if(!b||!b.atHome) return '';
   const total=b.totalUsd!=null?b.totalUsd:null;
   return `<div class="home-mine"><b>🏠 ${t('homeVisit')}</b> · ${esc(b.homeArea||'')}<br>${esc(b.homeAddress||'')}
-    ${total!=null?`<br>${b.servicePriceUsd!=null?`${fmtMoney(b.servicePriceUsd)} + ${fmtMoney(b.homeFee||0)} = `:''}<b>${fmtMoney(total)}</b>`:''}
+    ${total!=null?`<br>${b.servicePriceUsd!=null?`${fmtMoney(b.servicePriceUsd)} + ${t('homeFee')} ${fmtMoney(b.homeFee||0)} = `:''}<b>${fmtMoney(total)}</b>`:''}
     ${b.status==='Requested'?`<br><span class="home-wait">${t('homeStatusRequested')}</span>`:''}</div>`;
 }
 function splitBookings(list){
@@ -9904,6 +9963,7 @@ const TAB_DEFS=[
   {key:'clients',label:'Clients'},
   {key:'products',label:'Products'},
   {key:'services',label:'Services'},
+  {key:'homeservices',label:'Home Services'},
   {key:'offers',label:'Offers'},
   {key:'gallery',label:'Photos & Video'},
   {key:'employees',label:'Employees'},
@@ -10495,6 +10555,8 @@ function showAdminForRole(){
   if(!allowed.includes('settings') && (currentUser.isOwner || allowed.includes('overview'))) allowed.push('settings');
   // Shop orders come with Products (the people who sell in the shop).
   if(!allowed.includes('orders') && (currentUser.isOwner || allowed.includes('products'))) allowed.push('orders');
+  // Home Services comes with Services (same people, same businesses).
+  if(!allowed.includes('homeservices') && (currentUser.isOwner || allowed.includes('services'))) allowed.push('homeservices');
   // Core group classes: the owner, or staff given the Classes section who work at Core.
   if(currentUser.isOwner && !allowed.includes('classes')) allowed.push('classes');
   if(!currentUser.isOwner && allowed.includes('classes') && !userBrandsAll(currentUser).includes('core')) allowed.splice(allowed.indexOf('classes'),1);
@@ -10506,7 +10568,7 @@ function showAdminForRole(){
   });
   if(!allowed.includes(adminTab)) adminTab=allowed[0]||'bookings';
   document.querySelectorAll('#adminTabsRow [data-admin-tab]').forEach(x=>x.classList.toggle('active',x.dataset.adminTab===adminTab));
-  ['overview','bookings','loyalty','clients','orders','products','services','offers','gallery','employees','reports','purchases','settings','classes'].forEach(p=>{
+  ['overview','bookings','loyalty','clients','orders','products','services','homeservices','offers','gallery','employees','reports','purchases','settings','classes'].forEach(p=>{
     document.getElementById('admin'+p[0].toUpperCase()+p.slice(1)).classList.toggle('active',adminTab===p);
   });
   // Services has its own brand sub-tabs — hide any brand this account isn't
@@ -10516,6 +10578,7 @@ function showAdminForRole(){
   });
   if(!canSeeBrand(currentUser,svcBrandTab)) svcBrandTab=userBrands(currentUser)[0];
   document.querySelectorAll('#svcBrandTabs [data-svc-brand-tab]').forEach(x=>x.classList.toggle('active',x.dataset.svcBrandTab===svcBrandTab));
+  renderAdminHomeServices();
   renderAdminProducts(); renderAdminServices(); renderAdminOffers(); renderAdminGallery(); renderAdminBookings(); renderBrandPhotos(); renderPhotoMove(); renderCurrencySettings(); renderClientLoginSetting(); renderWaTemplates(); renderNotifSettings(); renderHoursAdmin(); renderHomeServiceAdmin(); renderAdminEmployees(); renderAdminPurchases(); renderAdminReports(); renderAdminLoyalty(); renderOverviewStats(); pullLoyaltyIssued(); updateSettingsEmpty(); updateAdmMenuLabel(); if(adminTab==='clients') renderAdminClients(); if(adminTab==='orders') renderAdminOrders();
   if(adminTab==='classes'){ renderAdminClasses(); pullClasses().then(()=>{ if(adminTab==='classes') renderAdminClasses(); }); }
   if(currentUser.isOwner) pullNotifications(true).then(ok=>{ if(ok){ renderNotifSettings(); updateSettingsEmpty(); } });
@@ -10581,6 +10644,8 @@ document.querySelectorAll('[data-admin-tab]').forEach(b=>{
     document.getElementById('adminBookings').classList.toggle('active',adminTab==='bookings');
     document.getElementById('adminProducts').classList.toggle('active',adminTab==='products');
     document.getElementById('adminServices').classList.toggle('active',adminTab==='services');
+    document.getElementById('adminHomeservices').classList.toggle('active',adminTab==='homeservices');
+    if(adminTab==='homeservices') renderAdminHomeServices();
     document.getElementById('adminOffers').classList.toggle('active',adminTab==='offers');
     document.getElementById('adminGallery').classList.toggle('active',adminTab==='gallery');
     document.getElementById('adminEmployees').classList.toggle('active',adminTab==='employees');
@@ -10955,6 +11020,98 @@ function sortedAdminServices(list){
   }
   return out;
 }
+/* ---- Admin → Home Services ------------------------------------------------
+   The same service records as Services — nothing is copied. Each one can have
+   a home-service price (services.home_price_usd) and be offered at home or
+   paused (services.home_ok). The clinic / salon / studio price never changes
+   here. The travel fee per area is the owner's (Settings → Home visits) and is
+   added once at booking, on top of the home-service price. */
+let hsBrandTab='dolce', hsEditId=null, hsAdding=false;
+function hsList(b){ return (svcList(b)||[]).filter(x=>x.homeOk===true||hasHomePrice(x)); }
+function hsSaveService(b,id,patch){
+  const list=STORE.services[b]||[]; const k=idxById(list,id); if(k<0) return false;
+  const prev={...list[k]}; list[k]={...list[k],...patch};
+  if(!saveStore()){ list[k]=prev; toast("This browser's storage is full."); return false; }
+  cloudSave('services',list[k].id,b); return true;
+}
+function hsAfterChange(){ renderAdminHomeServices(); renderAdminServices(); if(currentScreen==='services'||currentScreen==='detail') render(); }
+function renderAdminHomeServices(){
+  const rows=document.getElementById('hsRows'); if(!rows||!currentUser) return;
+  document.querySelectorAll('#hsBrandTabs [data-hs-brand-tab]').forEach(btn=>{ btn.style.display=canSeeBrand(currentUser,btn.dataset.hsBrandTab)?'':'none'; });
+  if(!canSeeBrand(currentUser,hsBrandTab)) hsBrandTab=userBrands(currentUser)[0]||'dolce';
+  document.querySelectorAll('#hsBrandTabs [data-hs-brand-tab]').forEach(x=>{ x.classList.toggle('active',x.dataset.hsBrandTab===hsBrandTab);
+    x.onclick=()=>{ hsBrandTab=x.dataset.hsBrandTab; hsEditId=null; hsAdding=false; renderAdminHomeServices(); }; });
+  const b=hsBrandTab, name=BRANDS[b].name, core=b==='core', hb=homeBrand(b), areas=homeAreas(b);
+  const list=sortedAdminServices(hsList(b)), offered=list.filter(x=>x.homeOk===true).length;
+  // What clients see, and the travel fee that is added once on top.
+  const st=document.getElementById('hsStatus');
+  st.innerHTML=`<div class="hs-status">
+    <div class="hs-st-row"><span class="hs-pill ${hb.enabled?'on':''}">${hb.enabled?'Home visits ON':'Home visits OFF'}</span>
+      <span>${hb.enabled?`Clients see <b>Home Services</b> at ${esc(name)} with the services marked <b>Offered</b> below, at their home-service price.`:`Clients don't see Home Services for ${esc(name)} yet. Get the list and prices ready here; ${currentUser.isOwner?'switch it on':'the owner switches it on'} in Settings → Home visits when everything is set.`}</span></div>
+    <div class="hs-st-row"><span class="hs-pill">Travel fee</span><span>${core
+      ?'None in the app — CORE home sessions are requested on WhatsApp; reception confirms the time, address and any extra cost.'
+      :areas.length?`Added <b>once</b> per visit, on top of the home-service price, by area: ${areas.map(a=>`${esc(a.name)} <b>+${fmtMoney(a.fee)}</b>`).join(' · ')}.`
+      :`No covered areas yet (Settings → Home visits${currentUser.isOwner?'':', owner'}). Clients can only request a home visit once at least one area is set.`}</span></div>
+  </div>`;
+  const add=document.getElementById('hsAddBtn'); add.onclick=()=>{ hsAdding=!hsAdding; hsEditId=null; renderAdminHomeServices(); };
+  add.textContent=hsAdding?'Close':'+ Add services';
+  // ---- add existing services
+  const fw=document.getElementById('hsFormWrap');
+  if(hsAdding){
+    const pool=sortedAdminServices((svcList(b)||[]).filter(x=>!(x.homeOk===true||hasHomePrice(x))));
+    fw.innerHTML=`<div class="admin-form hs-add"><div class="full"><b>Add ${esc(name)} services to Home Services</b>
+      <div class="note">Tick the services to offer at home and type their home-service price (USD). The ${core?'studio':b==='dolce'?'clinic':'salon'} price stays as it is.${core?' Leave the price empty for "Price on request".':''}</div></div>
+      <div class="full hs-add-list">${pool.length?pool.map(x=>`<label class="hs-add-row"><input type="checkbox" data-hs-pick="${attr(String(x.id))}">
+        <span class="hs-add-n">${esc(x.n)}<small>${esc(x.cat||'')} · ${esc(fmtDur(x.dur,true))} · in-place ${fmtMoney(effectivePrice(x))}</small></span>
+        <input type="number" min="0" step="0.01" inputmode="decimal" placeholder="Home $" data-hs-price="${attr(String(x.id))}"></label>`).join('')
+        :`<div class="admin-empty">Every ${esc(name)} service is already in the list.</div>`}</div>
+      <div class="full rowbtns"><button class="btn btn-ghost btn-sm" id="hsAddCancel">Cancel</button>${pool.length?'<button class="btn btn-primary btn-sm" id="hsAddSave">Add selected</button>':''}</div></div>`;
+    fw.querySelectorAll('[data-hs-price]').forEach(inp=>inp.addEventListener('input',()=>{ const c=fw.querySelector(`[data-hs-pick="${CSS.escape(inp.dataset.hsPrice)}"]`); if(c&&inp.value!=='') c.checked=true; }));
+    fw.querySelector('#hsAddCancel').onclick=()=>{ hsAdding=false; renderAdminHomeServices(); };
+    const sv=fw.querySelector('#hsAddSave'); if(sv) sv.onclick=()=>{
+      const picks=[...fw.querySelectorAll('[data-hs-pick]:checked')].map(c=>c.dataset.hsPick);
+      if(!picks.length){ toast('Tick at least one service.'); return; }
+      const missing=[];
+      const vals=picks.map(id=>{ const v=fw.querySelector(`[data-hs-price="${CSS.escape(id)}"]`).value.trim(); if(v===''&&!core) missing.push(id); return [id,v]; });
+      if(missing.length){ toast('Type a home-service price for each ticked service.'); fw.querySelector(`[data-hs-price="${CSS.escape(missing[0])}"]`).focus(); return; }
+      let n=0; vals.forEach(([id,v])=>{ if(hsSaveService(b,id,{homeOk:true,homePrice:v===''?null:Math.max(0,Math.round(Number(v)*100)/100)})) n++; });
+      hsAdding=false; toast(`${n} service${n===1?'':'s'} added to ${name} Home Services.`); hsAfterChange();
+    };
+  } else fw.innerHTML='';
+  // ---- the table
+  if(!list.length){ rows.innerHTML=`<tr><td colspan="7"><div class="admin-empty">No ${esc(name)} home services yet — tap “+ Add services”.</div></td></tr>`; return; }
+  rows.innerHTML=list.map(x=>{
+    const id=attr(String(x.id)), editing=hsEditId===String(x.id);
+    const home=hasHomePrice(x)?fmtMoney(homePriceOf(x)):`<span class="hs-muted">${core?'On request':'Not set'}</span>`;
+    // Marked Offered but no home price (only possible from the first test version): clients don't see it.
+    const avail=x.homeOk===true?(homeOffered(b,x)?'<span class="hs-pill on">Offered</span>':'<span class="hs-pill warn">Needs a price</span>'):'<span class="hs-pill">Paused</span>';
+    const row=`<tr class="${editing?'hs-editing':''}">
+      <td><span class="swdot" style="${x.image&&safeImgUrl(x.image)?cssBg(x.image):`background:linear-gradient(140deg,${BRANDS[b].c1},${BRANDS[b].c2})`}"></span>${esc(x.n)}</td>
+      <td>${esc(x.cat||'')}</td><td>${esc(fmtDur(x.dur,true))}</td>
+      <td>${priceHtml(x)}</td><td><b>${home}</b></td><td>${avail}</td>
+      <td><button class="btn btn-ghost btn-sm" data-hs-edit="${id}">${editing?'Close':'Edit'}</button></td></tr>`;
+    if(!editing) return row;
+    return row+`<tr class="hs-form-row"><td colspan="7"><div class="hs-edit">
+      <label>Home-service price (USD)<input type="number" min="0" step="0.01" inputmode="decimal" id="hsEdPrice" value="${hasHomePrice(x)?homePriceOf(x):''}" placeholder="${core?'Empty = price on request':'e.g. 60'}"></label>
+      <label class="hs-check"><input type="checkbox" id="hsEdOn" ${x.homeOk===true?'checked':''}> Offered to clients</label>
+      <div class="hs-ed-note">In-place price stays ${fmtMoney(effectivePrice(x))} (edit it in Services).${core?'':' Clients pay this home price + the travel fee for their area, added once.'}</div>
+      <div class="rowbtns"><button class="btn btn-danger btn-sm" id="hsEdRemove">Remove from Home Services</button><button class="btn btn-primary btn-sm" id="hsEdSave">Save</button></div>
+    </div></td></tr>`;
+  }).join('');
+  rows.querySelectorAll('[data-hs-edit]').forEach(btn=>btn.onclick=()=>{ hsEditId=hsEditId===btn.dataset.hsEdit?null:btn.dataset.hsEdit; hsAdding=false; renderAdminHomeServices(); });
+  const save=document.getElementById('hsEdSave');
+  if(save) save.onclick=()=>{
+    const v=document.getElementById('hsEdPrice').value.trim(), on=document.getElementById('hsEdOn').checked;
+    if(v===''&&!core&&on){ toast('Type a home-service price, or untick "Offered".'); document.getElementById('hsEdPrice').focus(); return; }
+    if(v!==''&&!(Number(v)>=0)){ toast('Type a valid price.'); return; }
+    if(hsSaveService(b,hsEditId,{homeOk:on,homePrice:v===''?null:Math.round(Number(v)*100)/100})){ hsEditId=null; toast('Home service saved.'); hsAfterChange(); }
+  };
+  const rm=document.getElementById('hsEdRemove');
+  if(rm) rm.onclick=()=>{
+    if(!confirmTap(rm,'Remove? (the service itself stays)')) return;
+    if(hsSaveService(b,hsEditId,{homeOk:false,homePrice:null})){ hsEditId=null; toast('Removed from Home Services. The normal service is unchanged.'); hsAfterChange(); }
+  };
+}
 function renderAdminServices(){
   renderCategoryManager();
   const all=svcList(svcBrandTab);
@@ -10982,7 +11139,7 @@ function renderAdminServices(){
       <td><span class="swdot" style="${s.image&&safeImgUrl(s.image)?cssBg(s.image):`background:linear-gradient(140deg,${BRANDS[svcBrandTab].c1},${BRANDS[svcBrandTab].c2})`}"></span>${esc(s.n)}</td>
       <td>${esc(s.cat)}</td>
       <td>${esc(fmtDur(s.dur,true))}</td>
-      <td>${priceHtml(s)}</td>
+      <td>${priceHtml(s)}${s.homeOk===true?`<div class="hs-mini">🏠 ${hasHomePrice(s)?fmtMoney(homePriceOf(s)):(svcBrandTab==='core'?'on request':'no home price')}</div>`:''}</td>
       <td><div class="rowbtns">
         <button class="btn btn-ghost btn-sm" data-edit-svc="${esc(String(s.id))}">Edit</button>
         <button class="btn btn-danger btn-sm" data-del-svc="${esc(String(s.id))}">Delete</button>
@@ -11016,8 +11173,7 @@ function openServiceForm(editId){
       <div class="field"><label>Duration</label><input id="sf_dur" type="text" value="${esc(s.dur)}" placeholder="e.g. 45 min"></div>
       <div class="field"><label>Price ($)</label><input id="sf_price" type="number" min="0" step="1" value="${s.price}"></div>
       <div class="field"><label>Discount % (optional)</label><input id="sf_discount" type="number" min="0" max="99" step="1" placeholder="0 — no discount" value="${s.discount||''}"></div>
-      <div class="field full" style="grid-column:1/-1;"><label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input id="sf_home" type="checkbox" ${s.homeOk===true?'checked':''} style="width:auto;"> 🏠 Can be booked as a home visit</label>
-        <div class="note">${homeOn(brand)?(brand==='core'?'CORE clients get an "Ask for a session at home" WhatsApp button.':`Clients choose their area from your list (${homeAreas(brand).length} covered); the fee depends on the area.`):`Home visits are switched off for ${esc(BRANDS[brand].name)} — Settings → Home visits.`}</div></div>
+      ${s.homeOk===true||hasHomePrice(s)?`<div class="field full" style="grid-column:1/-1;"><div class="note">🏠 Also a home service${hasHomePrice(s)?` — home price ${fmtMoney(homePriceOf(s))}`:''}${s.homeOk===true?'':' (paused)'}. Change it in <b>Home Services</b>.</div></div>`:''}
       <div class="field full" style="grid-column:1/-1;"><label>Description</label><textarea id="sf_desc" rows="6" placeholder="Short client-facing description">${esc(s.desc||'')}</textarea>
         <div class="rem-meta" style="margin-top:6px;">Start a line with <b>*</b> for a bullet, end a short line with <b>:</b> for a label (e.g. "Best For:"), leave an empty line between paragraphs. Duration: a plain number is shown in minutes (e.g. "45-60" → "45–60 min").</div>
         <div class="desc-pv-l">Preview — as clients see it</div>
@@ -11052,7 +11208,7 @@ function openServiceForm(editId){
     const discount=Math.min(99,Math.max(0,parseInt(document.getElementById('sf_discount').value)||0));
     const desc=document.getElementById('sf_desc').value.trim();
     const aftercare=document.getElementById('sf_aftercare').value.trim();
-    const homeOk=!!(document.getElementById('sf_home')||{}).checked;
+    const homeOk=s.homeOk===true;   // set in Admin → Home Services
     if(!n){ document.getElementById('sf_name').focus(); return; }
     const saveBtn=document.getElementById('sf_save'); saveBtn.disabled=true; saveBtn.textContent='Saving…';
     if(sfPos) await sfPos.settled();
@@ -11415,7 +11571,7 @@ function homeVisitHtml(bk){
   const lastChange=(bk.priceLog||[]).slice(-1)[0];
   return `<div class="home-adm"><span class="home-badge">🏠 Home visit</span>
     <div><b>${esc(bk.homeArea||'')}</b>${bk.homeAddress?` — ${esc(bk.homeAddress)}`:''}</div>
-    <div>${sp!=null?`${fmtMoney(sp)} + ${fmtMoney(bk.homeFee||0)} home = <b>${fmtMoney(tot!=null?tot:sp+(bk.homeFee||0))}</b>`:`Home fee ${fmtMoney(bk.homeFee||0)} (price not saved yet)`}</div>
+    <div>${sp!=null?`Home price ${fmtMoney(sp)} + travel ${fmtMoney(bk.homeFee||0)} = <b>${fmtMoney(tot!=null?tot:sp+(bk.homeFee||0))}</b>`:`Travel fee ${fmtMoney(bk.homeFee||0)} (price not saved yet)`}</div>
     ${lastChange?`<div class="home-small">Price changed ${esc(String(lastChange.at||'').slice(0,10))} by ${esc(lastChange.by||'')}: client agreed (${esc(lastChange.note||'')})</div>`:''}
     <a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Open in Maps ↗</a>
     ${bk.status==='Requested'?` · <button class="lux-link" data-home-price="${esc(String(bk.id))}">Change price</button>`:''}</div>`;
@@ -12563,7 +12719,7 @@ function renderHomeServiceAdmin(){
     <div class="admin-form" style="max-width:720px;"><div class="full">
       <div class="wa-langs" style="margin-bottom:10px;">${Object.keys(BRANDS).map(k=>`<button class="btn btn-sm ${k===b?'btn-primary':'btn-ghost'}" data-hs-brand="${k}">${BRANDS[k].name}${homeOn(k)?' · on':''}</button>`).join('')}</div>
       <label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="hs_on" ${hb.enabled?'checked':''} style="width:auto;"> Offer home visits for ${esc(BRANDS[b].name)}</label>
-      <div class="note" style="margin:6px 0 12px;">${ticked} service${ticked===1?'':'s'} ticked "Can be booked as a home visit" (Services → edit).</div>
+      <div class="note" style="margin:6px 0 12px;">${ticked} service${ticked===1?'':'s'} offered in Admin → Home Services.</div>
       ${b==='core'?`<div class="note">CORE home sessions are always arranged by reception on WhatsApp — reception agrees the area, time and price with the client. No areas or fees are needed here.</div>`:`
       <div style="font-size:14px;font-weight:600;margin:6px 0;">Covered areas and home visit fee (USD)</div>
       <table class="hs-areas"><thead><tr><th>Area (English)</th><th>Arabic</th><th>Kurdish</th><th>Fee $</th><th>Offered</th><th></th></tr></thead><tbody>
@@ -13201,7 +13357,7 @@ function coreContactHtml(s){
   if(!coreReceptionWa()) return `<button class="primary-btn" disabled style="opacity:.45;cursor:default;" data-core-wa-off>💬 ${t('contactReceptionWa')}</button>
     <div class="mb-note" style="margin-top:10px;">${t('coreWaMissing')}</div>`;
   const home=!group&&svcHomeOk('core',s);
-  if(home && atHomeNow()) return `<a class="primary-btn" style="display:block;text-align:center;text-decoration:none;" href="${attr(coreWaHref(t('coreHomeMsg').replace('{name}',s.n)))}" target="_blank" rel="noopener" data-core-wa>🏠 ${t('coreHomeBtn')}</a>
+  if(home && atHomeNow()) return `<a class="primary-btn" style="display:block;text-align:center;text-decoration:none;" href="${attr(coreWaHref(t('coreHomeMsg').replace('{name}',s.n+(hasHomePrice(s)?` (${fmtMoney(homePriceOf(s))})`:''))))}" target="_blank" rel="noopener" data-core-wa>🏠 ${t('coreHomeBtn')}</a>
     <div class="mb-note" style="margin-top:10px;">${t('coreHomeNote')}</div>`;
   return `<a class="primary-btn" style="display:block;text-align:center;text-decoration:none;" href="${attr(coreWaHref(msg))}" target="_blank" rel="noopener" data-core-wa>💬 ${t('contactReceptionWa')}</a>
     <div class="mb-note" style="margin-top:10px;">${t(group?'corePkgNote':'coreSessionNote')}</div>
