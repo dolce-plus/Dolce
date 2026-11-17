@@ -13033,8 +13033,8 @@ function renderWaTemplates(){
      - lets staff retry a failed message or open it in WhatsApp by hand
        (recorded as "opened by hand", never as delivered).
    Everything starts switched off with no timings or channel filled in. */
-const NOTIF_DEFAULT={enabled:false,channel:'',reminders_min:[],cancel:true,moved:true,
-  wa_templates:{cancel:'',moved:'',reminder:''},wa_langs:''};
+const NOTIF_DEFAULT={enabled:false,channel:'',reminders_min:[],confirmed:true,cancel:true,moved:true,
+  wa_templates:{confirmed:'',cancel:'',moved:'',reminder:''},wa_langs:''};
 function notifCfg(){
   const s=STORE.notifications||{};
   return {...NOTIF_DEFAULT,...s,reminders_min:Array.isArray(s.reminders_min)?s.reminders_min.map(Number).filter(x=>x>0):[],
@@ -13043,7 +13043,7 @@ function notifCfg(){
 function autoMsgsOn(){ const c=notifCfg(); return !!(c.enabled && ['whatsapp','push','both'].includes(c.channel)); }
 function autoRemindersOn(){ return autoMsgsOn() && notifCfg().reminders_min.length>0; }
 const CHANNEL_LABEL={whatsapp:'WhatsApp (automatic)',push:'iPhone app notifications',both:'iPhone app + WhatsApp'};
-const NOTIF_KIND={cancel:'Cancellation',moved:'New time',reminder:'Reminder'};
+const NOTIF_KIND={confirmed:'Booking confirmed',cancel:'Cancellation',moved:'New time',reminder:'Reminder'};
 function offsetLabel(m){ m=Number(m); if(m%1440===0) return `${m/1440} day${m===1440?'':'s'} before`; if(m%60===0) return `${m/60} hour${m===60?'':'s'} before`; return `${m} min before`; }
 
 let NOTIFS=[], notifsErr='', notifsAt=0, notifFilter='problems';
@@ -13138,9 +13138,11 @@ function renderNotifSettings(){
           <input id="nf_n" type="number" min="1" max="999" style="width:90px;" placeholder="e.g. 2">
           <select id="nf_u"><option value="60">hours before</option><option value="1">minutes before</option><option value="1440">days before</option></select>
           <button class="btn btn-ghost btn-sm" id="nf_add">Add reminder</button></div></div>
+      <label class="nt-check"><input type="checkbox" id="nf_confirmed" ${c.confirmed!==false?'checked':''}> Tell the client when their booking is confirmed (date and time)</label>
       <label class="nt-check"><input type="checkbox" id="nf_cancel" ${c.cancel!==false?'checked':''}> Confirm cancellations to the client (brand, service or class, original date and time)</label>
       <label class="nt-check"><input type="checkbox" id="nf_moved" ${c.moved!==false?'checked':''}> Tell the client the new time when an appointment or class is moved</label>
       <div class="field full" style="grid-column:1/-1;"><label>WhatsApp message templates (names approved in Meta)</label>
+        <div class="nt-tpl"><span>Confirmed</span><input id="nf_t_confirmed" type="text" value="${esc(c.wa_templates.confirmed||'')}" placeholder="template name"></div>
         <div class="nt-tpl"><span>Cancellation</span><input id="nf_t_cancel" type="text" value="${esc(c.wa_templates.cancel)}" placeholder="template name"></div>
         <div class="nt-tpl"><span>New time</span><input id="nf_t_moved" type="text" value="${esc(c.wa_templates.moved)}" placeholder="template name"></div>
         <div class="nt-tpl"><span>Reminder</span><input id="nf_t_reminder" type="text" value="${esc(c.wa_templates.reminder)}" placeholder="template name"></div>
@@ -13157,8 +13159,8 @@ function renderNotifSettings(){
     </div>
     <div style="margin-bottom:22px;"></div>`;
   const read=()=>{ c.enabled=document.getElementById('nf_on').checked; c.channel=document.getElementById('nf_ch').value;
-    c.cancel=document.getElementById('nf_cancel').checked; c.moved=document.getElementById('nf_moved').checked;
-    c.wa_templates={cancel:document.getElementById('nf_t_cancel').value.trim(),moved:document.getElementById('nf_t_moved').value.trim(),reminder:document.getElementById('nf_t_reminder').value.trim()};
+    c.confirmed=document.getElementById('nf_confirmed').checked; c.cancel=document.getElementById('nf_cancel').checked; c.moved=document.getElementById('nf_moved').checked;
+    c.wa_templates={confirmed:document.getElementById('nf_t_confirmed').value.trim(),cancel:document.getElementById('nf_t_cancel').value.trim(),moved:document.getElementById('nf_t_moved').value.trim(),reminder:document.getElementById('nf_t_reminder').value.trim()};
     c.wa_langs=document.getElementById('nf_langs').value.replace(/\s+/g,'').toLowerCase(); };
   wrap.querySelectorAll('[data-nf-del]').forEach(b=>b.addEventListener('click',()=>{ read(); c.reminders_min=c.reminders_min.filter(m=>m!==Number(b.dataset.nfDel)); renderNotifSettings(); }));
   document.getElementById('nf_add').addEventListener('click',()=>{
@@ -13175,7 +13177,7 @@ function renderNotifSettings(){
       if(!confirmTap(e.currentTarget,'No WhatsApp templates yet — save anyway?')) return;
     }
     if(!supa){ toast('Needs the internet.'); return; }
-    const value={enabled:!!c.enabled,channel:c.channel,reminders_min:c.reminders_min.slice().sort((a,b)=>b-a),cancel:!!c.cancel,moved:!!c.moved,wa_templates:c.wa_templates,wa_langs:c.wa_langs};
+    const value={enabled:!!c.enabled,channel:c.channel,reminders_min:c.reminders_min.slice().sort((a,b)=>b-a),confirmed:!!c.confirmed,cancel:!!c.cancel,moved:!!c.moved,wa_templates:c.wa_templates,wa_langs:c.wa_langs};
     const {error}=await supa.from('settings').upsert({key:'notifications',value:JSON.stringify(value)});
     if(error){ toast('Could not save: '+error.message); return; }
     STORE.notifications=value; notifDraft=null; saveStore();

@@ -27,7 +27,7 @@
 // messages), in the client's language.
 
 type Note = {
-  id: string; ref_type: string; ref_id: string; brand: string; kind: "cancel" | "moved" | "reminder";
+  id: string; ref_type: string; ref_id: string; brand: string; kind: "cancel" | "moved" | "reminder" | "confirmed";
   offset_min: number | null; to_phone: string; client_id: string | null; lang: string;
   payload: Record<string, string>; attempts: number;
 };
@@ -40,18 +40,21 @@ export const BRAND_NAMES: Record<string, string> = { dolce: "Dolce", polished: "
 // Same default wording as the app (index.html → DEFAULT_WA_TEMPLATES).
 export const DEFAULT_TEXT: Record<string, Record<string, string>> = {
   en: {
+    confirm: "Hi {name}, your appointment at {brand} is confirmed ✅\n📅 {date} at {time}\n\nSee you soon!",
     r12: "Hi {name}, a friendly reminder of your appointment at {brand}:\n📅 {date} at {time}\n\nReply here if you need to change it.",
     r1: "Hi {name}, see you in about an hour at {brand} — {time}. 🌿",
     cancel: "Hi {name}, your appointment at {brand} on {date} at {time} has been cancelled.\n\nReply here if you would like a new time.",
     moved: "Hi {name}, your appointment at {brand} has a new time ✅\n📅 {date} at {time}\n\nReply here if this does not suit you.",
   },
   ar: {
+    confirm: "مرحباً {name}، تم تأكيد موعدك في {brand} ✅\n📅 {date} الساعة {time}\n\nنراك قريباً!",
     r12: "مرحباً {name}، تذكير بموعدك في {brand}:\n📅 {date} الساعة {time}\n\nردّ هنا إذا أردت تغييره.",
     r1: "مرحباً {name}، نراك بعد ساعة تقريباً في {brand} — الساعة {time}. 🌿",
     cancel: "مرحباً {name}، تم إلغاء موعدك في {brand} يوم {date} الساعة {time}.\n\nردّ هنا إذا أردت موعداً جديداً.",
     moved: "مرحباً {name}، تم تغيير موعدك في {brand} ✅\n📅 {date} الساعة {time}\n\nردّ هنا إذا لم يناسبك.",
   },
   ku: {
+    confirm: "سڵاو {name}، کاتەکەت لە {brand} پشتڕاستکرایەوە ✅\n📅 {date} کاتژمێر {time}\n\nبە هیوای بینینت!",
     r12: "سڵاو {name}، بیرخستنەوەی کاتەکەت لە {brand}:\n📅 {date} کاتژمێر {time}\n\nئەگەر پێویستت بە گۆڕینی هەیە لێرە وەڵام بدەرەوە.",
     r1: "سڵاو {name}، نزیکەی یەک کاتژمێری تر لە {brand} دەتبینین — {time}. 🌿",
     cancel: "سڵاو {name}، کاتەکەت لە {brand} لە {date} کاتژمێر {time} هەڵوەشێنرایەوە.\n\nئەگەر کاتێکی نوێت دەوێت لێرە وەڵام بدەرەوە.",
@@ -60,6 +63,7 @@ export const DEFAULT_TEXT: Record<string, Record<string, string>> = {
 };
 
 export function textKind(n: Note): string {
+  if (n.kind === "confirmed") return "confirm";   // same key as the app's "Booking confirmed" wording
   if (n.kind !== "reminder") return n.kind;
   return (n.offset_min ?? 0) >= 180 ? "r12" : "r1";
 }
