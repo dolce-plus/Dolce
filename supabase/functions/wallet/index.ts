@@ -139,7 +139,7 @@ export function passJson(c: Record<string, any>, token: string) {
   const fields: Record<string, unknown[]> = {
     headerFields: [{ key: "points", label: "POINTS", value: Number(c.points) || 0, numberStyle: "PKNumberStyleDecimal",
       changeMessage: "You now have %@ D+ points" }],
-    primaryFields: [{ key: "name", label: "MEMBER", value: c.name || "Dolce+ Member" }],
+    primaryFields: [{ key: "name", label: "NAME", value: c.name || "Dolce+ Member" }],
     secondaryFields: [{ key: "level", label: "LEVEL", value: t.name, changeMessage: "Your Dolce+ level is now %@" }],
     auxiliaryFields: memberSince(c.member_since)
       ? [{ key: "since", label: "MEMBER SINCE", value: memberSince(c.member_since), textAlignment: "PKTextAlignmentRight" }] : [],
