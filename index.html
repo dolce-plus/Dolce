@@ -1621,6 +1621,11 @@
   .pv-bar{height:5px;border-radius:99px;background:rgba(251,245,234,.16);overflow:hidden;}
   .pv-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#b8955a,var(--champagne));}
   .pv-note{margin-top:9px;font:400 12.5px var(--sans);color:rgba(251,245,234,.75);}
+  .pv-wallet{margin-top:16px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:10px 16px;
+    border-radius:12px;border:1px solid rgba(251,245,234,.28);background:#000;color:#fff;font:600 14.5px var(--sans);letter-spacing:.01em;cursor:pointer;}
+  .pv-wallet svg{flex:none;width:22px;height:22px;}
+  .pv-wallet[disabled]{opacity:.65;cursor:default;}
+  .pv-wallet-note{margin-top:7px;font:400 11.5px var(--sans);color:rgba(251,245,234,.6);text-align:center;}
   .pv-book{padding:14px 16px;border-radius:18px;background:var(--ivory);border:1px solid var(--lux-hair);box-shadow:0 8px 20px -16px rgba(58,42,31,.25);margin-bottom:10px;}
   .pv-book-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .pv-status{font:600 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--label);background:var(--beige);border-radius:999px;padding:4px 9px;}
@@ -2289,6 +2294,7 @@
       <div class="adm-grid2">
         <div id="currencySettingsWrap"></div>
         <div id="clientLoginWrap"></div>
+        <div id="walletCardWrap"></div>
         <div id="hoursWrap"></div>
         <div id="homeServiceWrap"></div>
         <div id="waTemplatesWrap"></div>
@@ -2897,6 +2903,8 @@ const CLOUD_TABLES={
       ? {key:'loyalty',value:JSON.stringify(loyaltySettings())}
       : id==='wa_templates'
       ? {key:'wa_templates',value:JSON.stringify(STORE.waTemplates||{})}
+      : id==='wallet_card'
+      ? {key:'wallet_card',value:STORE.settings.walletCard==='on'?'on':'off'}
       : id==='client_login'
       ? {key:'client_login',value:['on','email','both'].includes(STORE.settings.clientLogin)?STORE.settings.clientLogin:'off'}
       : String(id).startsWith('categories:')
@@ -3399,7 +3407,7 @@ async function pullCatalog(){
       selectAllRows('products',q=>q.order('id',{ascending:true})),
       supa.from('offers').select('*'),
       supa.from('brand_images').select('*'),
-      supa.from('settings').select('*').in('key',['usd_to_iqd','image_focus','destinations','client_login','wa_templates','hours','loyalty','client_booking_changes','home_service','categories:dolce','categories:polished','categories:core','mindbody']),   // mindbody: CORE's public setup (Site ID, booking page, reception WhatsApp) — no secrets
+      supa.from('settings').select('*').in('key',['usd_to_iqd','image_focus','destinations','client_login','wa_templates','hours','loyalty','client_booking_changes','home_service','categories:dolce','categories:polished','categories:core','mindbody','wallet_card']),   // mindbody: CORE's public setup (Site ID, booking page, reception WhatsApp) — no secrets
     ]);
     if(svc.error||prod.error||off.error) return false;
 
@@ -3464,6 +3472,8 @@ async function pullCatalog(){
       const ccRow=row('core_classes');
       STORE.coreClasses={enabled:false};
       if(ccRow && ccRow.value){ try{ const v=typeof ccRow.value==='string'?JSON.parse(ccRow.value):ccRow.value; if(v&&typeof v==='object') STORE.coreClasses={enabled:v.enabled===true}; }catch(e){} }
+      const wcRow=row('wallet_card');
+      STORE.settings.walletCard=(wcRow&&String(wcRow.value)==='on')?'on':'off';
       const loginRow=row('client_login');
       const loginVal=loginRow?String(loginRow.value):'off';
       STORE.settings.clientLogin=(loginVal==='on'||loginVal==='email'||loginVal==='both')?loginVal:'off';
@@ -4260,6 +4270,12 @@ function ensureBookingSelection(){
 Object.assign(I18N.en,{otpChecking:'Checking your code',otpVerified:'Verified',otpCheckingSub:'One moment — we’re confirming it.',otpVerifiedSub:'Setting up your account…'});
 Object.assign(I18N.ar,{otpChecking:'جارٍ التحقق من الرمز',otpVerified:'تم التحقق',otpCheckingSub:'لحظة واحدة — نتأكد منه الآن.',otpVerifiedSub:'نجهّز حسابك…'});
 Object.assign(I18N.ku,{otpChecking:'کۆدەکەت دەپشکنرێت',otpVerified:'پشتڕاستکرایەوە',otpCheckingSub:'تکایە کەمێک چاوەڕێ بکە — پشتڕاستی دەکەینەوە.',otpVerifiedSub:'هەژمارەکەت ئامادە دەکەین…'});
+Object.assign(I18N.en,{walletAdd:'Add to Apple Wallet',walletBusy:'Preparing your card…',walletNote:'Your points and level update on the card by themselves.',
+  walletFail:'We couldn’t prepare your card. Please check your connection and try again.',walletLogin:'Please log in again to add your card.'});
+Object.assign(I18N.ar,{walletAdd:'إضافة إلى Apple Wallet',walletBusy:'نجهّز بطاقتك…',walletNote:'تتحدّث نقاطك ومستواك على البطاقة تلقائياً.',
+  walletFail:'تعذّر تجهيز بطاقتك. تحقّقي من الاتصال وحاولي مرة أخرى.',walletLogin:'يرجى تسجيل الدخول مرة أخرى لإضافة بطاقتك.'});
+Object.assign(I18N.ku,{walletAdd:'زیادکردن بۆ Apple Wallet',walletBusy:'کارتەکەت ئامادە دەکەین…',walletNote:'خاڵ و ئاستەکەت خۆکارانە لەسەر کارتەکە نوێ دەبنەوە.',
+  walletFail:'نەمانتوانی کارتەکەت ئامادە بکەین. تکایە پەیوەندییەکەت بپشکنە و دووبارە هەوڵ بدەرەوە.',walletLogin:'تکایە دووبارە بچۆرە ژوورەوە بۆ زیادکردنی کارتەکەت.'});
 Object.assign(I18N.en,{
   dpMember:'D+ Member',dpGold:'D+ Gold',dpBlack:'D+ Black',ptsWord:'pts',
   toTier:'{amt} more in 12 months to reach {tier}',topTier:'You are at our highest level — thank you.',
@@ -6073,6 +6089,7 @@ function bindLux(){
   const pvb=document.getElementById('previewMemberBtn'); if(pvb) pvb.addEventListener('click',()=>{ haptic(); setPreviewMember(true); });
   const pvx=document.getElementById('pvExit'); if(pvx) pvx.addEventListener('click',()=>setPreviewMember(false));
   screenEl.querySelectorAll('[data-pv-bookings]').forEach(el=>el.addEventListener('click',()=>navTo('bookings')));
+  screenEl.querySelectorAll('[data-wallet-add]').forEach(el=>el.addEventListener('click',()=>addToAppleWallet(el)));
   bindShopCards(screenEl);
   bindShopSearch();
   screenEl.querySelectorAll('[data-shop-brand]').forEach(el=>el.addEventListener('click',()=>setShopBrand(el.dataset.shopBrand)));
@@ -10059,7 +10076,7 @@ function shortRole(u){
   return 'Staff';
 }
 function updateSettingsEmpty(){
-  const ids=['currencySettingsWrap','clientLoginWrap','hoursWrap','homeServiceWrap','waTemplatesWrap','notifSettingsWrap','brandPhotosWrap','photoMoveWrap'];
+  const ids=['currencySettingsWrap','clientLoginWrap','walletCardWrap','hoursWrap','homeServiceWrap','waTemplatesWrap','notifSettingsWrap','brandPhotosWrap','photoMoveWrap'];
   const any=ids.some(id=>{ const el=document.getElementById(id); return el&&el.innerHTML.trim(); });
   const e=document.getElementById('settingsEmpty'); if(e) e.style.display=any?'none':'';
 }
@@ -10611,7 +10628,7 @@ function showAdminForRole(){
   if(!canSeeBrand(currentUser,svcBrandTab)) svcBrandTab=userBrands(currentUser)[0];
   document.querySelectorAll('#svcBrandTabs [data-svc-brand-tab]').forEach(x=>x.classList.toggle('active',x.dataset.svcBrandTab===svcBrandTab));
   renderAdminHomeServices();
-  renderAdminProducts(); renderAdminServices(); renderAdminOffers(); renderAdminGallery(); renderAdminBookings(); renderBrandPhotos(); renderPhotoMove(); renderCurrencySettings(); renderClientLoginSetting(); renderWaTemplates(); renderNotifSettings(); renderHoursAdmin(); renderHomeServiceAdmin(); renderAdminEmployees(); renderAdminPurchases(); renderAdminReports(); renderAdminLoyalty(); renderOverviewStats(); pullLoyaltyIssued(); updateSettingsEmpty(); updateAdmMenuLabel(); if(adminTab==='clients') renderAdminClients(); if(adminTab==='orders') renderAdminOrders();
+  renderAdminProducts(); renderAdminServices(); renderAdminOffers(); renderAdminGallery(); renderAdminBookings(); renderBrandPhotos(); renderPhotoMove(); renderCurrencySettings(); renderClientLoginSetting(); renderWalletCardSetting(); renderWaTemplates(); renderNotifSettings(); renderHoursAdmin(); renderHomeServiceAdmin(); renderAdminEmployees(); renderAdminPurchases(); renderAdminReports(); renderAdminLoyalty(); renderOverviewStats(); pullLoyaltyIssued(); updateSettingsEmpty(); updateAdmMenuLabel(); if(adminTab==='clients') renderAdminClients(); if(adminTab==='orders') renderAdminOrders();
   if(adminTab==='classes'){ renderAdminClasses(); pullClasses().then(()=>{ if(adminTab==='classes') renderAdminClasses(); }); }
   if(currentUser.isOwner) pullNotifications(true).then(ok=>{ if(ok){ renderNotifSettings(); updateSettingsEmpty(); } });
 }
@@ -11937,6 +11954,131 @@ async function loadMyLoyalty(force){
 function refreshMyLoyaltySoon(){
   loadMyLoyalty().then(ch=>{ if(ch&&currentScreen==='profile'&&clientIn()) render(); });
 }
+/* ---- Apple Wallet card (server: Edge Function "wallet") --------------------
+   Shown on iPhone/iPad only, when the owner has switched it on (Settings →
+   Apple Wallet card) — or on a test phone that opened the site once with
+   ?wallettest=1 (?wallettest=0 removes that again). */
+const WALLET_FN=SUPABASE_URL+'/functions/v1/wallet';
+(function(){
+  try{
+    const q=new URLSearchParams(location.search);
+    if(q.get('wallettest')==='1') localStorage.setItem('odc_wallet_test','1');
+    if(q.get('wallettest')==='0') localStorage.removeItem('odc_wallet_test');
+  }catch(e){}
+})();
+function isAppleMobile(){
+  try{
+    if(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios') return true;
+    const ua=navigator.userAgent||'';
+    return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints>1);
+  }catch(e){ return false; }
+}
+function walletCardOn(){
+  let test=false; try{ test=localStorage.getItem('odc_wallet_test')==='1'; }catch(e){}
+  return (STORE.settings&&STORE.settings.walletCard==='on') || test;
+}
+function walletButtonHtml(){
+  if(!walletCardOn() || !isAppleMobile() || !clientIn()) return '';
+  return `<button class="pv-wallet" data-wallet-add type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M2.5 9.5h19" stroke="#fff" stroke-width="1.6"/><rect x="14.5" y="12.5" width="4.5" height="3" rx="1.2" fill="#c9a46a"/></svg>
+      <span>${t('walletAdd')}</span></button>
+    <div class="pv-wallet-note">${t('walletNote')}</div>`;
+}
+let walletBusy=false;
+async function addToAppleWallet(btn){
+  if(walletBusy) return;
+  const cs=clientSupa(); if(!cs||!loggedInClient){ toast(t('walletLogin')); return; }
+  walletBusy=true;
+  const label=btn&&btn.querySelector('span'); const old=label?label.textContent:'';
+  if(btn){ btn.disabled=true; if(label) label.textContent=t('walletBusy'); }
+  try{
+    const ses=await cs.auth.getSession();
+    const tok=ses&&ses.data&&ses.data.session&&ses.data.session.access_token;
+    if(!tok){ toast(t('walletLogin')); return; }
+    const r=await fetch(WALLET_FN+'/card',{method:'POST',
+      headers:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+tok},
+      body:JSON.stringify({client_id:String(loggedInClient.id)})});
+    if(r.status===401){ toast(t('walletLogin')); return; }
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.url){ toast(t('walletFail')); return; }
+    // Safari shows "Add to Apple Wallet" for the card. In the iPhone app this
+    // address opens in Safari (the app hands outside links to Safari).
+    location.href=j.url;
+  }catch(e){ toast(t('walletFail')); }
+  finally{
+    walletBusy=false;
+    setTimeout(()=>{ if(btn&&btn.isConnected){ btn.disabled=false; if(label) label.textContent=old; } },1500);
+  }
+}
+
+/* ---- Staff: scan a client's Wallet card with the iPhone Camera ------------
+   The card's QR opens <site>/?m=<member code>#admin. After a staff login with
+   Loyalty or Bookings, that client opens in the Loyalty tab, ready to redeem.
+   Scanning alone never changes points. */
+(function(){
+  try{
+    const q=new URLSearchParams(location.search), m=(q.get('m')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(/^DP[A-Z0-9]{10}$/.test(m)){
+      sessionStorage.setItem('odc_scan_code',JSON.stringify({code:m,at:Date.now()}));
+      q.delete('m');
+      const rest=q.toString();
+      history.replaceState(history.state,'',location.pathname+(rest?'?'+rest:'')+location.hash);
+    }
+  }catch(e){}
+})();
+let walletScanBusy=false;
+function pendingScan(){
+  try{
+    const v=JSON.parse(sessionStorage.getItem('odc_scan_code')||'null');
+    if(v&&v.code&&Date.now()-v.at<10*60*1000) return v.code;
+    sessionStorage.removeItem('odc_scan_code');
+  }catch(e){}
+  return '';
+}
+function clearScan(){ try{ sessionStorage.removeItem('odc_scan_code'); }catch(e){} }
+function showScanNote(html){
+  const wrap=document.getElementById('loyaltyWrap'); if(!wrap) return;
+  let n=document.getElementById('walletScanNote');
+  if(!n){ n=document.createElement('div'); n.id='walletScanNote'; n.className='ac-card'; n.style.cssText='max-width:none;margin-bottom:14px;'; wrap.parentNode.insertBefore(n,wrap); }
+  n.innerHTML=html+` <button class="btn btn-sm" style="margin-inline-start:8px;" onclick="this.parentNode.remove()">OK</button>`;
+}
+function openAdminTab(tab){
+  const b=document.querySelector(`#adminTabsRow [data-admin-tab="${tab}"]`);
+  if(b && b.style.display!=='none'){ b.click(); return true; }
+  return false;
+}
+async function handleWalletScan(){
+  const code=pendingScan();
+  if(!code||walletScanBusy||!currentUser||!supa||appMode!=='admin') return;
+  walletScanBusy=true;
+  try{
+    const r=await supa.rpc('wallet_member_lookup',{p_code:code});
+    if(r.error){
+      const msg=String(r.error.message||'');
+      if(/NO_ACCESS/.test(msg)){ clearScan(); toast("Your login can't open D+ points. Ask the owner to give you the Loyalty or Bookings section."); }
+      else if(/NOT_STAFF|JWT|401/.test(msg)){ /* session still starting — try again shortly */ }
+      else { clearScan(); toast('Could not read the card — check the connection and scan again.'); }
+      return;
+    }
+    clearScan();
+    const row=(r.data||[])[0];
+    if(!openAdminTab('loyalty')){ toast("Your login can't open D+ points."); return; }
+    if(!row){ showScanNote('<b>Card not recognised.</b> This Dolce+ card doesn’t exist any more (the client may have deleted their account). Ask the client to add their card again from the Dolce+ app.'); return; }
+    if(!row.visible){
+      showScanNote(`<b>${esc(row.name||'This client')}</b> · ${Number(row.points||0).toLocaleString('en-US')} pts · ${esc(tierNameEn(row.tier))}<br>This client has no visits at your business yet, so your login can’t open their points. Complete their first visit in Bookings, or ask the owner.`);
+      return;
+    }
+    if(!STORE.clients.some(c=>String(c.id)===String(row.client_id))) await refreshFromCloud({force:true});
+    const old=document.getElementById('walletScanNote'); if(old) old.remove();
+    await selectLoyaltyClient(row.client_id);
+    toast(`Card scanned: ${row.name}. Choose a reward and confirm.`);
+    const w=document.getElementById('loyaltyWrap'); if(w) w.scrollIntoView({block:'start'});
+  }catch(e){ /* try again on the next check */ }
+  finally{ walletScanBusy=false; }
+}
+// Checks once a second for a scanned card waiting for a staff login (10 min).
+setInterval(()=>{ if(pendingScan()) handleWalletScan(); },1000);
+
 function clientLoyaltyHtml(c){
   const pts=Number(c.points)||0;
   const lv=loyaltyFromRows(myLedgerYear);
@@ -11962,6 +12104,7 @@ function clientLoyaltyHtml(c){
       <div class="pv-bar"><i style="width:${pct}%"></i></div>
       <div class="pv-note">${esc(note)}</div>
       <div class="pv-note dp-perk">${esc(perk)}</div>
+      ${walletButtonHtml()}
     </section>
     <section class="lux-sec">${LuxHeader(t('rewardsShop'))}
       <div class="dp-rw-list">${rws.map(r=>{ const ok=pts>=r.points; return `
@@ -14830,6 +14973,27 @@ function renderClientLoginSetting(){
     saveStore(); cloudSave('settings','client_login');
     toast(m==='off'?'Client login turned off.':m==='email'?'Client login turned on (email codes).':m==='both'?'Client login turned on (client chooses WhatsApp or email).':'Client login turned on (WhatsApp codes).');
     renderClientLoginSetting(); render();
+  }));
+}
+/* ---------------- Admin: Apple Wallet card switch (owner only) ---------------- */
+function renderWalletCardSetting(){
+  const wrap=document.getElementById('walletCardWrap'); if(!wrap) return;
+  if(!currentUser || !currentUser.isOwner){ wrap.innerHTML=''; return; }
+  const v=STORE.settings.walletCard==='on'?'on':'off';
+  wrap.innerHTML=`
+    <div class="section-label" style="margin:0 0 10px;">Apple Wallet card</div>
+    <div class="admin-form" style="max-width:520px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      ${[['off','Off'],['on','On for all clients']].map(([k,l])=>`<button class="btn btn-sm ${k===v?'btn-primary':''}" data-wc-mode="${k}" ${k===v?'aria-pressed="true"':''}>${l}</button>`).join('')}
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin:6px 0 22px;max-width:520px;">${v==='on'
+      ?'Logged-in clients on iPhone see “Add to Apple Wallet” on their Profile. The card shows their name, points and level, and updates by itself. Staff scan its QR with the iPhone Camera to open the client in Loyalty.'
+      :'Hidden from clients. To test on one phone, open the website once with <b>?wallettest=1</b> at the end of the address (<b>?wallettest=0</b> hides it again).'}</div>`;
+  wrap.querySelectorAll('[data-wc-mode]').forEach(b=>b.addEventListener('click',()=>{
+    const m=b.dataset.wcMode; if(m===v) return;
+    STORE.settings.walletCard=m;
+    saveStore(); cloudSave('settings','wallet_card');
+    toast(m==='on'?'Apple Wallet card turned on for clients.':'Apple Wallet card hidden from clients.');
+    renderWalletCardSetting(); render();
   }));
 }
 /* ---------------- Admin: Brand photos ---------------- */

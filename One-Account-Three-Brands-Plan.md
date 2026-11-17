@@ -291,3 +291,19 @@ New Admin section directly below Services, with Dolce / Polished / CORE tabs. Sa
 - Server (`supabase_migration_home_service_v3.sql`, needs v1 + v2, all-or-nothing): a client home request is accepted only if home visits are on, the service is Offered and has a home price (Dolce/Polished), the area is on the list and active, and the address is filled. The server saves the home price, travel fee and total itself; prices sent from a phone are ignored. Editing home prices needs the Services section for that business (existing database rule `can_write('services', brand)`).
 - Points: on the home-service price actually charged, never on the travel fee. Reports and refunds use the saved total.
 - `home_services_predeploy_check.sql` (read-only) shows which home-visit migrations are installed, that every business is OFF, and the live permission rules.
+
+
+## Apple Wallet loyalty card (built Nov 2026, testing)
+
+Clients on iPhone can add a Dolce+ card to Apple Wallet from their Profile ("Add to Apple Wallet"). The card shows their name, D+ points and level. Its colour follows the level: ivory for Member, gold for Gold, black for Black. It updates by itself when points or level change.
+
+The back of the card shows the clinic's address, phone and email, as Apple requires.
+
+At reception, staff scan the card's QR with the iPhone Camera. This opens Admin straight on that client in the Loyalty tab, where they choose a reward and confirm. Scanning alone never changes points.
+
+The owner switches the card on for everyone in Admin → Settings → Apple Wallet card. Until then it's hidden. A test phone can see it by opening the website once with `?wallettest=1`.
+
+Behind the scenes:
+- The database keeps one card per client (`supabase_migration_wallet.sql`).
+- The `wallet` server function makes and signs the card and pushes updates to the iPhone.
+- A nightly check moves cards down a level when old spending passes 12 months.
