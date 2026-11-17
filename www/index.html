@@ -12911,7 +12911,7 @@ function renderHomeServiceAdmin(){
         <td><input ${inp} dir="rtl" data-hs-f="name_ku" data-i="${i}" value="${attr(a.name_ku||'')}" maxlength="60"></td>
         <td><input ${inp} type="number" min="0" step="1" data-hs-f="fee" data-i="${i}" value="${a.fee}"></td>
         <td style="text-align:center;"><input type="checkbox" data-hs-f="active" data-i="${i}" ${a.active!==false?'checked':''}></td>
-        <td><button class="btn btn-ghost btn-sm" data-hs-del="${i}" aria-label="Remove">✕</button></td></tr>`).join('')||`<tr><td colspan="6" class="note">No areas yet — clients cannot request a home visit until you add at least one.</td></tr>`}
+        <td><button class="btn btn-ghost btn-sm" data-hs-del="${i}" aria-label="Remove">✕</button></td></tr>`).join('')||`<tr><td colspan="6" class="note">No areas — clients type their own area and address, and reception agrees the travel fee on WhatsApp.</td></tr>`}
       </tbody></table>
       <button class="btn btn-ghost btn-sm" id="hs_add" style="margin-top:8px;">+ Add area</button>
       <div class="note" style="margin:10px 0 0;"><b>No areas?</b> Leave the list empty: clients type their own area and address, and reception agrees the travel fee with them on WhatsApp and adds it in Bookings → Change price before confirming.<br>With areas: clients pick their area from this list and see the service price, this fee and the total before they request. An area not on the list gets "Contact reception for a quote". A fee change applies to new requests only — requests already made keep the price they were given. "Offered" off hides an area without deleting it.</div>`}
