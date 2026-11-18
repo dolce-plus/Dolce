@@ -37,28 +37,32 @@ const env = (k: string) => Deno.env.get(k) ?? "";
 const GRAPH = () => env("WHATSAPP_GRAPH_VERSION") || "v23.0";
 export const BRAND_NAMES: Record<string, string> = { dolce: "Dolce", polished: "Polished", core: "Core" };
 
-// Same default wording as the app (index.html → DEFAULT_WA_TEMPLATES).
+// iPhone notification wording. Written for a notification (people can't reply
+// to it), so it points to the app instead of "reply here". The WhatsApp
+// wording the owner edits in Admin is NOT used here.
+//   r12 = a reminder 3 hours or more before (e.g. the day before)
+//   r1  = a reminder less than 3 hours before (e.g. 2 hours before)
 export const DEFAULT_TEXT: Record<string, Record<string, string>> = {
   en: {
-    confirm: "Hi {name}, your appointment at {brand} is confirmed ✅\n📅 {date} at {time}\n\nSee you soon!",
-    r12: "Hi {name}, a friendly reminder of your appointment at {brand}:\n📅 {date} at {time}\n\nReply here if you need to change it.",
-    r1: "Hi {name}, see you in about an hour at {brand} — {time}. 🌿",
-    cancel: "Hi {name}, your appointment at {brand} on {date} at {time} has been cancelled.\n\nReply here if you would like a new time.",
-    moved: "Hi {name}, your appointment at {brand} has a new time ✅\n📅 {date} at {time}\n\nReply here if this does not suit you.",
+    confirm: "Hi {name}, your appointment at {brand} is confirmed ✅\n📅 {date} at {time}\nSee you soon!",
+    r12: "Hi {name}, a friendly reminder of your appointment at {brand}:\n📅 {date} at {time}\nNeed to change it? Open the Dolce+ app.",
+    r1: "Hi {name}, see you today at {time} at {brand}. 🌿",
+    cancel: "Hi {name}, your appointment at {brand} on {date} at {time} has been cancelled.\nOpen the Dolce+ app to book a new time.",
+    moved: "Hi {name}, your appointment at {brand} has a new time ✅\n📅 {date} at {time}\nIf it doesn't suit you, open the Dolce+ app.",
   },
   ar: {
-    confirm: "مرحباً {name}، تم تأكيد موعدك في {brand} ✅\n📅 {date} الساعة {time}\n\nنراك قريباً!",
-    r12: "مرحباً {name}، تذكير بموعدك في {brand}:\n📅 {date} الساعة {time}\n\nردّ هنا إذا أردت تغييره.",
-    r1: "مرحباً {name}، نراك بعد ساعة تقريباً في {brand} — الساعة {time}. 🌿",
-    cancel: "مرحباً {name}، تم إلغاء موعدك في {brand} يوم {date} الساعة {time}.\n\nردّ هنا إذا أردت موعداً جديداً.",
-    moved: "مرحباً {name}، تم تغيير موعدك في {brand} ✅\n📅 {date} الساعة {time}\n\nردّ هنا إذا لم يناسبك.",
+    confirm: "مرحباً {name}، تم تأكيد موعدك في {brand} ✅\n📅 {date} الساعة {time}\nنراك قريباً!",
+    r12: "مرحباً {name}، تذكير بموعدك في {brand}:\n📅 {date} الساعة {time}\nلتغيير الموعد، افتح تطبيق Dolce+.",
+    r1: "مرحباً {name}، نراك اليوم الساعة {time} في {brand}. 🌿",
+    cancel: "مرحباً {name}، تم إلغاء موعدك في {brand} يوم {date} الساعة {time}.\nافتح تطبيق Dolce+ لحجز موعد جديد.",
+    moved: "مرحباً {name}، تم تغيير موعدك في {brand} ✅\n📅 {date} الساعة {time}\nإذا لم يناسبك، افتح تطبيق Dolce+.",
   },
   ku: {
-    confirm: "سڵاو {name}، کاتەکەت لە {brand} پشتڕاستکرایەوە ✅\n📅 {date} کاتژمێر {time}\n\nبە هیوای بینینت!",
-    r12: "سڵاو {name}، بیرخستنەوەی کاتەکەت لە {brand}:\n📅 {date} کاتژمێر {time}\n\nئەگەر پێویستت بە گۆڕینی هەیە لێرە وەڵام بدەرەوە.",
-    r1: "سڵاو {name}، نزیکەی یەک کاتژمێری تر لە {brand} دەتبینین — {time}. 🌿",
-    cancel: "سڵاو {name}، کاتەکەت لە {brand} لە {date} کاتژمێر {time} هەڵوەشێنرایەوە.\n\nئەگەر کاتێکی نوێت دەوێت لێرە وەڵام بدەرەوە.",
-    moved: "سڵاو {name}، کاتەکەت لە {brand} گۆڕدرا ✅\n📅 {date} کاتژمێر {time}\n\nئەگەر گونجاو نییە لێرە وەڵام بدەرەوە.",
+    confirm: "سڵاو {name}، کاتەکەت لە {brand} پشتڕاستکرایەوە ✅\n📅 {date} کاتژمێر {time}\nبە هیوای بینینت!",
+    r12: "سڵاو {name}، بیرخستنەوەی کاتەکەت لە {brand}:\n📅 {date} کاتژمێر {time}\nبۆ گۆڕینی، ئەپی Dolce+ بکەرەوە.",
+    r1: "سڵاو {name}، ئەمڕۆ کاتژمێر {time} لە {brand} دەتبینین. 🌿",
+    cancel: "سڵاو {name}، کاتەکەت لە {brand} لە {date} کاتژمێر {time} هەڵوەشێنرایەوە.\nبۆ کاتێکی نوێ، ئەپی Dolce+ بکەرەوە.",
+    moved: "سڵاو {name}، کاتەکەت لە {brand} گۆڕدرا ✅\n📅 {date} کاتژمێر {time}\nئەگەر گونجاو نییە، ئەپی Dolce+ بکەرەوە.",
   },
 };
 
@@ -144,7 +148,7 @@ async function apnsToken(): Promise<string> {
   apnsJwt = { token: `${head}.${claims}.${b64url(sig)}`, at: now };
   return apnsJwt.token;
 }
-export async function sendPush(n: Note, texts: Record<string, Record<string, string>>): Promise<Result> {
+export async function sendPush(n: Note, _texts: Record<string, Record<string, string>>): Promise<Result> {
   if (!env("APNS_KEY") || !env("APNS_KEY_ID") || !env("APNS_TEAM_ID") || !env("APNS_BUNDLE_ID")) {
     return { ok: false, via: "push", ref: "", retry: false, error: "Push is not set up on the server (Apple key missing)" };
   }
@@ -157,7 +161,7 @@ export async function sendPush(n: Note, texts: Record<string, Record<string, str
   for (const d of devices) {
     const L = ["en", "ar", "ku"].includes(n.lang) ? n.lang : (["en", "ar", "ku"].includes(d.lang) ? d.lang : "en");
     const k = textKind(n);
-    const body = fill(texts[L]?.[k] || DEFAULT_TEXT[L][k] || DEFAULT_TEXT.en[k], n);
+    const body = fill(DEFAULT_TEXT[L][k] || DEFAULT_TEXT.en[k], n);   // notification wording only (not the WhatsApp texts)
     try {
       const res = await fetch(`https://${host}/3/device/${d.token}`, {
         method: "POST",
