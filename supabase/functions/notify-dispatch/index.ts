@@ -39,7 +39,8 @@ export const BRAND_NAMES: Record<string, string> = { dolce: "Dolce", polished: "
 
 // iPhone notification wording. Written for a notification (people can't reply
 // to it), so it points to the app instead of "reply here". The WhatsApp
-// wording the owner edits in Admin is NOT used here.
+// wording is NOT used here. The owner can change these in Admin → Settings →
+// "iPhone notification wording" (settings key push_texts); empty = this default.
 //   r12 = a reminder 3 hours or more before (e.g. the day before)
 //   r1  = a reminder less than 3 hours before (e.g. 2 hours before)
 export const DEFAULT_TEXT: Record<string, Record<string, string>> = {
@@ -148,7 +149,7 @@ async function apnsToken(): Promise<string> {
   apnsJwt = { token: `${head}.${claims}.${b64url(sig)}`, at: now };
   return apnsJwt.token;
 }
-export async function sendPush(n: Note, _texts: Record<string, Record<string, string>>): Promise<Result> {
+export async function sendPush(n: Note, texts: Record<string, Record<string, string>>): Promise<Result> {
   if (!env("APNS_KEY") || !env("APNS_KEY_ID") || !env("APNS_TEAM_ID") || !env("APNS_BUNDLE_ID")) {
     return { ok: false, via: "push", ref: "", retry: false, error: "Push is not set up on the server (Apple key missing)" };
   }
@@ -161,7 +162,8 @@ export async function sendPush(n: Note, _texts: Record<string, Record<string, st
   for (const d of devices) {
     const L = ["en", "ar", "ku"].includes(n.lang) ? n.lang : (["en", "ar", "ku"].includes(d.lang) ? d.lang : "en");
     const k = textKind(n);
-    const body = fill(DEFAULT_TEXT[L][k] || DEFAULT_TEXT.en[k], n);   // notification wording only (not the WhatsApp texts)
+    const own = String(texts?.[L]?.[k] ?? "").trim().slice(0, 500);   // owner's wording (Admin → Settings → iPhone notification wording)
+    const body = fill(own || DEFAULT_TEXT[L][k] || DEFAULT_TEXT.en[k], n);
     try {
       const res = await fetch(`https://${host}/3/device/${d.token}`, {
         method: "POST",
@@ -208,7 +210,7 @@ export async function handle(req: Request): Promise<Response> {
   if (!sameSecret(req.headers.get("x-cron-secret") ?? "", secret)) return out(401, { error: "not allowed" });
 
   const cfg = await setting("notifications");
-  const texts = await setting("wa_templates") as Record<string, Record<string, string>>;
+  const texts = await setting("push_texts") as Record<string, Record<string, string>>;   // owner's iPhone wording (Admin → Settings), empty = default
   const claim = await rest("rpc/claim_notifications", { method: "POST", body: JSON.stringify({ p_limit: 40 }) });
   if (!claim.ok) return out(502, { error: "claim failed", detail: (await claim.text()).slice(0, 300) });
   const notes = await claim.json() as Note[];

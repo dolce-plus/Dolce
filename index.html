@@ -3406,7 +3406,7 @@ async function pullCatalog(){
       selectAllRows('products',q=>q.order('id',{ascending:true})),
       supa.from('offers').select('*'),
       supa.from('brand_images').select('*'),
-      supa.from('settings').select('*').in('key',['usd_to_iqd','image_focus','destinations','client_login','wa_templates','hours','loyalty','client_booking_changes','home_service','categories:dolce','categories:polished','categories:core','mindbody','wallet_card']),   // mindbody: CORE's public setup (Site ID, booking page, reception WhatsApp) — no secrets
+      supa.from('settings').select('*').in('key',['usd_to_iqd','image_focus','destinations','client_login','wa_templates','push_texts','hours','loyalty','client_booking_changes','home_service','categories:dolce','categories:polished','categories:core','mindbody','wallet_card']),   // mindbody: CORE's public setup (Site ID, booking page, reception WhatsApp) — no secrets
     ]);
     if(svc.error||prod.error||off.error) return false;
 
@@ -3458,6 +3458,10 @@ async function pullCatalog(){
       const loyRow=row('loyalty');
       if(loyRow && loyRow.value){
         try{ const v=typeof loyRow.value==='string'?JSON.parse(loyRow.value):loyRow.value; if(v&&typeof v==='object') STORE.loyalty=v; }catch(e){}
+      }
+      const ptRow=row('push_texts');
+      if(ptRow && ptRow.value){
+        try{ const v=typeof ptRow.value==='string'?JSON.parse(ptRow.value):ptRow.value; if(v&&typeof v==='object') STORE.pushTexts=v; }catch(e){}
       }
       const waRow=row('wa_templates');
       if(waRow && waRow.value){
@@ -13118,6 +13122,70 @@ function renderMsgIssues(){
 
 // Settings → Automatic messages (owner only)
 let notifDraft=null;
+/* iPhone notification wording (Admin → Settings → Automatic messages).
+   Saved in settings key "push_texts" as {en:{confirm,r12,r1,cancel,moved}, ar:{…}, ku:{…}}.
+   The server ("notify-dispatch") uses the owner's text when it is filled in and
+   its built-in default otherwise, so an empty box always means "default".
+   Keep PUSH_DEFAULT the same as DEFAULT_TEXT in supabase/functions/notify-dispatch. */
+const PUSH_KINDS={confirm:'Booking confirmed',r12:'Reminder · 3 hours or more before (e.g. the day before)',r1:'Reminder · less than 3 hours before (e.g. 2 hours before)',cancel:'Cancelled',moved:'New time'};
+const PUSH_DEFAULT={
+  en:{confirm:"Hi {name}, your appointment at {brand} is confirmed ✅\n📅 {date} at {time}\nSee you soon!",
+      r12:"Hi {name}, a friendly reminder of your appointment at {brand}:\n📅 {date} at {time}\nNeed to change it? Open the Dolce+ app.",
+      r1:"Hi {name}, see you today at {time} at {brand}. 🌿",
+      cancel:"Hi {name}, your appointment at {brand} on {date} at {time} has been cancelled.\nOpen the Dolce+ app to book a new time.",
+      moved:"Hi {name}, your appointment at {brand} has a new time ✅\n📅 {date} at {time}\nIf it doesn't suit you, open the Dolce+ app."},
+  ar:{confirm:"مرحباً {name}، تم تأكيد موعدك في {brand} ✅\n📅 {date} الساعة {time}\nنراك قريباً!",
+      r12:"مرحباً {name}، تذكير بموعدك في {brand}:\n📅 {date} الساعة {time}\nلتغيير الموعد، افتح تطبيق Dolce+.",
+      r1:"مرحباً {name}، نراك اليوم الساعة {time} في {brand}. 🌿",
+      cancel:"مرحباً {name}، تم إلغاء موعدك في {brand} يوم {date} الساعة {time}.\nافتح تطبيق Dolce+ لحجز موعد جديد.",
+      moved:"مرحباً {name}، تم تغيير موعدك في {brand} ✅\n📅 {date} الساعة {time}\nإذا لم يناسبك، افتح تطبيق Dolce+."},
+  ku:{confirm:"سڵاو {name}، کاتەکەت لە {brand} پشتڕاستکرایەوە ✅\n📅 {date} کاتژمێر {time}\nبە هیوای بینینت!",
+      r12:"سڵاو {name}، بیرخستنەوەی کاتەکەت لە {brand}:\n📅 {date} کاتژمێر {time}\nبۆ گۆڕینی، ئەپی Dolce+ بکەرەوە.",
+      r1:"سڵاو {name}، ئەمڕۆ کاتژمێر {time} لە {brand} دەتبینین. 🌿",
+      cancel:"سڵاو {name}، کاتەکەت لە {brand} لە {date} کاتژمێر {time} هەڵوەشێنرایەوە.\nبۆ کاتێکی نوێ، ئەپی Dolce+ بکەرەوە.",
+      moved:"سڵاو {name}، کاتەکەت لە {brand} گۆڕدرا ✅\n📅 {date} کاتژمێر {time}\nئەگەر گونجاو نییە، ئەپی Dolce+ بکەرەوە."}
+};
+const PUSH_MAX=400;
+let ptLang='en', ptDraft=null;   // unsaved edits survive the screen redrawing (e.g. adding a reminder)
+function pushText(L,k){ const own=STORE.pushTexts&&STORE.pushTexts[L]&&STORE.pushTexts[L][k]; return (own&&String(own).trim())?String(own):PUSH_DEFAULT[L][k]; }
+function pushSample(t){ return String(t).replace(/\{name\}/g,'Dana').replace(/\{brand\}/g,'Polished').replace(/\{date\}/g,'24 Dec').replace(/\{time\}/g,'11:00 AM').replace(/\{service\}/g,'Classic Manicure'); }
+function pushTextsHtml(){
+  if(!ptDraft) ptDraft={};
+  if(!ptDraft[ptLang]){ ptDraft[ptLang]={}; Object.keys(PUSH_KINDS).forEach(k=>{ ptDraft[ptLang][k]=pushText(ptLang,k); }); }
+  const d=ptDraft[ptLang];
+  return `<div class="admin-form" style="max-width:620px;margin-top:12px;" id="ptBox">
+      <div class="field full" style="grid-column:1/-1;"><label>iPhone notification wording</label>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">What clients see on their iPhone. The business name (Dolce, Polished or CORE) is shown as the title. Clients get it in the app language they use.</div>
+        <div class="wa-langs">${[['en','English'],['ar','عربي'],['ku','کوردی']].map(([k,l])=>`<button class="btn btn-sm ${k===ptLang?'btn-primary':'btn-ghost'}" data-pt-lang="${k}">${l}</button>`).join('')}</div></div>
+      ${Object.keys(PUSH_KINDS).map(k=>`<div class="field full" style="grid-column:1/-1;"><label>${PUSH_KINDS[k]}</label>
+        <textarea id="pt_${k}" rows="3" dir="auto" maxlength="${PUSH_MAX}">${esc(d[k])}</textarea>
+        <div class="pt-prev" id="ptp_${k}" dir="auto" style="font-size:12.5px;color:var(--muted);white-space:pre-line;margin-top:4px;">Example: ${esc(pushSample(d[k]))}</div></div>`).join('')}
+      <div style="font-size:13px;color:var(--muted);grid-column:1/-1;">Use {name}, {brand}, {date} and {time}. Clients can't reply to a notification, so point them to the app instead of "reply here". An empty box uses the default wording.</div>
+      <div style="display:flex;gap:8px;grid-column:1/-1;"><button class="btn btn-primary btn-sm" id="pt_save">Save wording</button><button class="btn btn-ghost btn-sm" id="pt_reset">Back to default wording</button></div>
+    </div>`;
+}
+function bindPushTexts(wrap){
+  const box=wrap.querySelector('#ptBox'); if(!box) return;
+  Object.keys(PUSH_KINDS).forEach(k=>{ const ta=box.querySelector('#pt_'+k); if(!ta) return;
+    ta.addEventListener('input',()=>{ ptDraft[ptLang][k]=ta.value; const pv=box.querySelector('#ptp_'+k); if(pv) pv.textContent='Example: '+pushSample(ta.value.trim()||PUSH_DEFAULT[ptLang][k]); }); });
+  box.querySelectorAll('[data-pt-lang]').forEach(b=>b.addEventListener('click',()=>{ ptLang=b.dataset.ptLang; renderNotifSettings(); }));
+  const save=async(reset)=>{
+    if(!supa){ toast('Needs the internet.'); return; }
+    const next=JSON.parse(JSON.stringify(STORE.pushTexts||{}));
+    next[ptLang]={};
+    if(!reset) Object.keys(PUSH_KINDS).forEach(k=>{
+      const v=String(ptDraft[ptLang][k]||'').trim().slice(0,PUSH_MAX);
+      if(v && v!==PUSH_DEFAULT[ptLang][k]) next[ptLang][k]=v;   // only keep what differs from the default
+    });
+    const {error}=await supa.from('settings').upsert({key:'push_texts',value:JSON.stringify(next)});
+    if(error){ toast('Could not save: '+error.message); return; }
+    STORE.pushTexts=next; saveStore(); delete ptDraft[ptLang];
+    toast(reset?'Default wording restored.':'Notification wording saved.');
+    renderNotifSettings();
+  };
+  box.querySelector('#pt_save').addEventListener('click',()=>save(false));
+  box.querySelector('#pt_reset').addEventListener('click',()=>save(true));
+}
 function renderNotifSettings(){
   const wrap=document.getElementById('notifSettingsWrap'); if(!wrap) return;
   if(!currentUser || !currentUser.isOwner){ wrap.innerHTML=''; return; }
@@ -13147,9 +13215,10 @@ function renderNotifSettings(){
         <div class="nt-tpl"><span>New time</span><input id="nf_t_moved" type="text" value="${esc(c.wa_templates.moved)}" placeholder="template name"></div>
         <div class="nt-tpl"><span>Reminder</span><input id="nf_t_reminder" type="text" value="${esc(c.wa_templates.reminder)}" placeholder="template name"></div>
         <div class="nt-tpl"><span>Languages</span><input id="nf_langs" type="text" value="${esc(c.wa_langs)}" placeholder="e.g. en,ar (first = default)"></div>
-        <div style="font-size:12.5px;color:var(--muted);margin-top:6px;">WhatsApp only allows business-started messages through templates Meta has approved. Each template's text uses {{1}} first name, {{2}} brand, {{3}} service or class, {{4}} date, {{5}} time — "New time" adds {{6}} old date, {{7}} old time. WhatsApp has no Kurdish: Kurdish clients get the first language. App notifications use the wording under "WhatsApp messages".</div></div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:6px;">WhatsApp only allows business-started messages through templates Meta has approved. Each template's text uses {{1}} first name, {{2}} brand, {{3}} service or class, {{4}} date, {{5}} time — "New time" adds {{6}} old date, {{7}} old time. WhatsApp has no Kurdish: Kurdish clients get the first language. iPhone app notifications use their own wording, which you can change below under "iPhone notification wording".</div></div>
       <div style="display:flex;gap:8px;"><button class="btn btn-primary btn-sm" id="nf_save">Save</button></div>
     </div>
+    ${pushTextsHtml()}
     <div class="admin-form" style="max-width:none;margin-top:12px;display:block;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
         <b>Delivery log</b>
@@ -13186,6 +13255,7 @@ function renderNotifSettings(){
     await pullNotifications(true); renderNotifSettings(); renderReminders();
   });
   bindNotifRows(wrap,renderNotifSettings);
+  bindPushTexts(wrap);
 }
 
 /* ======================= CORE weekly group classes (Admin) =======================
