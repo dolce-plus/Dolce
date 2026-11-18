@@ -23,3 +23,8 @@ data-export/
 *.key
 *.cer
 *.certSigningRequest
+
+# Android signing keys — never commit
+*.jks
+*.keystore
+key.properties

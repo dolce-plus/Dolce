@@ -13902,7 +13902,11 @@ function bindMyClasses(root){
    (@capacitor/push-notifications) and Apple setup; without them this quietly
    does nothing. */
 const PUSH_ASKED_KEY='odc_push_asked_v1';
-function pushPlugin(){ try{ return window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications||null; }catch(e){ return null; } }
+// iPhone only for now: on Android, notifications need Firebase (google-services.json),
+// and asking for a token without it makes the Android app close. Remove the
+// platform check once Firebase and the server's Android sender are set up.
+function pushPlugin(){ try{ if(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')) return null;
+  return window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications||null; }catch(e){ return null; } }
 function pushWanted(){ const c=notifCfg(); return c.enabled && (c.channel==='push'||c.channel==='both'); }
 let pushListening=false;
 async function registerPush(P){

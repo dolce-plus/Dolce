@@ -1,4 +1,4 @@
-package com.dolce.app;
+package com.dolceclinic.plus;
 
 import com.getcapacitor.BridgeActivity;
 
