@@ -5516,7 +5516,12 @@ function EventOfferCard(o,opt){
   const b=BRANDS[o.brand]||BRANDS.dolce;
   // On the home screen every offer/event opens its business's Offers tab; a
   // link chosen in Admin still wins. Inside the tab, cards only follow such a link.
-  const link=o.auto?`offers:${o.brand}:${o.link||''}`:(o.link||(opt&&opt.inTab?'':BRANDS[o.brand]?`offers:${o.brand}`:''));
+  // Every offer/event card on the home screen opens its business's ✦ Offers tab —
+  // also when the card was saved in Admin with a link to the business page
+  // ("brand:dolce"), which used to land on "All". Inside the Offers tab a card
+  // only follows a link to one specific treatment, product or the shop.
+  const specific=o.link&&!/^brand:/.test(o.link)?o.link:'';
+  const link=o.auto?`offers:${o.brand}:${o.link||''}`:(opt&&opt.inTab?specific:(BRANDS[o.brand]?`offers:${o.brand}`:specific));
   const date=fmtRange(o.start,o.end);
   const inner=(o.badge?`<span class="lux-badge">${esc(o.badge)}</span>`:'')
     +(o.image?'':`<span class="eo-ph">${esc(b.name)}</span>`);
