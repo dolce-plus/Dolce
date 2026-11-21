@@ -4449,6 +4449,7 @@ let homePickBrand=null;
 // homeOnly: the client came from the home-screen "Home Services" card, so the
 // business opens showing only Home Services (no "At Dolce / Home Services" cards).
 let homeOnly=false;
+const SHOW_PLACE_CARDS=false;
 function syncHomePick(){ if(homePickBrand!==currentBrand){ homePickBrand=currentBrand; bookAtHome=false; homeOnly=false; } }
 function homeSelectorOn(b){ return !!(b && homeOn(b) && (svcList(b)||[]).some(x=>homeOffered(b,x))); }
 function atHomeNow(){ syncHomePick(); return homeSelectorOn(currentBrand) && bookAtHome===true; }
@@ -4509,6 +4510,11 @@ const PLACE_ART={
 </g></svg>`,
 };
 function placeCardsHtml(){
+  // The "At Dolce / Home Services" cards are no longer shown on a business's
+  // page: it always lists the in-place services, and Home Services are reached
+  // only from the Home Services card on the home screen (which opens the
+  // business already on Home Services). Kept here in case it is wanted back.
+  if(!SHOW_PLACE_CARDS) return '';
   const b=currentBrand; if(!homeSelectorOn(b)||(homeOnly&&atHomeNow())) return '';
   const home=atHomeNow();
   const card=(isHome)=>{ const on=isHome===home;
