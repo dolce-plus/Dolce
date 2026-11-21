@@ -1913,15 +1913,15 @@
 /* Home screen: "Home Services" under Upcoming events & offers — one card per
    business that offers home visits; tapping opens that business already set
    to Home Services. */
-.hs-home{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:10px;margin-top:4px;}
-.hs-home .place-card{aspect-ratio:auto;min-height:124px;padding:10px 6px 12px;gap:4px;}
-.hs-home .place-card .place-art{height:62px;flex:none;}
-.hs-home .place-card .place-art svg{width:92%;}
-.hs-home .place-name{font-size:15px;}
-.hs-home .hs-sub{font-size:11.5px;color:var(--muted,#8a7b6c);letter-spacing:.2px;text-align:center;line-height:1.2;}
-.hs-home .hs-dolce{background:linear-gradient(180deg,#f2f7fc,#e4eef8);}
-.hs-home .hs-polished{background:linear-gradient(180deg,#faf3e8,#f1e5d2);}
-.hs-home .hs-core{background:linear-gradient(180deg,#f2f6ee,#e6ede0);}
+.hs-dest{cursor:pointer;}
+.hs-dest .hs-tag{position:absolute;top:12px;inset-inline-end:12px;z-index:3;display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px 6px 9px;border-radius:999px;background:rgba(251,247,241,.92);color:var(--ink);
+  font:600 11px/1 var(--sans,system-ui);letter-spacing:.14em;text-transform:uppercase;
+  border:1px solid rgba(200,169,106,.55);box-shadow:0 6px 14px -8px rgba(40,28,18,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.hs-dest .hs-tag-ic{display:inline-flex;width:22px;}
+.dest-card.hs-dest .hs-tag,.dest-card.hs-dest .hs-tag-ic{display:inline-flex!important;}
+.hs-dest .hs-tag-ic svg{width:100%;height:auto;}
+.hs-dest .hs-tag-ic .pa-l{fill:none;stroke:#b08a4e;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;}
 .place-check{position:absolute;top:10px;inset-inline-end:10px;width:26px;height:26px;border-radius:50%;background:#b08a4e;
   display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px -4px rgba(58,42,31,.5);}
 .place-check svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
@@ -5201,14 +5201,18 @@ function EventOfferCard(o){
 }
 
 function homeServicesHomeHtml(){
-  const bs=['dolce','polished','core'].filter(b=>BRANDS[b]&&homeSelectorOn(b));
-  if(!bs.length) return '';
+  // Same big photo cards as "Choose your destination", one per business that
+  // offers home visits, with a gold "Home Services" tag so they read differently.
+  const ds=destinationList().filter(d=>BRANDS[d.b]&&homeSelectorOn(d.b));
+  if(!ds.length) return '';
   return `<section class="lux-sec">${LuxHeader(t('homeServices'))}
     <p class="lux-lede">${t('homeHomeLede')}</p>
-    <div class="hs-home" style="--n:${bs.length}">${bs.map(b=>`<button type="button" class="place-card hs-${b}" data-home-brand="${b}">
-      <span class="place-art">${PLACE_ART.home}</span>
-      <span class="place-name">${esc(BRANDS[b].name)}</span>
-      <span class="hs-sub">${t('atHome')}</span></button>`).join('')}</div></section>`;
+    <div class="dest-list hs-list">${ds.map(d=>{
+      const html=DestinationCard(d).replace(`data-brand="${d.b}"`,`data-home-brand="${d.b}" role="button" tabindex="0" aria-label="${attr(d.name+' — '+t('homeServices'))}"`)
+        .replace('class="dest-card ','class="dest-card hs-dest ');
+      const tag=`<span class="hs-tag"><span class="hs-tag-ic">${PLACE_ART.home}</span>${t('homeServices')}</span>`;
+      return html.replace(/<\/div>\s*$/,tag+'</div>');
+    }).join('')}</div></section>`;
 }
 function renderWelcome(){
   const dests=destinationList();
