@@ -1918,6 +1918,18 @@
 .hs-one-main{display:flex;align-items:center;gap:14px;width:100%;padding:18px 16px 18px 14px;background:none;border:0;font:inherit;color:var(--ink);text-align:start;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .hs-one-main:active{transform:scale(.99);}
 .hs-one-art{flex:none;width:92px;}
+.hs-one-main.has-pic{flex-wrap:wrap;padding:0 0 16px;gap:0;}
+.hs-one-main.has-pic .mi.hs-one-pic{flex:0 0 100%;width:100%;aspect-ratio:11/4;height:auto;border-radius:0;margin-bottom:14px;}
+.hs-one-main.has-pic .hs-one-copy{padding-inline-start:18px;}
+.hs-one-main.has-pic .hs-one-go{padding-inline-end:16px;}
+.hs-photo-adm{display:flex;gap:16px;align-items:center;padding:14px 16px;margin:0 0 14px;border:1px solid var(--line);border-radius:14px;background:#fff;}
+.hs-photo-th{flex:none;width:200px;aspect-ratio:11/4;border-radius:10px;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);}
+.hs-photo-th svg{width:46%;}
+.hs-photo-th .pa-l{fill:none;stroke:#b08a4e;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.hs-photo-tx{flex:1;display:flex;flex-direction:column;gap:6px;font-size:14px;}
+.hs-photo-tx .note{font-size:12.5px;color:var(--muted);}
+.hs-photo-tx .rowbtns{display:flex;gap:8px;flex-wrap:wrap;}
+@media (max-width:640px){.hs-photo-adm{flex-direction:column;align-items:stretch;}.hs-photo-th{width:100%;}}
 .hs-one-art svg{width:100%;height:auto;overflow:visible;}
 .hs-one-art .pa-l{fill:none;stroke:#b08a4e;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
 .hs-one-copy{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;}
@@ -2179,6 +2191,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary" id="hsAddBtn">+ Add services</button></div>
       </div>
       <div id="hsStatus"></div>
+      <div id="hsPhotoWrap"></div>
       <div id="hsFormWrap"></div>
       <div class="admin-table-wrap">
         <table class="admin-table hs-table">
@@ -4353,7 +4366,8 @@ function homeCfg(){
       areas:(Array.isArray(x.areas)?x.areas:[]).filter(a=>a&&a.id&&a.name).map(a=>({id:String(a.id),name:String(a.name),
         name_ar:String(a.name_ar||''),name_ku:String(a.name_ku||''),fee:Math.max(0,Math.round(numOr0(a.fee))),active:a.active!==false}))};
   });
-  return {version:2,brands:out};
+  const img=typeof h.image==='string'&&safeImgUrl(h.image)?h.image:'';
+  return {version:2,brands:out,image:img};
 }
 function homeBrand(b){ return homeCfg().brands[b]||{enabled:false,areas:[]}; }
 /* A service's home-service price (Admin → Home Services). The clinic / salon /
@@ -5222,11 +5236,11 @@ function homeServicesHomeHtml(){
   const ds=destinationList().filter(d=>BRANDS[d.b]&&homeSelectorOn(d.b));
   if(!ds.length) return '';
   const names=ds.map(d=>esc(d.name)).join(' · ');
-  const one=ds.length===1;
+  const one=ds.length===1, pic=homeCfg().image;
   return `<section class="lux-sec">${LuxHeader(t('homeServices'))}
     <div class="hs-one" id="hsOne">
-      <button type="button" class="hs-one-main" ${one?`data-home-brand="${ds[0].b}"`:'data-hs-toggle'} aria-expanded="false">
-        <span class="hs-one-art">${PLACE_ART.home}</span>
+      <button type="button" class="hs-one-main${pic?' has-pic':''}" ${one?`data-home-brand="${ds[0].b}"`:'data-hs-toggle'} aria-expanded="false">
+        ${pic?mediaHtml(pic,'destinationCover',{cls:'hs-one-pic',alt:t('homeServices')}):`<span class="hs-one-art">${PLACE_ART.home}</span>`}
         <span class="hs-one-copy">
           <span class="hs-one-title">${t('homeServices')}</span>
           <span class="hs-one-lede">${t('homeHomeLede')}</span>
@@ -6790,6 +6804,7 @@ function pruneFocus(){
   (STORE.products||[]).forEach(p=>{ add(p.image); (p.images||[]).forEach(add); });
   (STORE.offers||[]).forEach(o=>add(o.image));
   (STORE.media||[]).forEach(m=>add(m.dataUrl));
+  add((STORE.homeService||{}).image);
   Object.keys(STORE.imageFocus).forEach(k=>{ if(!live.has(k)) delete STORE.imageFocus[k]; });
 }
 
@@ -11169,6 +11184,30 @@ function hsSaveService(b,id,patch){
   if(!saveStore()){ list[k]=prev; toast("This browser's storage is full."); return false; }
   cloudSave('services',list[k].id,b); return true;
 }
+/* The picture on the home screen's single "Home Services" card (owner only).
+   Saved inside the home_service setting as "image", so it syncs to every device. */
+function renderHsPhoto(){
+  const w=document.getElementById('hsPhotoWrap'); if(!w) return;
+  if(!currentUser||!currentUser.isOwner){ w.innerHTML=''; return; }
+  const img=homeCfg().image;
+  w.innerHTML=`<div class="hs-photo-adm">
+    <div class="hs-photo-th" style="${img?cssBg(img):'background:linear-gradient(135deg,#fbf6ee,#f3e7d4)'}">${img?'':PLACE_ART.home}</div>
+    <div class="hs-photo-tx"><b>Home Services picture</b>
+      <div class="note">Shows on the client home screen, on the one “Home Services” card under Upcoming events. A wide photo works best (for example a therapist at a client's home). No picture → the gold house drawing.</div>
+      <div class="rowbtns"><label class="btn btn-primary btn-sm" style="cursor:pointer;">${img?'Change picture':'Add picture'}<input type="file" accept="image/*" id="hsPhotoIn" hidden></label>
+      ${img?'<button class="btn btn-ghost btn-sm" id="hsPhotoDel">Remove picture</button>':''}</div></div></div>`;
+  const save=(url)=>{ const h=STORE.homeService||(STORE.homeService={}); const prev=h.image; h.image=url;
+    if(!saveStore()){ h.image=prev; toast("This browser's storage is full — try a smaller photo."); return false; }
+    cloudSave('settings','home_service'); renderHsPhoto(); if(currentScreen==='welcome') render(); return true; };
+  w.querySelector('#hsPhotoIn').addEventListener('change',async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    w.querySelector('.hs-photo-tx .note').textContent='Preparing photo…';
+    try{ const r=await processImageUpload(f,'homeHero'); rememberMeta(r.url,r.meta);
+      if(save(r.url)){ pruneFocus(); saveStore(); cloudSave('settings','image_focus'); toast('Home Services picture updated — now on the client home screen.'); } }
+    catch(err){ toast('Could not read that photo — try a different file.'); renderHsPhoto(); }
+  });
+  const del=w.querySelector('#hsPhotoDel'); if(del) del.onclick=()=>{ if(!confirmTap(del,'Remove picture?')) return; if(save('')) toast('Picture removed.'); };
+}
 function hsAfterChange(){ renderAdminHomeServices(); renderAdminServices(); if(currentScreen==='services'||currentScreen==='detail') render(); }
 function renderAdminHomeServices(){
   const rows=document.getElementById('hsRows'); if(!rows||!currentUser) return;
@@ -11188,6 +11227,7 @@ function renderAdminHomeServices(){
       :areas.length?`Added <b>once</b> per visit, on top of the home-service price, by area: ${areas.map(a=>`${esc(a.name)} <b>+${fmtMoney(a.fee)}</b>`).join(' · ')}.`
       :`Set by reception for each visit — clients type their area and address, reception agrees the travel fee on WhatsApp and adds it in Bookings → Change price before confirming. (Or add fixed fees by area in Settings → Home visits.)`}</span></div>
   </div>`;
+  renderHsPhoto();
   const add=document.getElementById('hsAddBtn'); add.onclick=()=>{ hsAdding=!hsAdding; hsEditId=null; renderAdminHomeServices(); };
   add.textContent=hsAdding?'Close':'+ Add services';
   // ---- add existing services
