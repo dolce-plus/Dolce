@@ -1043,6 +1043,7 @@
 
   /* services */
   .cat-tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;}
+  .cat-tabs{scrollbar-width:none;} .cat-tabs::-webkit-scrollbar{display:none;}   /* the row still scrolls by swipe / trackpad; no grey bar on computers */
   .cat-tabs button{flex:none;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13.5px;font-weight:600;color:var(--ink-soft);}
   .cat-tabs button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
   /* Service categories: one dark pill that slides and resizes between chips
