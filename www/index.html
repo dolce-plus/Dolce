@@ -4402,7 +4402,10 @@ Object.assign(I18N.ku,{whereLabel:'شوێن',atPlace_dolce:'لە کلینیک',a
    on into service details and booking; opening another business starts at
    its own location again. */
 let homePickBrand=null;
-function syncHomePick(){ if(homePickBrand!==currentBrand){ homePickBrand=currentBrand; bookAtHome=false; } }
+// homeOnly: the client came from the home-screen "Home Services" card, so the
+// business opens showing only Home Services (no "At Dolce / Home Services" cards).
+let homeOnly=false;
+function syncHomePick(){ if(homePickBrand!==currentBrand){ homePickBrand=currentBrand; bookAtHome=false; homeOnly=false; } }
 function homeSelectorOn(b){ return !!(b && homeOn(b) && (svcList(b)||[]).some(x=>homeOffered(b,x))); }
 function atHomeNow(){ syncHomePick(); return homeSelectorOn(currentBrand) && bookAtHome===true; }
 // Gold line art (no photos), drawn on a 200×120 canvas so all four sit the same size.
@@ -4462,7 +4465,7 @@ const PLACE_ART={
 </g></svg>`,
 };
 function placeCardsHtml(){
-  const b=currentBrand; if(!homeSelectorOn(b)) return '';
+  const b=currentBrand; if(!homeSelectorOn(b)||(homeOnly&&atHomeNow())) return '';
   const home=atHomeNow();
   const card=(isHome)=>{ const on=isHome===home;
     return `<button type="button" class="place-card${on?' on':''}" data-place-pick="${isHome?1:0}" aria-pressed="${on}">
@@ -8085,7 +8088,7 @@ function render(){
 function bindScreen(){
   screenEl.querySelectorAll('[data-brand]').forEach(el=>el.addEventListener('click',()=>{
     const b=el.dataset.brand;
-    showBrandReveal(b,()=>{ currentBrand=b; currentCat='All'; goto('services'); });
+    showBrandReveal(b,()=>{ currentBrand=b; homeOnly=false; if(homePickBrand===b) bookAtHome=false; currentCat='All'; goto('services'); });
   }));
   // Home screen → Home Services: open that business already on "Home Services".
   screenEl.querySelectorAll('[data-hs-toggle]').forEach(el=>el.addEventListener('click',()=>{
@@ -8094,7 +8097,7 @@ function bindScreen(){
   }));
   screenEl.querySelectorAll('[data-home-brand]').forEach(el=>el.addEventListener('click',()=>{
     const b=el.dataset.homeBrand;
-    showBrandReveal(b,()=>{ currentBrand=b; homePickBrand=b; bookAtHome=true; currentCat='All'; goto('services'); });
+    showBrandReveal(b,()=>{ currentBrand=b; homePickBrand=b; bookAtHome=true; homeOnly=true; currentCat='All'; goto('services'); });
   }));
   screenEl.querySelectorAll('[data-cat]').forEach(el=>el.addEventListener('click',()=>CatGlass.select(el.dataset.cat)));
   screenEl.querySelectorAll('[data-svc]').forEach(el=>el.addEventListener('click',()=>{currentService=el.dataset.svc;goto('detail');}));
