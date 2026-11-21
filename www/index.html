@@ -5557,8 +5557,10 @@ function homeServicesHomeHtml(){
 function renderWelcome(){
   const dests=destinationList();
   const curated=STORE.offers.filter(o=>o.kind==='curated'&&isLiveItem(o)).sort(byDisplayOrder);
-  const events=[...STORE.offers.filter(o=>o.kind!=='curated'&&isLiveItem(o)).sort(byDisplayOrder),
-                ...activeDiscountOffers()];
+  // Only the offers and events staff create in Admin → Offers. Discounted
+  // treatments and products are not repeated here: they are listed in each
+  // business's ✦ Offers tab, which these cards open.
+  const events=STORE.offers.filter(o=>o.kind!=='curated'&&isLiveItem(o)).sort(byDisplayOrder);
   return `
     <button class="sr-bar" type="button" data-sr-open="all">${ICONS.search}<span>${t('searchAll')}</span></button>
     <section class="lux-sec">
@@ -11413,7 +11415,7 @@ function renderAdminOffers(){
   const autoWrap=document.getElementById('autoOffersWrap');
   const autoList=activeDiscountOffers().filter(o=>canSeeBrand(currentUser,o.brand));
   autoWrap.innerHTML = autoList.length ? `
-    <div style="font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin:22px 0 8px;">Also showing automatically, from discounts</div>
+    <div style="font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin:22px 0 8px;">Discounted items — shown in each business's ✦ Offers tab (not on the home screen)</div>
     <div class="admin-table-wrap">
       <table class="admin-table">
         <thead><tr><th>Item</th><th>Brand</th><th>Discount</th></tr></thead>
@@ -11421,7 +11423,7 @@ function renderAdminOffers(){
           <tr><td>${esc(o.t)}</td><td><span class="brand-tag" style="background:${brandColor[o.brand]}">${BRANDS[o.brand].name}</span></td><td>${esc(o.s)}</td></tr>`).join('')}</tbody>
       </table>
     </div>
-    <div style="font-size:13px;color:var(--muted);margin-top:8px;">To remove one of these, clear its discount back to 0 from the Products or Services tab.</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:8px;">Clients see them when they open the business's Offers tab (tapping one of the offer cards above takes them there). To remove one, set its discount back to 0 in the Products or Services tab.</div>
   ` : '';
 }
 /* What a home-screen card can open when tapped. */
