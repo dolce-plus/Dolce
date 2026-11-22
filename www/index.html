@@ -9557,6 +9557,9 @@ const AI_PROD_SYN=[
 AI_PRODUCT_KEYS.push('sunscreen','spf','yoga mat','leggings','sports bra','oura','brushes','palette','conditioner','hair perfume','deodorant','lotion',
   'واقي شمس','حصيرة يوغا','ليقنز','فرشاة مكياج','عطر شعر','لوشن','کرێمی دژە خۆر','ڕایەخی یۆگا','لێگینز','فڵچەی مەکیاج');
 
+aiTeach('spa',{keys:['relax','relaxing','relaxed','relaxation','unwind','stress','stressed','stressful','tension','tense','muscle tension','tight muscles','stiff','stiffness','sore muscles','muscle pain','back pain','neck pain','shoulder pain','back hurts','neck hurts','my back','muscles','muscle','body aches','aches','achy','tired','exhausted','fatigue','pamper me','calm down',
+  'توتر','متوتر','متوترة','ضغط نفسي','شد عضلي','الم الظهر','ألم الظهر','الم الرقبة','تعب','تعبانة','تعبان','إرهاق','ارهاق',
+  'فشار','ماندوو','ماندووم','گرژی','ئازاری پشت','ئازاری مل','ماسولکە','پشوو'],terms:['massage','relax']});
 aiUnteach('acne',['skin tag','skin tags','stretch mark','stretch marks']); aiUnteach('boosters',['شد البشرة','tightening']);
 function aiNorm(s){
   return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()   // é → e (Juvéderm = juvederm)
@@ -9657,15 +9660,18 @@ function aiFind(text,topics){
   // Two words typed apart that a name writes as one ("hydra facial" → HydraFacial).
   const nw0=aiNorm(text).split(' '); const joined=[]; for(let i=0;i+1<nw0.length;i++) joined.push(nw0[i]+nw0[i+1]);
   // The client's own words in a NAME count most, then the category, then the description.
+  // A name word counts less on an item outside the chosen topics ("back" in a laser
+  // name shouldn't beat a massage when the client talks about back pain).
   const scoreItem=(name,cat,desc)=>{
+    const offTopic=topics.length>0 && catW[String(cat||'').toLowerCase()]==null;
     const nh=aiNorm(name), dh=aiNorm(desc), ch=aiNorm(cat);
     const nw=nh.split(' '), cw=ch.split(' '), dw=dh.split(' ');
     let sc=0;
     termSets.forEach(({w,t})=>{ if(t.some(x=>aiIn(nh,x))) sc+=w; else if(t.some(x=>aiIn(dh,x))) sc+=w/2; });
     wordSets.forEach((set,i)=>{
-      if(set.some(w=>aiWordIn(nw,nh,w))) sc+=gen[i]?2:6;
+      if(set.some(w=>aiWordIn(nw,nh,w))) sc+=gen[i]?2:(offTopic?3:6);
       else if(set.some(w=>aiWordIn(cw,ch,w))) sc+=2;
-      else if(set.some(w=>w.length>=4&&dw.includes(w))) sc+=1;
+      else if(set.some(w=>w.length>=4&&dw.some(d=>d===w||(d.length>w.length&&d.startsWith(w)&&d.length-w.length<=3)))) sc+=1;
     });
     if(joined.some(j=>j.length>=6&&nw.includes(j))) sc+=8;
     return sc;
