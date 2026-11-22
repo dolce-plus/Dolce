@@ -494,6 +494,8 @@
   .lo-rw:not(:disabled):hover{border-color:var(--gold);}
   .lo-rw.arm{border-color:#a0473a;background:#fff3f0;color:#a0473a;font-weight:700;}
   .lo-adj{display:flex;flex-direction:column;gap:8px;}
+  .lo-visit .lo-box-t span{font-weight:400;color:var(--muted);font-size:12.5px;}
+  .lo-visit select{padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:14px;}
   .lo-adj .btn{align-self:flex-end;}
   .lo-rw-edit input:not([type=checkbox]),.lo-rw-edit select{width:100%;min-width:90px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:13.5px;background:#fff;box-sizing:border-box;}
   .lo-rw-edit input[type=date]{min-width:130px;margin-bottom:4px;}
@@ -12682,12 +12684,17 @@ async function addPointRow(row){
     spend:Math.max(0,Number(row.spend)||0),brand:row.brand||'',booking_id:row.booking_id||null,order_id:row.order_id||null,
     reward_id:row.reward_id||null,reason:String(row.reason||'').slice(0,200),
     staff_name:(currentUser&&currentUser.name)||''};
+  if(row.visit_ref) payload.visit_ref=String(row.visit_ref).slice(0,120);
   let res;
   try{ res=await supa.from('point_transactions').insert(payload); }
   catch(e){ return 'No connection — points were not saved. Try again when you are back online.'; }
   if(res.error){
     const m=String(res.error.message||''), code=res.error.code;
-    if(code==='23505') return row.order_id?'Points were already added for this order.':'Points were already added for this booking.';
+    if(code==='23505') return row.visit_ref?'This receipt number has already earned points.':row.order_id?'Points were already added for this order.':'Points were already added for this booking.';
+    if(row.visit_ref && /visit_ref|EARN_NEEDS_SOURCE/.test(m)) return 'Recording visits needs a small database update first — an owner runs supabase_migration_visit_points.sql in Supabase.';
+    if(/VISIT_NEEDS_AMOUNT/.test(m)) return 'Type the amount the client paid.';
+    if(/VISIT_TOO_MANY_POINTS/.test(m)) return 'That is more than 5 points per dollar — please check the amount.';
+    if(/VISIT_/.test(m)) return 'Could not record the visit — check the business and the amount.';
     if(/NOT_COMPLETED_PAID/.test(m)) return 'Points can be added only after the order is completed and paid.';
     if(/NOT_COMPLETED/.test(m)) return 'Points can be added only after the visit is marked Completed — try again in a moment.';
     if(/not enough points/i.test(m)) return 'Not enough points for that — '+m.replace(/^.*?\(/,'(');
@@ -13094,6 +13101,60 @@ function renderClientProfile(wrap,c){
 
 /* ---- Admin → Loyalty tab ---- */
 var loSel=null, loRows=[], loErr='', loQuery='', loRedeemArm='';
+// Record a visit booked outside the app: one reference per form, so a double tap never adds twice.
+var loVisitRef='', loVisit={brand:'',amount:'',what:'',rcpt:''};
+/* ---- Admin → Loyalty: "Record a visit" ----
+   For visits booked OUTSIDE the app — WhatsApp, Mindbody (CORE), walk-ins,
+   phone. $1 = 1 point × the client's level bonus (Gold / Black). The app bonus
+   (1.25×) stays only for bookings made in the Dolce+ app. The amount counts
+   toward the client's level. A receipt / Mindbody number can earn only once
+   (database: supabase_migration_visit_points.sql). */
+function visitBrands(){ return userBrands(currentUser).filter(b=>BRANDS[b]); }
+function visitBoxHtml(lv,notReady){
+  const bs=visitBrands(); if(!bs.length) return '';
+  if(!bs.includes(loVisit.brand)) loVisit.brand=bs.includes('core')?'core':bs[0];
+  if(!loVisitRef) loVisitRef=newVisitRef();
+  const mult=earnMultiplier(lv.mult,'visit'), pts=pointsFor(loVisit.amount,mult);
+  return `<div class="lo-box lo-visit">
+    <div class="lo-box-t">Record a visit <span>· WhatsApp, Mindbody, walk-in</span></div>
+    <div class="lo-adj">
+      <select id="lo_v_brand">${bs.map(b=>`<option value="${b}"${b===loVisit.brand?' selected':''}>${esc(BRANDS[b].name)}</option>`).join('')}</select>
+      <input id="lo_v_amt" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Amount paid (USD)" value="${esc(String(loVisit.amount))}">
+      <input id="lo_v_what" placeholder="What (e.g. Reformer class) — optional" maxlength="80" value="${esc(loVisit.what)}">
+      <input id="lo_v_rcpt" placeholder="Mindbody / receipt number — optional" maxlength="60" value="${esc(loVisit.rcpt)}">
+      <button class="btn btn-primary btn-sm" id="lo_v_save" ${notReady||pts<=0?'disabled':''}>${pts>0?`Add ${pts.toLocaleString('en-US')} points`:'Add points'}</button>
+    </div>
+    <div class="ac-foot" id="lo_v_note">$1 = 1 point${mult>1?` × ${mult} (${esc(tierNameEn(lv.tier))})`:''}. Counts toward the client's level. With a receipt number, the same visit can't get points twice.</div>
+  </div>`;
+}
+function bindVisitBox(sel,lv){
+  const btn=document.getElementById('lo_v_save'); if(!btn||!sel) return;
+  const g=id=>document.getElementById(id);
+  const mult=earnMultiplier(lv.mult,'visit');
+  const sync=()=>{
+    loVisit={brand:g('lo_v_brand').value,amount:g('lo_v_amt').value,what:g('lo_v_what').value,rcpt:g('lo_v_rcpt').value};
+    const p=pointsFor(Math.max(0,Number(loVisit.amount)||0),mult);
+    btn.textContent=p>0?`Add ${p.toLocaleString('en-US')} points`:'Add points';
+    btn.disabled=p<=0||loyaltyReady===false||!!btn.dataset.busy;
+  };
+  ['lo_v_brand','lo_v_amt','lo_v_what','lo_v_rcpt'].forEach(id=>{ const el=g(id); el.addEventListener('input',sync); el.addEventListener('change',sync); });
+  btn.addEventListener('click',async()=>{
+    sync(); if(btn.disabled) return;
+    const amount=Math.round(Math.max(0,Number(loVisit.amount)||0)*100)/100, p=pointsFor(amount,mult);
+    const rcpt=loVisit.rcpt.trim(), brand=loVisit.brand;
+    const ref=rcpt?`${brand}:rcpt:${rcpt.toLowerCase().replace(/\s+/g,'')}`:loVisitRef;
+    btn.dataset.busy='1'; btn.disabled=true; btn.textContent='Saving…';
+    const what=loVisit.what.trim()||'Visit';
+    const err=await addPointRow({client_id:sel.id,kind:'earn',points:p,spend:amount,brand,visit_ref:ref,
+      reason:`${what} · booked outside the app${rcpt?' · #'+rcpt:''}${mult>1?` (${mult}×)`:''}`});
+    delete btn.dataset.busy;
+    if(err){ toast(err,'err'); sync(); return; }
+    toast(`${p.toLocaleString('en-US')} points added for ${sel.name||'the client'}.`,'ok');
+    loVisit={brand,amount:'',what:'',rcpt:''}; loVisitRef=newVisitRef();
+    selectLoyaltyClient(sel.id);
+  });
+}
+function newVisitRef(){ return 'v:'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 function renderAdminLoyalty(){
   const wrap=document.getElementById('loyaltyWrap'); if(!wrap||!currentUser) return;
   const owner=!!currentUser.isOwner;
@@ -13130,6 +13191,7 @@ function renderAdminLoyalty(){
             <button class="lo-rw${arm?' arm':''}" data-lo-redeem="${esc(r.id)}" ${ok&&!notReady?'':'disabled'}>
               <span>${arm?`Confirm: −${r.points.toLocaleString('en-US')} pts`:esc(r.name)}</span><small>${r.points.toLocaleString('en-US')} pts · ${esc(rewardBrandLabelEn(r.brand))}</small></button>`;}).join('')||'<div class="lo-none">No active rewards.</div>'}</div>
         </div>
+        ${visitBoxHtml(lv,notReady)}
         <div class="lo-box">
           <div class="lo-box-t">Add or remove points</div>
           <div class="lo-adj">
@@ -13175,6 +13237,7 @@ function renderAdminLoyalty(){
     toast(`Redeemed: ${r.name} (−${r.points.toLocaleString('en-US')} pts).`);
     selectLoyaltyClient(sel.id);
   }));
+  bindVisitBox(sel,lv);
   const adj=document.getElementById('lo_adj_save');
   if(adj) adj.addEventListener('click',async()=>{
     const p=Math.round(Number(document.getElementById('lo_adj_pts').value)||0);
