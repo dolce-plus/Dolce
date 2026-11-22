@@ -2843,6 +2843,12 @@ function catsFor(b){
   const own=STORE.categories&&STORE.categories[b];
   return (Array.isArray(own)&&own.length)?own:((BRANDS[b]&&BRANDS[b].cats)||[]);
 }
+// The discount date columns are only sent once an item has used them, so items
+// without dates keep saving even before supabase_migration_discount_dates.sql is run.
+function discDateCols(x){
+  if(!(x.discFrom||x.discUntil||x.discDatesUsed)) return {};
+  return {discount_starts_on:x.discFrom||null,discount_ends_on:x.discUntil||null};
+}
 const CLOUD_TABLES={
   services:{
     table:'services',
@@ -2853,12 +2859,14 @@ const CLOUD_TABLES={
       images:Array.isArray(s.images)?s.images:[],home_ok:s.homeOk===true,
       home_price_usd:(s.homePrice==null||s.homePrice==='')?null:Math.max(0,numOr0(s.homePrice)),home_price_from:s.homePriceFrom===true,
       staff_count:svcCap(s),
+      ...discDateCols(s),
       sort_order:(STORE.services[job.brand]||[]).indexOf(s)}),
     app:(r)=>({id:r.id,n:r.name,cat:renamedCat(r.category),dur:r.duration,price:Number(r.price_usd),
       discount:r.discount_percent||0,desc:r.description||'',points:r.points||[],image:r.image||'',
       aftercare:r.aftercare||'',images:Array.isArray(r.images)?r.images:[],homeOk:r.home_ok===true,
       homePrice:r.home_price_usd==null?null:Number(r.home_price_usd),homePriceFrom:r.home_price_from===true,
-      staffCount:r.staff_count==null?1:Math.max(1,Number(r.staff_count)||1)}),
+      staffCount:r.staff_count==null?1:Math.max(1,Number(r.staff_count)||1),
+      discFrom:r.discount_starts_on||'',discUntil:r.discount_ends_on||''}),
   },
   products:{
     table:'products',
@@ -2871,14 +2879,14 @@ const CLOUD_TABLES={
       discount_percent:numOr0(p.discount),image:p.image||'',
       description:p.desc||'',images:Array.isArray(p.images)?p.images:[],
       category:p.category||'',options:normOptions(p.options),active:p.active!==false,
-      sort_order:numOr0(p.sort)};
+      sort_order:numOr0(p.sort),...discDateCols(p)};
       if(job && job.withStock) r.stock=Math.max(0,numOr0(p.stock));
       return r; },
     app:(r)=>({id:r.id,n:r.name,price:Number(r.price_usd),discount:r.discount_percent||0,
       brand:r.brand,stock:r.stock||0,image:r.image||'',description:r.description,
       desc:r.description||'',images:Array.isArray(r.images)?r.images:[],
       category:r.category||'',options:normOptions(r.options),active:r.active!==false,
-      sort:numOr0(r.sort_order)}),
+      sort:numOr0(r.sort_order),discFrom:r.discount_starts_on||'',discUntil:r.discount_ends_on||''}),
   },
   /* One table, three kinds of home-screen content, all chosen in the Admin
      App: 'offer' and 'event' cards in the Events & Offers carousel, and
@@ -3793,7 +3801,36 @@ function nextId(prefix,arr){
    Events & Offers" strip alongside whatever the Owner has added manually
    there. Clear the discount (back to 0) and it drops off the offers strip
    on its own — nothing to remember to delete separately. */
-function hasDiscount(item){ return !!(item && item.discount && item.discount>0); }
+// A discount can have dates: it only counts from discFrom to discUntil (both days included).
+// No dates = always on, as before.
+function discountSet(item){ return !!(item && item.discount && item.discount>0); }
+function discountState(item){
+  if(!discountSet(item)) return 'none';
+  const today=todayIso();
+  if(item.discFrom && String(item.discFrom).slice(0,10)>today) return 'soon';
+  if(item.discUntil && String(item.discUntil).slice(0,10)<today) return 'ended';
+  return 'on';
+}
+function hasDiscount(item){ return discountState(item)==='on'; }
+// For staff: "−50% · 15 Nov – 30 Nov (not started yet)"
+function discountNote(item){
+  const st=discountState(item); if(st==='none') return '';
+  const f=item.discFrom?fmtDayShort(item.discFrom):'', u=item.discUntil?fmtDayShort(item.discUntil):'';
+  const when=f&&u?`${f} – ${u}`:(f?`from ${f}`:(u?`until ${u}`:''));
+  const tag=st==='soon'?' (not started yet)':(st==='ended'?' (ended)':'');
+  return `−${item.discount}%${when?' · '+when:''}${tag}`;
+}
+function fmtDayShort(iso){ const d=new Date(String(iso).slice(0,10)+'T12:00:00'); return isNaN(d)?String(iso):d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+// Discount dates from a form: {from, until} or {err}.
+function readDiscDates(prefix){
+  const f=(document.getElementById(prefix+'_dfrom')||{}).value||'', u=(document.getElementById(prefix+'_duntil')||{}).value||'';
+  if(f&&u&&u<f) return {err:'The discount end date is before its start date.'};
+  return {from:f||'',until:u||''};
+}
+function discDatesHtml(prefix,item){
+  return `<div class="field"><label>Discount starts (optional)</label><input id="${prefix}_dfrom" type="date" value="${attr(item.discFrom||'')}"></div>
+      <div class="field"><label>Discount ends (optional — last day of the discount)</label><input id="${prefix}_duntil" type="date" value="${attr(item.discUntil||'')}"></div>`;
+}
 function discountedPrice(item){ return Math.round(item.price*(1-(item.discount||0)/100)); }
 function effectivePrice(item){ return hasDiscount(item)?discountedPrice(item):item.price; }
 // Every price is stored and entered in USD everywhere in the app — this is
@@ -11687,7 +11724,7 @@ function renderAdminProducts(){
     <tr>
       <td><span class="swdot" style="${p.image&&safeImgUrl(p.image)?cssBg(p.image):`background:linear-gradient(140deg,${BRANDS[p.brand].c1},${BRANDS[p.brand].c2})`}"></span>${esc(p.n)}${p.active===false?' <span class="status-badge Cancelled">Hidden</span>':''}${p.category?`<div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(p.category)}${normOptions(p.options).length?' · '+normOptions(p.options).map(o=>esc(o.name)).join(', '):''}</div>`:''}</td>
       <td><span class="brand-tag" style="background:${brandColor[p.brand]}">${BRANDS[p.brand].name}</span></td>
-      <td>${priceHtml(p)}</td>
+      <td>${priceHtml(p)}${discountState(p)!=='none'&&(p.discFrom||p.discUntil)?`<div class="hs-mini">🏷 ${esc(discountNote(p))}</div>`:''}</td>
       <td>${stockHtml}</td>
       <td><div class="rowbtns">
         <button class="btn btn-ghost btn-sm" data-sell-prod="${esc(String(p.id))}" ${stock<=0?'disabled':''}>Sell</button>
@@ -11755,6 +11792,7 @@ function openProductForm(editId){
       </div>
       <div class="field"><label>Price ($)</label><input id="pf_price" type="number" min="0" step="1" value="${p.price}"></div>
       <div class="field"><label>Discount % (optional)</label><input id="pf_discount" type="number" min="0" max="99" step="1" placeholder="0 — no discount" value="${p.discount||''}"></div>
+      ${discDatesHtml('pf',p)}
       <div class="field"><label>Stock on hand</label><input id="pf_stock" type="number" min="0" step="1" value="${p.stock||0}"></div>
       <div class="field"><label>Category / collection (optional)</label><input id="pf_cat" type="text" list="pf_catList" value="${esc(p.category||'')}" placeholder="e.g. Serums, Mats, Nail care">
         <datalist id="pf_catList">${[...new Set(STORE.products.map(x=>String(x.category||'').trim()).filter(Boolean))].map(c=>`<option value="${attr(c)}">`).join('')}</datalist></div>
@@ -11788,6 +11826,9 @@ function openProductForm(editId){
     const brand=document.getElementById('pf_brand').value;
     const price=parseFloat(document.getElementById('pf_price').value)||0;
     const discount=Math.min(99,Math.max(0,parseInt(document.getElementById('pf_discount').value)||0));
+    const pdd=readDiscDates('pf'); if(pdd.err){ toast(pdd.err,'err'); return; }
+    const discFrom=discount>0?pdd.from:'', discUntil=discount>0?pdd.until:'';
+    const discDatesUsed=!!(discFrom||discUntil||p.discFrom||p.discUntil||p.discDatesUsed);
     const stock=Math.max(0,parseInt(document.getElementById('pf_stock').value)||0);
     if(!n){ document.getElementById('pf_name').focus(); return; }
     const saveBtn=document.getElementById('pf_save'); saveBtn.disabled=true; saveBtn.textContent='Saving…';
@@ -11805,7 +11846,7 @@ function openProductForm(editId){
       const sort=parseInt(document.getElementById('pf_sort').value,10)||0;
       const options=normOptions(parseOptionsText(document.getElementById('pf_opts').value));
       const active=document.getElementById('pf_active').checked;
-      const updated={...base,n,brand,price,discount,stock,image,desc,images:pfShots.value(),category,sort,options,active};
+      const updated={...base,n,brand,price,discount,discFrom,discUntil,discDatesUsed,stock,image,desc,images:pfShots.value(),category,sort,options,active};
       if(at>=0) STORE.products[at]=updated; else STORE.products.push(updated);
       const ok=saveStore();
       if(!ok){
@@ -12153,7 +12194,7 @@ function renderAdminServices(){
       <td><span class="swdot" style="${s.image&&safeImgUrl(s.image)?cssBg(s.image):`background:linear-gradient(140deg,${BRANDS[svcBrandTab].c1},${BRANDS[svcBrandTab].c2})`}"></span>${esc(s.n)}</td>
       <td>${esc(s.cat)}</td>
       <td>${esc(fmtDur(s.dur,true))}</td>
-      <td>${priceHtml(s)}${s.homeOk===true?`<div class="hs-mini">🏠 ${hasHomePrice(s)?homePriceText(s):(svcBrandTab==='core'?'on request':'no home price')}</div>`:''}</td>
+      <td>${priceHtml(s)}${discountState(s)!=='none'&&(s.discFrom||s.discUntil)?`<div class="hs-mini">🏷 ${esc(discountNote(s))}</div>`:''}${s.homeOk===true?`<div class="hs-mini">🏠 ${hasHomePrice(s)?homePriceText(s):(svcBrandTab==='core'?'on request':'no home price')}</div>`:''}</td>
       <td><div class="rowbtns">
         <button class="btn btn-ghost btn-sm" data-edit-svc="${esc(String(s.id))}">Edit</button>
         <button class="btn btn-danger btn-sm" data-del-svc="${esc(String(s.id))}">Delete</button>
@@ -12187,6 +12228,7 @@ function openServiceForm(editId){
       <div class="field"><label>Duration</label><input id="sf_dur" type="text" value="${esc(s.dur)}" placeholder="e.g. 45 min"></div>
       <div class="field"><label>Price ($)</label><input id="sf_price" type="number" min="0" step="1" value="${s.price}"></div>
       <div class="field"><label>Discount % (optional)</label><input id="sf_discount" type="number" min="0" max="99" step="1" placeholder="0 — no discount" value="${s.discount||''}"></div>
+      ${discDatesHtml('sf',s)}
       <div class="field"><label>Staff who can do this service</label><input id="sf_staff" type="number" min="1" max="20" step="1" inputmode="numeric" value="${svcCap(s)}">
         <div class="rem-meta" style="margin-top:6px;">How many clients can book this service at the same time. 3 = three clients can book 11:00; the 4th sees it as taken.</div></div>
       ${s.homeOk===true||hasHomePrice(s)?`<div class="field full" style="grid-column:1/-1;"><div class="note">🏠 Also a home service${hasHomePrice(s)?` — home price ${fmtMoney(homePriceOf(s))}`:''}${s.homeOk===true?'':' (paused)'}. Change it in <b>Home Services</b>.</div></div>`:''}
@@ -12205,7 +12247,7 @@ function openServiceForm(editId){
         <div class="upload-drop"><input id="sf_shots" type="file" accept="image/*" multiple></div>
         <div id="sf_shotGrid" class="shot-grid"></div>
       </div>
-      <div style="grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px;">A discount above 0% shows the old price crossed out next to the new one, and adds this service to the business's ✦ Offers tab automatically — no need to also create an Offer for it.</div>
+      <div style="grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px;">A discount above 0% shows the old price crossed out next to the new one, and adds this service to the business's ✦ Offers tab automatically — no need to also create an Offer for it. With dates, the discount starts and stops by itself.</div>
       <div class="actions">
         <button class="btn btn-ghost" id="sf_cancel">Cancel</button>
         <button class="btn btn-primary" id="sf_save">${editing?'Save changes':'Add service'}</button>
@@ -12223,6 +12265,9 @@ function openServiceForm(editId){
     const price=parseFloat(document.getElementById('sf_price').value)||0;
     const discount=Math.min(99,Math.max(0,parseInt(document.getElementById('sf_discount').value)||0));
     const staffCount=Math.max(1,Math.min(20,parseInt(document.getElementById('sf_staff').value,10)||1));
+    const dd=readDiscDates('sf'); if(dd.err){ toast(dd.err,'err'); return; }
+    const discFrom=discount>0?dd.from:'', discUntil=discount>0?dd.until:'';
+    const discDatesUsed=!!(discFrom||discUntil||s.discFrom||s.discUntil||s.discDatesUsed);
     const desc=document.getElementById('sf_desc').value.trim();
     const aftercare=document.getElementById('sf_aftercare').value.trim();
     const homeOk=s.homeOk===true;   // set in Admin → Home Services
@@ -12242,11 +12287,11 @@ function openServiceForm(editId){
     const at=editing?idxById(list,s.id):-1;
     const prevItem = at>=0 ? {...list[at]} : null;
     if(at>=0){
-      list[at]={...list[at],n,cat,dur,price,discount,desc,image,aftercare,images,homeOk,staffCount};
+      list[at]={...list[at],n,cat,dur,price,discount,discFrom,discUntil,discDatesUsed,desc,image,aftercare,images,homeOk,staffCount};
     } else if(editing){
-      list.push({...s,n,cat,dur,price,discount,desc,image,aftercare,images,homeOk,staffCount});   // removed elsewhere meanwhile: keep the edit
+      list.push({...s,n,cat,dur,price,discount,discFrom,discUntil,discDatesUsed,desc,image,aftercare,images,homeOk,staffCount});   // removed elsewhere meanwhile: keep the edit
     } else {
-      list.push({id:nextId('svc_'+brand+'_',list),n,cat,dur,price,discount,desc,image,aftercare,images,homeOk,staffCount,points:[]});
+      list.push({id:nextId('svc_'+brand+'_',list),n,cat,dur,price,discount,discFrom,discUntil,discDatesUsed,desc,image,aftercare,images,homeOk,staffCount,points:[]});
     }
     const ok=saveStore();
     if(!ok){
@@ -12261,7 +12306,7 @@ function openServiceForm(editId){
     document.getElementById('serviceFormWrap').innerHTML='';
     renderAdminServices();
     renderAdminOffers();
-    toast(`${n} ${editing?'updated':'added'} — now live in the Client App → ${BRANDS[brand].name}.${discount>0?' Also showing in the Offers tab.':''}`);
+    toast(`${n} ${editing?'updated':'added'} — now live in the Client App → ${BRANDS[brand].name}.${discount>0?(discFrom&&discFrom>todayIso()?' The discount starts '+fmtDayShort(discFrom)+'.':' Also showing in the Offers tab.'):''}`);
     if(currentScreen==='services'||currentScreen==='detail'||currentScreen==='welcome') render();
   });
 }
