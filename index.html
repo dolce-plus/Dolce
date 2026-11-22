@@ -2836,11 +2836,13 @@ const CLOUD_TABLES={
       points:s.points||[],image:s.image||'',aftercare:s.aftercare||'',
       images:Array.isArray(s.images)?s.images:[],home_ok:s.homeOk===true,
       home_price_usd:(s.homePrice==null||s.homePrice==='')?null:Math.max(0,numOr0(s.homePrice)),home_price_from:s.homePriceFrom===true,
+      staff_count:svcCap(s),
       sort_order:(STORE.services[job.brand]||[]).indexOf(s)}),
     app:(r)=>({id:r.id,n:r.name,cat:renamedCat(r.category),dur:r.duration,price:Number(r.price_usd),
       discount:r.discount_percent||0,desc:r.description||'',points:r.points||[],image:r.image||'',
       aftercare:r.aftercare||'',images:Array.isArray(r.images)?r.images:[],homeOk:r.home_ok===true,
-      homePrice:r.home_price_usd==null?null:Number(r.home_price_usd),homePriceFrom:r.home_price_from===true}),
+      homePrice:r.home_price_usd==null?null:Number(r.home_price_usd),homePriceFrom:r.home_price_from===true,
+      staffCount:r.staff_count==null?1:Math.max(1,Number(r.staff_count)||1)}),
   },
   products:{
     table:'products',
@@ -4299,24 +4301,39 @@ function fmtDow(d){ return d.toLocaleDateString(undefined,{weekday:'short'}); }
    names or numbers — via busy_slots(). Refreshed when the booking screen
    opens and again just before a booking is sent. */
 const BUSY_SLOTS={};
-async function loadBusySlots(brand,force){
+/* How many clients can book the SAME service at the SAME time: the number of
+   staff who can do it (Admin → Services → "Staff who can do this service").
+   1 = one client per time, as before. Different services no longer block each
+   other — each service is limited only by its own staff number. */
+function svcCap(s){ return Math.max(1,Math.min(20,parseInt(s&&s.staffCount,10)||1)); }
+function svcCapOf(brand,svcId){ const s=(svcList(brand)||[]).find(x=>String(x.id)===String(svcId)); return svcCap(s); }
+async function loadBusySlots(brand,force,svcId){
   const pub=(typeof anonSupa==='function'&&anonSupa())||supa; if(!pub||!brand) return false;
-  const c=BUSY_SLOTS[brand]; if(!force && c && Date.now()-c.at<60000) return false;
+  if(svcId==null) svcId=currentService;
+  const key=brand+'|'+(svcId==null?'':svcId);
+  const c=BUSY_SLOTS[key]; if(!force && c && Date.now()-c.at<60000) return false;
   const from=isoOf(new Date()), to=isoOf(new Date(Date.now()+16*864e5));
   try{
-    const {data,error}=await pub.rpc('busy_slots',{p_brand:brand,p_from:from,p_to:to});
-    if(error) return false;
+    // Times where this service is fully booked (all its staff taken).
+    let {data,error}=await pub.rpc('busy_slots_service',{p_brand:brand,p_service:String(svcId==null?'':svcId),p_from:from,p_to:to});
+    // Database not updated yet (supabase_migration_service_capacity.sql): the
+    // old rule — any booking at that time makes the time busy.
+    if(error){ ({data,error}=await pub.rpc('busy_slots',{p_brand:brand,p_from:from,p_to:to})); if(error) return false; }
     const before=c?[...c.set].sort().join(','):'';
     const set=new Set((data||[]).map(r=>String(r.date_iso)+'|'+r.time_label));
-    BUSY_SLOTS[brand]={at:Date.now(),set};
+    BUSY_SLOTS[key]={at:Date.now(),set};
     return before!==[...set].sort().join(',');
   }catch(e){ return false; }
 }
-function slotBusy(brand,d,time){ const c=BUSY_SLOTS[brand]; return !!(c && d && c.set.has(isoOf(d)+'|'+time)); }
-function availableTimesForDate(brand,dateStr,dObj){
+function slotBusy(brand,d,time,svcId){ const c=BUSY_SLOTS[brand+'|'+(svcId==null?(currentService==null?'':currentService):svcId)]; return !!(c && d && c.set.has(isoOf(d)+'|'+time)); }
+function availableTimesForDate(brand,dateStr,dObj,svcId){
   const d=dObj||selectedDateObj||new Date();
-  const taken=new Set(STORE.bookings.filter(bk=>bk.brand===brand&&bk.date===dateStr&&bk.status!=='Cancelled').map(bk=>bk.time));
-  const busy=BUSY_SLOTS[brand]; if(busy){ const iso=isoOf(d); busy.set.forEach(k=>{ const [di,tl]=k.split('|'); if(di===iso) taken.add(tl); }); }
+  if(svcId==null) svcId=currentService;
+  const cap=svcCapOf(brand,svcId), count={};
+  STORE.bookings.filter(bk=>bk.brand===brand&&bk.date===dateStr&&!['Cancelled','No-show'].includes(bk.status)&&String(bk.serviceId)===String(svcId))
+    .forEach(bk=>{ count[bk.time]=(count[bk.time]||0)+1; });
+  const taken=new Set(Object.keys(count).filter(t=>count[t]>=cap));
+  const busy=BUSY_SLOTS[brand+'|'+(svcId==null?'':svcId)]; if(busy){ const iso=isoOf(d); busy.set.forEach(k=>{ const [di,tl]=k.split('|'); if(di===iso) taken.add(tl); }); }
   const earliest=Date.now()+BOOK_LEAD_MIN*60000;
   return slotsForDay(brand,d).map(m=>{
     const time=minToLabel(m);
@@ -5321,7 +5338,7 @@ function clientChangeHtml(b){
   if(clMoveId===String(b.id)){
     // Only times far enough ahead (the same cutoff the server checks).
     const earliest=Date.now()+STORE.settings.clientChanges.cutoffHours*3600e3;
-    const okSlots=(d)=>availableTimesForDate(b.brand,fmtDate(d),d).filter(x=>!x.past&&!x.taken&&bookingTime({date:fmtDate(d),time:x.time})>=earliest);
+    const okSlots=(d)=>availableTimesForDate(b.brand,fmtDate(d),d,b.serviceId).filter(x=>!x.past&&!x.taken&&bookingTime({date:fmtDate(d),time:x.time})>=earliest);
     const dates=upcomingDates(14).filter(d=>dayHours(b.brand,d)&&okSlots(d).length);
     if(!clMoveDate || !dates.some(d=>sameDay(d,clMoveDate))) clMoveDate=dates[0]||null;
     const slots=clMoveDate?okSlots(clMoveDate):[];
@@ -11329,7 +11346,7 @@ function openProductForm(editId){
         <div class="upload-drop"><input id="pf_shots" type="file" accept="image/*" multiple></div>
         <div id="pf_shotGrid" class="shot-grid"></div>
       </div>
-      <div style="grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px;">A discount above 0% shows the old price crossed out next to the new one, and adds this product to the welcome screen's "Upcoming Events &amp; Offers" automatically — no need to also create an Offer for it. Stock moves down automatically when you record a sale, and up automatically when you log a purchase in the Purchases tab — edit it directly here only to make a correction.</div>
+      <div style="grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px;">A discount above 0% shows the old price crossed out next to the new one, and adds this product to its business's ✦ Offers tab automatically — no need to also create an Offer for it. Stock moves down automatically when you record a sale, and up automatically when you log a purchase in the Purchases tab — edit it directly here only to make a correction.</div>
       <div class="actions">
         <button class="btn btn-ghost" id="pf_cancel">Cancel</button>
         <button class="btn btn-primary" id="pf_save">${editing?'Save changes':'Add product'}</button>
@@ -11376,7 +11393,7 @@ function openProductForm(editId){
       document.getElementById('productFormWrap').innerHTML='';
       renderAdminProducts();
       renderAdminOffers();
-      toast(`${n} ${editing?'updated':'added'} — now live in the Client App → Shop.${discount>0?' Also showing in Upcoming Events & Offers.':''}`);
+      toast(`${n} ${editing?'updated':'added'} — now live in the Client App → Shop.${discount>0?' Also showing in the Offers tab.':''}`);
       if(currentScreen==='shop'||currentScreen==='welcome') render();
     }catch(e){
       toast('Could not read that photo — try a different file.');
@@ -11743,6 +11760,8 @@ function openServiceForm(editId){
       <div class="field"><label>Duration</label><input id="sf_dur" type="text" value="${esc(s.dur)}" placeholder="e.g. 45 min"></div>
       <div class="field"><label>Price ($)</label><input id="sf_price" type="number" min="0" step="1" value="${s.price}"></div>
       <div class="field"><label>Discount % (optional)</label><input id="sf_discount" type="number" min="0" max="99" step="1" placeholder="0 — no discount" value="${s.discount||''}"></div>
+      <div class="field"><label>Staff who can do this service</label><input id="sf_staff" type="number" min="1" max="20" step="1" inputmode="numeric" value="${svcCap(s)}">
+        <div class="rem-meta" style="margin-top:6px;">How many clients can book this service at the same time. 3 = three clients can book 11:00; the 4th sees it as taken.</div></div>
       ${s.homeOk===true||hasHomePrice(s)?`<div class="field full" style="grid-column:1/-1;"><div class="note">🏠 Also a home service${hasHomePrice(s)?` — home price ${fmtMoney(homePriceOf(s))}`:''}${s.homeOk===true?'':' (paused)'}. Change it in <b>Home Services</b>.</div></div>`:''}
       <div class="field full" style="grid-column:1/-1;"><label>Description</label><textarea id="sf_desc" rows="6" placeholder="Short client-facing description">${esc(s.desc||'')}</textarea>
         <div class="rem-meta" style="margin-top:6px;">Start a line with <b>*</b> for a bullet, end a short line with <b>:</b> for a label (e.g. "Best For:"), leave an empty line between paragraphs. Duration: a plain number is shown in minutes (e.g. "45-60" → "45–60 min").</div>
@@ -11759,7 +11778,7 @@ function openServiceForm(editId){
         <div class="upload-drop"><input id="sf_shots" type="file" accept="image/*" multiple></div>
         <div id="sf_shotGrid" class="shot-grid"></div>
       </div>
-      <div style="grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px;">A discount above 0% shows the old price crossed out next to the new one, and adds this service to the welcome screen's "Upcoming Events &amp; Offers" automatically — no need to also create an Offer for it.</div>
+      <div style="grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px;">A discount above 0% shows the old price crossed out next to the new one, and adds this service to the business's ✦ Offers tab automatically — no need to also create an Offer for it.</div>
       <div class="actions">
         <button class="btn btn-ghost" id="sf_cancel">Cancel</button>
         <button class="btn btn-primary" id="sf_save">${editing?'Save changes':'Add service'}</button>
@@ -11776,6 +11795,7 @@ function openServiceForm(editId){
     const dur=document.getElementById('sf_dur').value.trim();
     const price=parseFloat(document.getElementById('sf_price').value)||0;
     const discount=Math.min(99,Math.max(0,parseInt(document.getElementById('sf_discount').value)||0));
+    const staffCount=Math.max(1,Math.min(20,parseInt(document.getElementById('sf_staff').value,10)||1));
     const desc=document.getElementById('sf_desc').value.trim();
     const aftercare=document.getElementById('sf_aftercare').value.trim();
     const homeOk=s.homeOk===true;   // set in Admin → Home Services
@@ -11795,11 +11815,11 @@ function openServiceForm(editId){
     const at=editing?idxById(list,s.id):-1;
     const prevItem = at>=0 ? {...list[at]} : null;
     if(at>=0){
-      list[at]={...list[at],n,cat,dur,price,discount,desc,image,aftercare,images,homeOk};
+      list[at]={...list[at],n,cat,dur,price,discount,desc,image,aftercare,images,homeOk,staffCount};
     } else if(editing){
-      list.push({...s,n,cat,dur,price,discount,desc,image,aftercare,images,homeOk});   // removed elsewhere meanwhile: keep the edit
+      list.push({...s,n,cat,dur,price,discount,desc,image,aftercare,images,homeOk,staffCount});   // removed elsewhere meanwhile: keep the edit
     } else {
-      list.push({id:nextId('svc_'+brand+'_',list),n,cat,dur,price,discount,desc,image,aftercare,images,homeOk,points:[]});
+      list.push({id:nextId('svc_'+brand+'_',list),n,cat,dur,price,discount,desc,image,aftercare,images,homeOk,staffCount,points:[]});
     }
     const ok=saveStore();
     if(!ok){
@@ -11814,7 +11834,7 @@ function openServiceForm(editId){
     document.getElementById('serviceFormWrap').innerHTML='';
     renderAdminServices();
     renderAdminOffers();
-    toast(`${n} ${editing?'updated':'added'} — now live in the Client App → ${BRANDS[brand].name}.${discount>0?' Also showing in Upcoming Events & Offers.':''}`);
+    toast(`${n} ${editing?'updated':'added'} — now live in the Client App → ${BRANDS[brand].name}.${discount>0?' Also showing in the Offers tab.':''}`);
     if(currentScreen==='services'||currentScreen==='detail'||currentScreen==='welcome') render();
   });
 }
