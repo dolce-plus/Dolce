@@ -14872,7 +14872,7 @@ document.addEventListener('click',e=>{
   if(!a||!inAppBrowser()) return;
   e.preventDefault();
   try{
-    window.Capacitor.Plugins.Browser.open({url:a.href,presentationStyle:'popover',toolbarColor:'#f6efe3'})
+    window.Capacitor.Plugins.Browser.open({url:a.href,presentationStyle:'fullscreen',toolbarColor:'#f6efe3'})
       .catch(()=>{ window.open(a.href,'_blank','noopener'); });
   }catch(err){ window.open(a.href,'_blank','noopener'); }
 },true);
