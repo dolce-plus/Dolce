@@ -14219,6 +14219,22 @@ function coreDailyHtml(){
     ${url?`<a class="primary-btn mb-ext" style="display:block;text-align:center;text-decoration:none;margin-top:12px;" href="${attr(url)}" target="_blank" rel="noopener" data-mb-go>${t('viewScheduleMb')} ↗</a>`:''}</div></section>
     ${mindbodyOn()?timetableHtml():''}`;
 }
+/* In the iPhone / Android app, Mindbody opens INSIDE the app (a Safari sheet
+   with a "Done" button that brings the client straight back to Dolce+),
+   instead of jumping out to the Safari app. Uses @capacitor/browser; on the
+   website, or in an app build without the plugin, the link opens as before. */
+function inAppBrowser(){
+  try{ const C=window.Capacitor; return !!(C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Browser); }catch(e){ return false; }
+}
+document.addEventListener('click',e=>{
+  const a=e.target&&e.target.closest&&e.target.closest('a.mb-ext[href^="https://"]');
+  if(!a||!inAppBrowser()) return;
+  e.preventDefault();
+  try{
+    window.Capacitor.Plugins.Browser.open({url:a.href,presentationStyle:'popover',toolbarColor:'#f6efe3'})
+      .catch(()=>{ window.open(a.href,'_blank','noopener'); });
+  }catch(err){ window.open(a.href,'_blank','noopener'); }
+},true);
 // CORE's Mindbody booking page (optionally opened on a given date).
 function mbBookingUrl(dateIso){
   const c=mbCfg();
@@ -14314,7 +14330,7 @@ function bindMindbody(root){
   root.querySelectorAll('[data-mb-week]').forEach(b=>b.addEventListener('click',()=>{ MBS.week=Math.max(0,MBS.week+Number(b.dataset.mbWeek)); navDirection='none'; render(); }));
   root.querySelectorAll('[data-mb-type]').forEach(b=>b.addEventListener('click',()=>{ MBS.type=b.dataset.mbType; navDirection='none'; render(); }));
   // Opening Mindbody is only a link: nothing is saved and no booking is assumed.
-  root.querySelectorAll('[data-mb-go]').forEach(a=>a.addEventListener('click',()=>{ haptic(); toast(t('mbOpening')); }));
+  root.querySelectorAll('[data-mb-go]').forEach(a=>a.addEventListener('click',()=>{ haptic(); if(!inAppBrowser()) toast(t('mbOpening')); }));
   // Book a live Mindbody class from Dolce+: the server adds the client to the class in
   // Mindbody, which counts the places and refuses a full class. Two taps, so it is never accidental.
   root.querySelectorAll('[data-mb-book]').forEach(b=>b.addEventListener('click',async()=>{
