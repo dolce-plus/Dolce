@@ -17,7 +17,8 @@
 // PIN changes check the caller's login token themselves.
 //
 // Actions (POST JSON):
-//   {action:"login", slug, pin}                 → session tokens
+//   {action:"login", name, pin}                 → session tokens (name typed by the staff member)
+//   {action:"login", slug, pin}                 → same, for app versions that still pick from a list
 //   {action:"set_pin", pin, target_id?}         → own PIN, or owner sets anyone's
 //   {action:"create_staff", pin}                → owner: new login, returns {id, slug}
 
@@ -101,10 +102,43 @@ function clientIp(req: Request): string {
     .split(",")[0].trim().slice(0, 64) || "unknown";
 }
 
+// "  Kawa  JAFF " → "kawa jaff"
+const normName = (s: string) => String(s ?? "").normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase().slice(0, 80);
+// The staff member types their name: full name, or first name when only one person has it.
+// Nothing tells the visitor whether a name exists — a wrong name answers exactly like a wrong PIN.
+async function slugsForName(name: string): Promise<string[]> {
+  const n = normName(name);
+  if (!n) return [];
+  const r = await rest(`/rest/v1/profiles?login_slug=not.is.null&select=name,login_slug`);
+  if (!r.ok) return [];
+  const rows: any[] = await r.json();
+  const full = rows.filter((p) => normName(p.name) === n);
+  if (full.length) return full.map((p) => p.login_slug);
+  const first = rows.filter((p) => normName(p.name).split(" ")[0] === n);
+  return first.length === 1 ? [first[0].login_slug] : [];
+}
+
 async function login(req: Request, body: any): Promise<Response> {
-  const slug = String(body.slug ?? "").slice(0, 64);
   const pin = String(body.pin ?? "");
   const ip = clientIp(req);
+  if (body.name !== undefined && !body.slug) {
+    const slugs = await slugsForName(String(body.name));
+    // The lockout counts per person (or per typed name when nobody matches) and per network address.
+    const account = slugs[0] ?? ("name:" + normName(String(body.name)));
+    const gate = await rpc("staff_login_gate", { p_account: account, p_ip: ip });
+    if (gate?.locked) return json(429, { error: "locked", until: gate.until });
+    for (const s of slugs) {
+      const ok = await tryLogin(s, pin);
+      if (ok) {
+        await rpc("staff_login_record", { p_account: s, p_ip: ip, p_ok: true });
+        return json(200, { ...ok, slug: s });
+      }
+    }
+    const r = await rpc("staff_login_record", { p_account: account, p_ip: ip, p_ok: false });
+    return r?.locked ? json(429, { error: "locked", until: r.until })
+                     : json(401, { error: "wrong_pin", left: r?.left ?? null });
+  }
+  const slug = String(body.slug ?? "").slice(0, 64);
   const gate = await rpc("staff_login_gate", { p_account: slug, p_ip: ip });
   if (gate?.locked) return json(429, { error: "locked", until: gate.until });
 
@@ -113,12 +147,19 @@ async function login(req: Request, body: any): Promise<Response> {
     return r?.locked ? json(429, { error: "locked", until: r.until })
                      : json(401, { error: "wrong_pin", left: r?.left ?? null });
   };
-  if (!/^\d{4,8}$/.test(pin) || !slug) return await fail();
+  const ok = slug ? await tryLogin(slug, pin) : null;
+  if (!ok) return await fail();
+  await rpc("staff_login_record", { p_account: slug, p_ip: ip, p_ok: true });
+  return json(200, ok);
+}
+
+// The PIN check itself: session tokens when it's right, null when it isn't.
+async function tryLogin(slug: string, pin: string): Promise<Record<string, unknown> | null> {
+  if (!/^\d{4,8}$/.test(pin) || !slug) return null;
   const prof = await profileBySlug(slug);
-  if (!prof) return await fail();
+  if (!prof) return null;
   const email = staffEmail(slug);
   const v2 = await pinPassword(prof.id, pin);
-
   let session = await passwordGrant(email, v2);
   if (!session) {
     // An account from before this function existed: its password is still the
@@ -128,13 +169,12 @@ async function login(req: Request, body: any): Promise<Response> {
       session = await passwordGrant(email, v2);
     }
   }
-  if (!session) return await fail();
-  await rpc("staff_login_record", { p_account: slug, p_ip: ip, p_ok: true });
+  if (!session) return null;
   await markSecure(prof.id);
-  return json(200, {
+  return {
     access_token: session.access_token, refresh_token: session.refresh_token,
     expires_in: session.expires_in, expires_at: session.expires_at, user_id: prof.id,
-  });
+  };
 }
 
 async function setPin(req: Request, body: any): Promise<Response> {

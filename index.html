@@ -1104,6 +1104,9 @@
   .core-wait-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line);font-size:14px;}
   .cw-note{font-size:13px;color:var(--ink-soft);margin-top:3px;}
   .cw-note.muted{color:var(--muted);}
+  .login-pin #loginNameInput{font-size:16px;letter-spacing:normal;text-align:start;}
+  .login-pin label.login-remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);margin:12px 0 0;font-weight:500;cursor:pointer;}
+  .login-pin .login-remember input{width:18px;height:18px;margin:0;padding:0;box-shadow:none;accent-color:var(--gold-dark);}
   .discount-badge{display:inline-block;background:var(--gold-dark);color:#fff;font-size:11.5px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:5px;vertical-align:middle;white-space:nowrap;}
   .svc-row .price{text-align:right;}
 
@@ -3614,7 +3617,7 @@ async function pullCatalog(){
     // Staff directory — names only, so everyone this owner has added appears
     // as a login option on every device, not just the one they were added on.
     try{
-      const namesRes=await supa.rpc('list_staff_names');
+      const namesRes=currentUser?await supa.rpc('list_staff_names'):{data:null};   // staff only (not before sign-in)
       if(!namesRes.error && namesRes.data){
         const freshBySlug=new Map(namesRes.data.map(r=>[r.login_slug,r]));
         // Drop any cached staff card that no longer matches the server: its
@@ -11419,90 +11422,53 @@ const loginReduced=()=>{ try{ return matchMedia('(prefers-reduced-motion: reduce
 function loginRoleText(u){ return (u && ((u.tabs&&u.tabs.length)||u.isOwner)) ? shortRole(u) : ''; }
 function renderLogin(){
   if(loginBusy) return;                       // never redraw under a sign-in in progress
-  // Once a real, cloud-verified account exists for someone (it has a
-  // loginSlug), hide the old local-only demo card with the same name.
-  const visibleUsers = supa
-    ? STORE.users.filter(u=>u.loginSlug || !STORE.users.some(x=>x.loginSlug && x.name===u.name))
-    : STORE.users;
-  if(loginSelected && !visibleUsers.some(u=>u.id===loginSelected)) loginSelected=null;
-  const check='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.6 8.4l2.9 2.9 5.9-6.3"/></svg>';
+  // Staff type their own name and PIN. No list of staff is shown (or even
+  // downloaded) before sign-in, so someone who reaches this page learns nothing.
+  const saved=loadStaffName();
   document.getElementById('adminLogin').innerHTML=`
     <div class="login-wrap" id="loginWrap">
       <h2>Dolce+ Admin</h2>
-      <p>Choose your account, then enter your PIN.</p>
-      <div class="login-note">${supa?'Secure, server-verified login.':'Offline demo mode — PINs shown for convenience since there\'s no connection to verify against.'}</div>
-      ${visibleUsers.length?`<div class="login-cards" role="radiogroup" aria-label="Employee">
-        ${visibleUsers.map(u=>{ const role=loginRoleText(u); return `
-          <button class="login-card${u.id===loginSelected?' sel':''}" data-pick="${esc(u.id)}" role="radio" aria-checked="${u.id===loginSelected}">
-            <span class="lc-check" aria-hidden="true">${check}</span>
-            <span class="av">${esc((u.name||'?')[0])}</span>
-            <span class="nm">${esc(u.name)}</span>
-            <span class="lc-role">${role?`<span class="role-pill">${esc(role)}</span>`:''}</span>
-
-          </button>`; }).join('')}
-      </div>`:`<div class="adm-empty">No staff accounts found yet — check the connection, then reload.</div>`}
-      <div class="login-pin${loginSelected?' show':''}" id="loginPin" ${loginSelected?'':'hidden'}>
-        <div class="who"><span class="adm-av" id="lpAv"></span><span><b id="lpName"></b><span id="lpRole"></span></span></div>
-        <label for="loginPinInput">PIN</label>
-        <input type="password" id="loginPinInput" maxlength="6" inputmode="numeric" autocomplete="current-password" placeholder="••••" aria-describedby="loginErr">
+      <p>Staff only. Type your name and PIN.</p>
+      <div class="login-pin show" id="loginPin">
+        <label for="loginNameInput">Your name</label>
+        <input type="text" id="loginNameInput" maxlength="80" autocomplete="username" autocapitalize="words" spellcheck="false" value="${attr(saved)}" placeholder="e.g. Shatu">
+        <label for="loginPinInput" style="margin-top:12px;">PIN</label>
+        <input type="password" id="loginPinInput" maxlength="8" inputmode="numeric" autocomplete="current-password" placeholder="••••••" aria-describedby="loginErr">
+        <label class="login-remember"><input type="checkbox" id="loginRemember" ${saved?'checked':''}> Remember my name on this device</label>
         <div class="login-err" id="loginErr" role="alert"></div>
-        <div class="row">
-          <button class="adm-link" id="loginSwitch" type="button">Switch account</button>
+        <div class="row" style="justify-content:flex-end;">
           <button class="btn btn-primary" id="loginGo"><span class="lg-label">Log in</span></button>
         </div>
       </div>
     </div>`;
   const panel=document.getElementById('loginPin'), pinEl=document.getElementById('loginPinInput'),
+        nameEl=document.getElementById('loginNameInput'),
         go=document.getElementById('loginGo'), err=document.getElementById('loginErr');
-  const fillPanel=()=>{
-    const u=visibleUsers.find(x=>x.id===loginSelected); if(!u) return;
-    document.getElementById('lpAv').textContent=(u.name||'?')[0];
-    document.getElementById('lpName').textContent=u.name;
-    const role=loginRoleText(u);
-    document.getElementById('lpRole').textContent=role?role+(u.brands&&u.brands.length?' · '+brandsLabel(u.brands):''):'Enter your PIN to continue';
-  };
   const setErr=(msg)=>{ err.textContent=msg||''; panel.classList.toggle('has-err',!!msg); };
-  const pick=(id,fromUser)=>{
-    const changed=loginSelected!==id;
-    loginSelected=id;
-    document.querySelectorAll('#adminLogin [data-pick]').forEach(c=>{ const on=c.dataset.pick===id; c.classList.toggle('sel',on); c.setAttribute('aria-checked',on); });
-    fillPanel(); setErr('');
-    if(changed){ pinEl.value=''; }
-    if(panel.hidden){
-      panel.hidden=false;
-      if(!loginReduced()) panel.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:220,easing:'cubic-bezier(.2,.7,.3,1)'});
-      try{ panel.scrollIntoView({block:'nearest',behavior:loginReduced()?'auto':'smooth'}); }catch(e){}
-    }
-    if(fromUser) pinEl.focus({preventScroll:true});
-  };
-  if(loginSelected) fillPanel();
-  document.querySelectorAll('#adminLogin [data-pick]').forEach(b=>b.addEventListener('click',()=>pick(b.dataset.pick,true)));
-  document.getElementById('loginSwitch').addEventListener('click',()=>{
-    loginSelected=null; setErr(''); pinEl.value='';
-    document.querySelectorAll('#adminLogin [data-pick]').forEach(c=>{ c.classList.remove('sel'); c.setAttribute('aria-checked','false'); });
-    panel.hidden=true;
-    const first=document.querySelector('#adminLogin [data-pick]'); if(first) first.focus();
-  });
+  nameEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); pinEl.focus(); } });
   pinEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); go.click(); } });
-  pinEl.addEventListener('input',()=>{ if(err.textContent) setErr(''); });
+  [nameEl,pinEl].forEach(el=>el.addEventListener('input',()=>{ if(err.textContent) setErr(''); }));
+  setTimeout(()=>{ try{ (saved?pinEl:nameEl).focus({preventScroll:true}); }catch(e){} },60);
   go.addEventListener('click',async()=>{
     if(loginBusy) return;                                   // one sign-in at a time
-    const u=STORE.users.find(x=>x.id===loginSelected); if(!u) return;
-    const entered=pinEl.value;
+    const name=nameEl.value.replace(/\s+/g,' ').trim();
+    const entered=pinEl.value.trim();
+    if(!name){ setErr('Type your name.'); nameEl.focus(); return; }
     if(!entered){ setErr('Enter your PIN.'); pinEl.focus(); return; }
     loginBusy=true; setErr('');
-    go.disabled=true; pinEl.readOnly=true; go.classList.add('busy');
+    go.disabled=true; pinEl.readOnly=true; nameEl.readOnly=true; go.classList.add('busy');
     go.innerHTML='<span class="lg-spin" aria-hidden="true"></span><span class="lg-label">Signing in…</span>';
-    const res=await staffAuthenticate(u,entered);
+    const res=await staffAuthenticate(name,entered);
     if(!res.ok){
       loginBusy=false;
       if(!go.isConnected) return;
-      go.disabled=false; pinEl.readOnly=false; go.classList.remove('busy');
+      go.disabled=false; pinEl.readOnly=false; nameEl.readOnly=false; go.classList.remove('busy');
       go.innerHTML='<span class="lg-label">Log in</span>';
       setErr(res.error); pinEl.value=''; pinEl.focus();
       if(!loginReduced()) pinEl.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(5px)'},{transform:'translateX(-3px)'},{transform:'translateX(0)'}],{duration:260,easing:'ease-out'});
       return;
     }
+    saveStaffName(document.getElementById('loginRemember').checked?name:'');
     // Authenticated by the server — only now say so, and only now open the Admin App.
     const first=String(res.user.name||'').trim().split(/\s+/)[0]||res.user.name;
     go.classList.remove('busy'); go.classList.add('ok');
@@ -11523,6 +11489,10 @@ function renderLogin(){
    checks the PIN, counts wrong tries and locks the login for a while after
    too many. Until that function is deployed (404) the older direct check is
    used, so the Admin App keeps working during the switch-over. */
+// "Remember my name on this device" — only the name, never the PIN, and only when ticked.
+const STAFF_NAME_KEY='odc_staff_name_v1';
+function loadStaffName(){ try{ return localStorage.getItem(STAFF_NAME_KEY)||''; }catch(e){ return ''; } }
+function saveStaffName(n){ try{ if(n) localStorage.setItem(STAFF_NAME_KEY,n); else localStorage.removeItem(STAFF_NAME_KEY); }catch(e){} }
 const STAFF_AUTH_URL=SUPABASE_URL+'/functions/v1/staff-auth';
 async function callStaffAuth(body,token){
   try{
@@ -11537,11 +11507,10 @@ function lockedUntilText(until){
   try{ const d=new Date(until); if(!isNaN(d)) return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }catch(e){}
   return 'a few minutes';
 }
-async function staffAuthenticate(u,entered){
+async function staffAuthenticate(name,entered){
   if(supa){
-    if(!u.loginSlug) return {ok:false,error:'This account isn\'t connected to a secure login yet — ask the owner to check the Employees tab.'};
     let data,error;
-    const sv=await callStaffAuth({action:'login',slug:u.loginSlug,pin:String(entered)});
+    const sv=await callStaffAuth({action:'login',name:String(name),pin:String(entered)});
     if(sv.status===200 && sv.data.access_token){
       try{ ({data,error}=await supa.auth.setSession({access_token:sv.data.access_token,refresh_token:sv.data.refresh_token})); }
       catch(e){ return {ok:false,error:'No connection — check the internet and try again.'}; }
@@ -11549,7 +11518,7 @@ async function staffAuthenticate(u,entered){
       return {ok:false,error:`Too many wrong PINs — this login is locked until ${lockedUntilText(sv.data.until)}. Please wait, or ask the owner.`};
     } else if(sv.status===401){
       const left=Number(sv.data.left);
-      return {ok:false,error:'That PIN isn\'t right.'+(left>0&&left<=3?` ${left} ${left===1?'try':'tries'} left before this login is locked for 15 minutes.`:' Please try again.')};
+      return {ok:false,error:'That name and PIN don\'t match.'+(left>0&&left<=3?` ${left} ${left===1?'try':'tries'} left before this login is locked for 15 minutes.`:' Check both and try again.')};
     } else if(sv.status===0){
       // Staff sign in ONLY through the secure sign-in server (staff-auth). The old
       // direct sign-in was removed (Oct 2026): every account now has a secure password.
@@ -11557,12 +11526,12 @@ async function staffAuthenticate(u,entered){
     } else {
       return {ok:false,error:'Sign-in is not available right now (server '+sv.status+'). Please try again shortly.'};
     }
-    if(error || !data || !data.user) return {ok:false,error:/fetch|network/i.test(String(error&&error.message))?'No connection — check the internet and try again.':'That PIN isn\'t right. Please try again.'};
+    if(error || !data || !data.user) return {ok:false,error:/fetch|network/i.test(String(error&&error.message))?'No connection — check the internet and try again.':'That name and PIN don\'t match. Please try again.'};
     let profile=null, profErr=null;
     try{ ({data:profile,error:profErr}=await supa.from('profiles').select('*').eq('id',data.user.id).maybeSingle()); }
     catch(e){ profErr=e; }
     if(profErr || !profile){ try{ await supa.auth.signOut(); }catch(e){} return {ok:false,error:'Signed in, but this account has no profile yet — ask the owner to check the Employees tab.'}; }
-    return {ok:true,user:{id:profile.id,name:profile.name,brands:profile.brands||[],tabs:profile.tabs||[],isOwner:!!profile.is_owner,loginSlug:u.loginSlug,securePinAt:profile.secure_pin_at||null}};
+    return {ok:true,user:{id:profile.id,name:profile.name,brands:profile.brands||[],tabs:profile.tabs||[],isOwner:!!profile.is_owner,loginSlug:profile.login_slug||sv.data.slug||'',securePinAt:profile.secure_pin_at||null}};
   }
   // PINs are checked only by the server now — no offline sign-in.
   return {ok:false,error:'Staff sign-in needs the internet — check the connection and try again.'};
