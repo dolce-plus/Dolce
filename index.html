@@ -10727,18 +10727,20 @@ function renderOverviewToday(){
         <div class="k-s">${openOrders.length?`${newOrders} new · ${openOrders.length-newOrders} accepted`:'No orders waiting'}</div></button>`:''}
     </div>
     <div class="adm-grid2">
+      <div style="display:flex;flex-direction:column;gap:18px;">
       <section class="adm-card">
         <h3>Today's appointments</h3><p class="adm-cap">${today.length?`${today.length} booking${today.length===1?'':'s'}, in time order`:'Your day so far'}</p>
         <div class="adm-list">${today.length?today.map(b=>row(b,false)).join(''):`<div class="adm-empty">No appointments today.</div>`}</div>
         ${canBookings?`<div style="margin-top:12px;"><button class="adm-link" data-ov-go="bookings">Open bookings →</button></div>`:''}
       </section>
+      ${currentAllowedTabs.includes('clients')?ovBirthdaysHtml():''}
+      </div>
       <div style="display:flex;flex-direction:column;gap:18px;">
         <section class="adm-card">
           <h3>Waiting for confirmation</h3><p class="adm-cap">Booking requests from clients</p>
           <div class="adm-list">${pending.length?pending.slice(0,6).map(b=>row(b,true)).join(''):`<div class="adm-empty">No requests waiting.</div>`}</div>
           ${pending.length>6?`<div style="margin-top:10px;font-size:13px;color:var(--muted);">+ ${pending.length-6} more in Bookings</div>`:''}
         </section>
-        ${currentAllowedTabs.includes('clients')?ovBirthdaysHtml():''}
         <section class="adm-card">
           <h3>Low stock</h3><p class="adm-cap">${ADMIN_LOW_STOCK} or fewer left</p>
           <div class="adm-list">${low.length?low.slice(0,6).map(p=>`<div class="adm-li" style="grid-template-columns:minmax(0,1fr) auto;">
@@ -13031,7 +13033,7 @@ function bdayWaHref(c){
   const first=String(c.name||'').trim().split(/\s+/)[0]||'';
   return `https://wa.me/${ph}?text=${encodeURIComponent(bdayMsg().replace(/\{name\}/g,first))}`;
 }
-function bdayWhen(i){ return i.days===0?'<b>Today</b> 🎂':i.days===1?'Tomorrow':i.next.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
+function bdayWhen(i){ return i.days===0?'<b style="white-space:nowrap;">Today 🎂</b>':i.days===1?'Tomorrow':i.next.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
 function birthdaysPanelHtml(){
   const counts={today:birthdayList('today').length,week:birthdayList('week').length,month:birthdayList('month').length};
   const list=birthdayList(bdayRange);
