@@ -9643,14 +9643,153 @@ function aiSynonyms(w){
 // Does a list of words contain w (whole word, a word starting with it, or a near-spelling)?
 function aiWordIn(hayWords,hayText,w){
   if(w.includes(' ')) return (' '+hayText+' ').includes(' '+w+' ');
-  return hayWords.some(h=>h===w||(w.length>=3&&h.startsWith(w))||(w.length>=5&&h.length>=5&&aiNear(w,h)));
+  return hayWords.some(h=>h===w||(w.length>=3&&h.startsWith(w)&&AI_ENDINGS.test(h.slice(w.length)))||(w.length>=5&&h.length>=5&&aiNear(w,h)));
+}
+const AI_ENDINGS=/^(s|es|ed|d|ing|er|ers|y|ies|ly|al|ness|ه|ها|ات|ان|ی|یی|ەکان|ەکە)$/;
+function aiWordExact(hayWords,w){
+  return hayWords.some(h=>h===w||(w.length>=3&&h.startsWith(w)&&AI_ENDINGS.test(h.slice(w.length))));
 }
 // Everyday words ("skin", "face") are in many names, so alone they shouldn't decide the answer.
 const AI_GENERIC=new Set(['skin','face','body','treatment','treatments','session','بشره','وجه','جسم','علاج','پیست','روو','دەم','لەش','چارەسەر'].map(w=>aiNorm(w)));
+/* ---- Every word in the live service descriptions can be found ----
+   Descriptions are written in English; these groups let Arabic and Kurdish
+   words (and everyday English variants) reach the same description words.
+   Rare description words count more than common ones (see aiDescW), so
+   "puffiness" finds the under-eye treatments, while "benefits" finds nothing. */
+AI_SYN.push(
+  ['wrinkles','wrinkle','lines','crease','creases','تجاعيد','خطوط','چرچ','لۆچ','چرچولۆچ'],
+  ['puffiness','puffy','bags','انتفاخ','منتفخ','ئاوسان','پەنەمان'],
+  ['sagging','saggy','loose','laxity','droopy','ترهل','مترهل','شلبوون','شل','شۆڕبوونەوە'],
+  ['dull','dullness','lifeless','باهت','بهتان','بێڕەنگ','ڕەنگپەڕیو'],
+  ['glow','glowing','radiance','radiant','luminosity','نضارة','نضاره','اشراقة','توهج','درەوشانەوە','گەشاوە','گەشی'],
+  ['hydration','hydrated','dehydrated','dryness','dry','moisture','ترطيب','جفاف','جافة','جاف','وشک','وشکی','شێداری'],
+  ['oily','greasy','دهنية','دهني','دهنيه','چەور'],
+  ['pores','pore','مسام','المسامات','کونیلە','کونیلەکان'],
+  ['blackheads','blackhead','whiteheads','سوداء','رووس','رەشکە','سەرڕەش'],
+  ['breakouts','pimples','pimple','spots','bumps','حبوب','بثور','زیپکە','پزۆ','زیپکەکان'],
+  ['scars','scar','scarring','marks','ندبات','ندبة','ندوب','اثار','شوێنەوار','جێبرین'],
+  ['pigmentation','discoloration','melasma','freckles','تصبغات','تصبغ','كلف','نمش','پەڵە','پەڵەی','خاڵی'],
+  ['circles','undereye','هالات','سواد','ڕەشی','ژێرچاو'],
+  ['sweating','sweat','sweaty','hyperhidrosis','تعرق','عرق','ئارەق','ئارەقکردنەوە'],
+  ['headache','headaches','migraine','صداع','شقيقة','سەرئێشە','شەقیقە'],
+  ['jawline','jaw','فك','الفك','شەویلگە'],
+  ['chin','ذقن','الذقن','غبغب','لغلوغ','چەناگە','ژێرچەناگە'],
+  ['fat','deposits','stubborn','دهون','شحوم','چەوری','چەورییەکان'],
+  ['stretch','تشققات','تشقق','درز','هێڵیکشان'],
+  ['weight','metabolism','appetite','وزن','تنحيف','رجيم','سمنة','کێش','لاوازبوون','قەڵەوی','کێشکەمکردنەوە'],
+  ['energy','fatigue','vitality','exhausted','طاقة','تعب','ارهاق','نشاط','وزە','ماندوویی','ماندووبوون'],
+  ['immune','immunity','مناعة','المناعة','بەرگری','بەرگریلەش'],
+  ['vitamins','vitamin','فيتامين','فيتامينات','ڤیتامین','فیتامین'],
+  ['detox','ديتوكس','سموم','دیتۆکس','ژەهر'],
+  ['thinning','shedding','balding','تساقط','صلع','خفيف','وەرین','وەرینی','کەچەڵی'],
+  ['scalp','فروة','پێستیسەر'],
+  ['frizz','frizzy','هيشة','منفوش','ئاڵۆز'],
+  ['keratin','straightening','straight','smoothing','فرد','تنعيم','كيراتين','کێراتین','ڕێککردن','ڕاستکردنەوە'],
+  ['curly','curls','waves','wavy','مجعد','كيرلي','تموج','لوول','شەپۆل'],
+  ['color','colour','coloring','dye','صبغ','صبغة','لون','ڕەنگ','ڕەنگکردن','بۆیە'],['highlights','balayage','ombre','هايلايت','هايلايتس','بالياج','هایلایت','بالیاج'],
+  ['gray','grey','شيب','شایب','سپیبوون'],
+  ['blowdry','blow','سشوار','استشوار','سشوارکردن'],
+  ['manicure','مناكير','منيكير','مانیکیور'],['pedicure','باديكير','بديكير','پێدیکیور'],
+  ['brittle','weak','cracked','تكسر','ضعيفة','متشقق','شکاو','لاواز'],
+  ['feet','foot','heels','قدم','اقدام','كعب','پاژنە'],
+  ['hands','hand','يد','يدين','ايدي','دەست'],
+  ['lashes','lash','eyelashes','رموش','الرموش','برژانگ'],
+  ['brows','eyebrows','eyebrow','حواجب','حاجب','برۆ'],
+  ['lips','lip','شفاه','شفايف','شفه','لێو'],
+  ['nose','nasal','انف','الانف','لووت'],
+  ['neck','رقبة','الرقبة','مل'],
+  ['underarm','underarms','armpit','ابط','الابط','بنباڵ'],
+  ['makeup','مكياج','ميكب','مکیاج','میکاپ'],
+  ['bridal','wedding','bride','عروس','زفاف','عرس','بووک','زەماوەند'],
+  ['occasions','events','parties','celebration','party','حفلة','حفله','مناسبة','مناسبات','ئاهەنگ','بۆنە'],
+  ['photoshoots','photoshoot','photos','تصوير','وێنەگرتن'],
+  ['posture','قوام','وقفة','جەستەڕاگرتن'],
+  ['flexibility','flexible','stretching','مرونة','نەرمی','نەرمبوون'],
+  ['strength','strong','toning','قوة','شد العضلات','هێز','بەهێز'],
+  ['beginners','beginner','مبتدئ','مبتدئة','مبتدئين','سەرەتایی','تازەکار'],
+  ['injuries','injury','recovery','اصابة','اصابات','تعافي','برینداری','چاکبوونەوە'],
+  ['pregnancy','pregnant','حمل','حامل','سکپڕ','دووگیان'],
+  ['intimate','vaginal','feminine','نسائي','مهبلي','ئافرەتان'],
+  ['thyroid','غدة','درقية','تیرۆید','دەرەقی'],
+  ['cholesterol','كوليسترول','کۆلیسترۆل'],
+  ['iron','ferritin','anemia','حديد','فقر الدم','ئاسن','کەمخوێنی'],
+  ['sugar','diabetes','سكر','السكري','شەکر','نەخۆشیشەکرە'],
+  ['hormones','hormone','hormonal','هرمونات','هرمون','هورمون','هۆرمۆن'],
+  ['visbody','scan','analysis','فحص','تحليل','سكان','پشکنین','شیکردنەوە'],
+  ['relaxation','relax','relaxing','استرخاء','راحة','پشوودان','حەسانەوە'],
+  ['circulation','دورة','سوڕیخوێن'],
+  ['lymphatic','drainage','retention','bloating','احتباس','سوائل','انتفاخ البطن','ئاوکۆبوونەوە','پڕبوونیسک'],
+  ['moisturizer','moisturiser','cream','creams','lotion','مرطب','كريم','لوشن','کرێم','شێدارکەر'],
+  ['serum','سيروم','سیرۆم'],
+  ['cleanser','cleanse','wash','غسول','منظف','پاککەرەوە'],
+  ['toner','تونر','تۆنەر'],
+  ['deodorant','مزيل','مزیل','دژەئارەق'],
+  ['perfume','fragrance','عطر','بارفان','پەرفیوم'],
+  ['leggings','ليقنز','ليجنز','لیگینز'],
+  ['sports','sportswear','activewear','رياضي','رياضية','وەرزشی'],
+  ['ring','oura','خاتم','ئەڵقە'],
+  ['tanning','tan','bronzed','bronze','اسمرار','تان','برونزي','قاوەییکردن'],
+  ['peel','peeling','تقشير','پیلینگ','توێکڵکردن'],
+  ['exfoliation','exfoliating','exfoliate','scrub','سكراب','سکراب'],
+  ['firmness','firm','tightening','tighten','شد','مشدود','توندکردن','توندکردنەوە'],
+  ['collagen','كولاجين','کۆلاجین'],
+  ['volume','fullness','plump','حجم','نفخ','قەبارە'],
+  ['contour','contours','contouring','definition','sculpted','نحت','تحديد','شێوەدان'],
+  ['cheeks','cheek','خدود','خد','الخد','گۆنا','کوڵم'],
+  ['forehead','جبين','جبهة','الجبهة','ناوچەوان','تەوێڵ'],
+  ['eyes','eye','عيون','عين','العين','چاو','چاوەکان'],
+  ['gummy','gums','لثة','اللثة','پووک'],
+  ['smile','smiling','ابتسامة','ضحكة','زەردەخەنە','پێکەنین'],
+  ['redness','rosacea','احمرار','وردية','سووربوونەوە','سووری'],
+  ['sensitive','sensitivity','حساسة','حساسية','هەستیار','هەستیاری'],
+  ['ageing','aging','youthful','anti','شيخوخة','تقدم','پیری','گەنجی'],
+  ['breathing','breath','تنفس','هەناسە','هەناسەدان'],
+  ['mind','mindful','ذهن','ذهني','مێشک','دەروون'],
+  ['private','privately','خاص','خاصة','تایبەت'],
+  ['group','classes','جماعي','جماعية','مجموعة','گروپ','گرووپ'],
+  ['hairstyle','hairstyling','styling','updo','تسريحة','تسريحات','قژڕێکخستن','شێوازیقژ'],
+  ['extensions','extension','وصلات','تطويل','درێژکردنەوە'],
+  ['shine','shiny','glossy','لمعان','بريق','بریقە','دەرەوشاوە'],
+  ['damaged','damage','repair','تالف','متضرر','اصلاح','زیانپێگەیشتوو','چاککردنەوە'],
+  ['hair','شعر','الشعر','شعري','قژ','قژم','موو'],['skin','بشرة','البشرة','بشرتي','پێست','پێستم'],['face','وجه','الوجه','وجهي','ڕوو','دەموچاو'],['body','جسم','الجسم','جسمي','لەش','جەستە'],
+  ['stone','stones','حجر','الحجر','احجار','بەرد'],['hot','warm','ساخن','حار','دافئ','گەرم'],['men','male','رجال','رجالي','للرجال','پیاو','پیاوان'],
+  ['haircut','cut','trim','قص','قصة','بڕین','کورتکردنەوە'],
+  ['botox','btx','بوتوكس','بوتكس','بتوكس','بۆتۆکس','بوتۆکس'],['filler','fillers','فيلر','فلر','حشو','فیلەر','فلەر'],['laser','ليزر','الليزر','لەیزەر','لێزەر','لیزەر'],
+  ['facial','facials','فيشل','فيشال','تنظيف','فەیشەڵ','فەیشیاڵ'],['massage','مساج','تدليك','مەساج'],['booster','boosters','بوستر','بووستەر'],
+  ['pilates','بيلاتس','بلاتس','پیلاتس'],['reformer','ريفورمر','رفورمر','ڕیفۆرمەر'],['yoga','يوغا','يوجا','یۆگا','یوگا'],['drip','iv','تغذية','وريدي','دریپ'],
+  ['manicure','مناكير','منيكير','مانیکیور'],['nails','nail','اظافر','أظافر','نینۆک'],['peptide','ببتيد','پێپتاید'],
+  ['thai','تايلندي','تايلاندي','تایلەندی'],['swedish','سويدي','سویدی'],['deep','عميق','قوول'],['underarm','underarms','بنباڵ','بنهنگڵ']
+);
+_aiSynGroups=null;
+// Chat words that say nothing about a treatment: never searched in descriptions.
+const AI_DESC_IGNORE=new Set(['want','need','feel','like','know','best','good','look','looking','help','time','book','booking','price','cost','love','make','give','take','really','please','service','services','treatment','treatments','session','sessions','benefits','results','offer','offers','today','also','your','with','have','some','something','anything','would','could','should','about','there','thing','things','work','works']);
+// How rare a word is across the live services (rare = tells us more).
+let _aiDf=null, _aiDfKey='';
+function aiDf(){
+  const all=[]; Object.keys(BRANDS).forEach(b=>(svcList(b)||[]).forEach(s=>all.push(s)));
+  const key=all.length+':'+all.reduce((a,s)=>a+String(s.desc||'').length+String(s.n||'').length,0);
+  if(_aiDf && _aiDfKey===key) return _aiDf;
+  const df=new Map();
+  all.forEach(s=>{ new Set(aiNorm([s.n,s.cat,s.desc,(s.points||[]).join(' ')].join(' ')).split(' ')).forEach(w=>{ if(w.length>=3) df.set(w,(df.get(w)||0)+1); }); });
+  _aiDf={df,n:Math.max(1,all.length)}; _aiDfKey=key; return _aiDf;
+}
+function aiDescW(w){ const {df,n}=aiDf(); const r=(df.get(w)||1)/n; return r<=.012?3:r<=.035?2.5:r<=.08?1.5:r<=.2?.8:.3; }
+// The best description match for one of the client's words (0 = none).
+function aiDescHit(set,dw){
+  let best=0;
+  set.forEach(w=>{
+    if(w.length<4||AI_DESC_IGNORE.has(w)) return;
+    dw.forEach(d=>{ if(d===w||(d.length>w.length&&d.startsWith(w)&&d.length-w.length<=3)){ const x=aiDescW(d); if(x>best) best=x; } });
+  });
+  return best;
+}
 function aiFind(text,topics){
   const norm=aiNorm(text);
   const words=aiWords(text);
   const wordSets=words.map(w=>aiSynonyms(w));
+  { const raw=aiNorm(text).split(' ');
+    aiSynonyms('x');   // builds the group list
+    for(let i=0;i+1<raw.length;i++){ const j=raw[i]+raw[i+1]; if(_aiSynGroups.some(g=>g.includes(j))){ words.push(j); wordSets.push(aiSynonyms(j)); } } }
   const gen=words.map(w=>aiStems(w).some(v=>AI_GENERIC.has(v)));
   // The topic named most clearly leads: its categories and words count more.
   const catW={}, catOrder=[];
@@ -9662,17 +9801,23 @@ function aiFind(text,topics){
   // The client's own words in a NAME count most, then the category, then the description.
   // A name word counts less on an item outside the chosen topics ("back" in a laser
   // name shouldn't beat a massage when the client talks about back pain).
+  // Numbers matter in names: "reformer 8 sessions".
+  const nums=(String(text).match(/\d+/g)||[]);
+  let strongName=false;
   const scoreItem=(name,cat,desc)=>{
     const offTopic=topics.length>0 && catW[String(cat||'').toLowerCase()]==null;
     const nh=aiNorm(name), dh=aiNorm(desc), ch=aiNorm(cat);
-    const nw=nh.split(' '), cw=ch.split(' '), dw=dh.split(' ');
-    let sc=0;
+    const nw0=nh.split(' '), cw=ch.split(' '), dw=dh.split(' ');
+    const nw=nw0.concat(nw0.slice(0,-1).map((x,i)=>x+nw0[i+1]));   // "under arms" also reads as "underarms"
+    let sc=0, nameHits=0; strongName=false;
     termSets.forEach(({w,t})=>{ if(t.some(x=>aiIn(nh,x))) sc+=w; else if(t.some(x=>aiIn(dh,x))) sc+=w/2; });
     wordSets.forEach((set,i)=>{
-      if(set.some(w=>aiWordIn(nw,nh,w))) sc+=gen[i]?2:(offTopic?3:6);
+      if(set.some(w=>aiWordIn(nw,nh,w))){ sc+=gen[i]?2:(offTopic?3:6); nameHits++; if(!gen[i] && aiDescW(words[i])>=1.5 && set.some(w=>!w.includes(' ')&&aiWordExact(nw,w))) strongName=true; }
       else if(set.some(w=>aiWordIn(cw,ch,w))) sc+=2;
-      else if(set.some(w=>w.length>=4&&dw.some(d=>d===w||(d.length>w.length&&d.startsWith(w)&&d.length-w.length<=3)))) sc+=1;
+      else { const dh2=aiDescHit(set,dw); sc+=dh2; if(dh2>=2.5) strongName=true; }
     });
+    if(nameHits>=2) sc+=4+(offTopic?3*nameHits:0);
+    if(nums.length && nums.some(x=>nw.includes(x))) sc+=3;
     if(joined.some(j=>j.length>=6&&nw.includes(j))) sc+=8;
     return sc;
   };
@@ -9685,13 +9830,16 @@ function aiFind(text,topics){
       if(sc>=2) svc.push({kind:'svc',b,id:s.id,s,sc:sc+(hasDiscount(s)?.5:0)});
     });
   });
-  const prod=[];
+  const prod=[], soldOut=[];
   (STORE.products||[]).filter(p=>p.active!==false).forEach(p=>{
-    let sc=scoreItem(p.n,p.category||'',p.desc||'');
+    let sc=scoreItem(p.n,p.category||'',p.desc||''); const named=strongName;
     const ph=aiNorm(p.n+' '+(p.category||''));
-    AI_PROD_SYN.forEach(([ks,ts])=>{ if(ks.some(k=>aiHas(norm,k)) && ts.some(t=>aiIn(ph,t))) sc+=9; });
+    let syn=false;
+    AI_PROD_SYN.forEach(([ks,ts])=>{ if(ks.some(k=>aiHas(norm,k)) && ts.some(t=>aiIn(ph,t))){ sc+=9; syn=true; } });
     topics.forEach(tp=>{ if(tp.brand&&tp.brand===p.brand) sc+=.5; });
-    if(sc>=2 && numOr0(p.stock)>0) prod.push({kind:'prod',p,sc});
+    // A product is only suggested when the client's own words point at it
+    // (its name, or a product word like "sunscreen"), never just by topic.
+    if(sc>=2 && (named||syn)){ if(numOr0(p.stock)>0) prod.push({kind:'prod',p,sc}); else soldOut.push({p,sc}); }
   });
   svc.sort((a,b)=>b.sc-a.sc); prod.sort((a,b)=>b.sc-a.sc);
   // Multi-part plans (wedding, party…): the best of each category first, in the topic's own order.
@@ -9703,7 +9851,8 @@ function aiFind(text,topics){
     const first=Object.keys(best).sort((a,b)=>{ const ia=catOrder.indexOf(a), ib=catOrder.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); }).map(c=>best[c]);
     pickedSvc=[...first,...rest];
   }
-  return {svc:pickedSvc.slice(0,multi?5:3), prod:prod.slice(0,3), allSvc:pickedSvc, allProd:prod};
+  soldOut.sort((a,b)=>b.sc-a.sc);
+  return {svc:pickedSvc.slice(0,multi?5:3), prod:prod.slice(0,3), allSvc:pickedSvc, allProd:prod, soldOut:soldOut.map(x=>x.p)};
 }
 
 /* ======================= Search (client app) =======================
@@ -10126,15 +10275,15 @@ function srBind(body){
 }
 
 const AI_TEXT={
-  en:{recommended:'Recommended for you',products:'From the shop',none:"I couldn't find an exact match for that yet — our team will gladly help on WhatsApp.",
+  en:{recommended:'Recommended for you',products:'From the shop',soldOut:'{name} is sold out right now — message us on WhatsApp and we\'ll tell you when it\'s back.',none:"I couldn't find an exact match for that yet — our team will gladly help on WhatsApp.",
       found:"Here's what I found for you.",deals:'Here are the offers running right now.',noDeals:'There are no special offers right now — but here are some favourites.',
       booking:'Open any treatment and tap “Request Booking” — pick a day and time and our team confirms it. You can also book on WhatsApp.',
       contact:'You can reach each brand on WhatsApp — tap below and our team will answer.',wa:'Message us on WhatsApp',tapHint:'Tap any item to see details.'},
-  ar:{recommended:'مقترح لك',products:'من المتجر',none:'لم أجد تطابقاً دقيقاً بعد — فريقنا يسعده مساعدتك عبر واتساب.',
+  ar:{recommended:'مقترح لك',products:'من المتجر',soldOut:'{name} غير متوفر حالياً — راسلنا على واتساب وسنخبرك عند توفره.',none:'لم أجد تطابقاً دقيقاً بعد — فريقنا يسعده مساعدتك عبر واتساب.',
       found:'هذا ما وجدته لك.',deals:'هذه العروض المتاحة الآن.',noDeals:'لا توجد عروض خاصة الآن — لكن هذه بعض الخيارات المفضلة.',
       booking:'افتحي أي علاج واضغطي «طلب حجز» — اختاري اليوم والوقت وسيؤكد فريقنا الحجز. يمكنك أيضاً الحجز عبر واتساب.',
       contact:'يمكنك التواصل مع كل علامة عبر واتساب — اضغطي أدناه وسيرد فريقنا.',wa:'راسلنا على واتساب',tapHint:'اضغطي على أي خيار لرؤية التفاصيل.'},
-  ku:{recommended:'پێشنیار بۆ تۆ',products:'لە فرۆشگاوە',none:'هێشتا هاوتایەکی ورد نەدۆزییەوە — تیمەکەمان بە خۆشحاڵییەوە لە واتساپ یارمەتیت دەدات.',
+  ku:{recommended:'پێشنیار بۆ تۆ',products:'لە فرۆشگاوە',soldOut:'{name} ئێستا نەماوە — لە واتساپ نامەمان بۆ بنێرە، کاتێک گەڕایەوە پێت دەڵێین.',none:'هێشتا هاوتایەکی ورد نەدۆزییەوە — تیمەکەمان بە خۆشحاڵییەوە لە واتساپ یارمەتیت دەدات.',
       found:'ئەمە ئەوەیە کە بۆم دۆزییتەوە.',deals:'ئەمانە ئۆفەرەکانی ئێستان.',noDeals:'ئێستا ئۆفەری تایبەت نییە — بەڵام ئەمانە هەندێک هەڵبژاردەی خۆشەویستن.',
       booking:'هەر چارەسەرێک بکەرەوە و «داواکردنی حجز» دابگرە — ڕۆژ و کات هەڵبژێرە و تیمەکەمان پشتڕاستی دەکاتەوە. دەتوانیت لە واتساپیش حجز بکەیت.',
       contact:'دەتوانیت لە واتساپ پەیوەندی بە هەر براندێکەوە بکەیت — لە خوارەوە دابگرە.',wa:'نامە بنێرە لە واتساپ',tapHint:'هەر بڕگەیەک دابگرە بۆ بینینی وردەکاری.'},
@@ -10854,6 +11003,7 @@ function aiReply(text){
   } else {
     res=aiFind(text,[]);
     if(!res.svc.length && !res.prod.length){
+      if(res.soldOut&&res.soldOut.length){ bot(esc(T.soldOut.replace('{name}',res.soldOut[0].n))+aiWaLinks(T)); return; }
       bot(esc(T.none)+aiWaLinks(T));
       return;
     }
