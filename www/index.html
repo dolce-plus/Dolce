@@ -9314,8 +9314,158 @@ const AI_INFO=[
    kind:'contact'},
 ];
 
+/* ---------- Knowledge update (Nov 2026): every service on the live menu checked ----------
+   More ways people ask (EN / Arabic / Kurdish Sorani, Iraqi spellings, brand
+   names and common typos), plus topics for treatments that had none. */
+function aiUnteach(id,keys){ const tp=AI_TOPICS.find(x=>x.id===id); if(tp) tp.keys=tp.keys.filter(k=>!keys.includes(k)); }
+function aiTeach(id,more){
+  const tp=AI_TOPICS.find(x=>x.id===id); if(!tp) return;
+  if(more.keys) tp.keys.push(...more.keys);
+  if(more.terms) tp.terms.push(...more.terms);
+  if(more.cats) more.cats.forEach(c=>{ if(!tp.cats.includes(c)) tp.cats.push(c); });
+}
+aiTeach('botox',{keys:['botx','btx','baby botox','preventive botox','migraine','migraines','headache','headaches','chronic headache','sweaty','sweating','sweat','hyperhidrosis','sweaty palms','sweaty hands','underarm sweat','armpit sweat','slim jaw','square jaw','jaw slimming','v shape','v-shape face','clenching','grinding','lip flip','baby lips','fox eye','cat eye','eyebrow lift','brow lift botox','nose tip','droopy nose','sad smile','dimple chin','orange peel chin','neck bands','nefertiti','allergan','otesaly',
+  'بوتكس','بتوكس','الصداع النصفي','صداع','شقيقة','تعرق','تعرق اليدين','تعرق الابط','تعرق الإبط','نحت الفك','تنحيف الفك','الفك المربع','فرك الاسنان','صرير','شفاه بوتوكس','عين الثعلب','رفع الحاجب','رفع الحواجب بالبوتوكس','ابتسامة حزينة','ابتسامة لثوية',
+  'بوتوکس','سەرئێشە','سەرئێشەی کۆچ','شەقیقە','ئارەقکردنەوەی دەست','ئارەقی دەست','ئارەقی بن باڵ','باریککردنەوەی شەویلگە','شەویلگە','جیڕەی ددان','چاوی ڕێوی','بەرزکردنەوەی برۆ بە بۆتۆکس'],terms:['migraine','sweaty','underarm','masseter','bruxism','lip flip','fox eye','gummy','dimple','sad smile','nose','facelift','forehead']});
+aiTeach('fillers',{keys:['fillr','filer','filler lips','lip enhancement','lip augmentation','juvederm','teosyal','revanesse','rha','ultra deep','redensity','hyaluronic','ha filler','kiss','lip shape','chin filler','jaw filler','cheek lift','liquid facelift',
+  'فلير','فيللر','جوفيدرم','تيوسيال','ريفانيس','نفخ الشفايف','تكبير شفايف','تحديد الشفاه','فلر خدود','فلر ذقن',
+  'فیلەری لێو','پڕکردنەوەی لێو','گەورەکردنی لێو','فیلەری گۆنا','فیلەری چەناگە','جوڤیدێرم'],terms:['teosyal','juvederm','revanesse','rha','kiss','shape','ultra']});
+aiTeach('boosters',{keys:['profhilo','profilo','skin booster','skinbooster','boosters','polynucleotide','polynucleotides','pdrn','salmon dna','salmon','pluryal','nctf','filorga','sculptra','collagen stimulator','collagen','olidia','plla','skinfill','rrs','amber','volite','hyalrepair','mesotherapy','meso','glass skin','dewy','hydration injection','brightening injection',
+  'بروفايلو','بروفيلو','سكن بوستر','بوستر','حمض الهيالورونيك','دي ان اي السلمون','حقن السلمون','ميزوثيرابي','ميزو','نضارة','بشرة زجاجية','كولاجين','سكلبترا',
+  'سکین بوستەر','بوستەر','پرۆفایلۆ','دی ئێن ئەی سەلمۆن','میزۆسێراپی','میزۆ','کۆلاجین','درەوشانەوەی پێست'],terms:['profhilo','booster','salmon','pluryal','nctf','sculptra','olidia','skinfill','mesotherapy','hyalrepair','volite','amber','rrs']});
+aiTeach('facials',{keys:['hydrafacial','hydra facial','hydro facial','hydrofacial','facial','facials','face cleaning','deep cleansing','deep clean','cleaning','blackheads','whiteheads','glow','dull skin','tired skin','rosacea','redness','sensitive skin','pigmentation','melasma','dark spots','sun spots','uneven skin tone','back facial','bacne','back acne','teen facial','teenager','young skin','gua sha','peach facial','medik8','skinceuticals','dermapen facial','oxygen',
+  'هيدرافيشل','هيدرا فيشل','هايدرافيشل','تنظيف البشرة','تنظيف بشرة','رؤوس سوداء','رؤوس بيضاء','بشرة باهتة','وردية','احمرار','بشرة حساسة','تصبغات','كلف','نمش','بقع داكنة','تنظيف الظهر','حب شباب الظهر','مراهقين','غوا شا',
+  'هایدرافەیشەڵ','هیدرافەیشەڵ','پاککردنەوەی پێست','پاککردنەوەی دەموچاو','خاڵە ڕەشەکان','پێستی هەستیار','سووربوونەوە','پەڵە','پەڵەی ڕەش','میلاسما','پاککردنەوەی پشت'],terms:['hydrafacial','rosacea','pigmentation','back','young','peach','cleansing','hydration','radiant','glow','acne','stamp','gua sha']});
+aiTeach('acne',{keys:['pimple','pimples','spots','breakout','breakouts','cpl','phototherapy','blue light','حبوب','حبوب الوجه','حب الشباب','بثور','زیپکە','زیپکەی دەموچاو','دەنکە'],terms:['acne','cpl','phototherapy']});
+aiTeach('laser',{keys:['lazer','laser hair','hair removal','remove hair','unwanted hair','permanent hair removal','full body laser','body laser','face laser','facial hair','upper lip','mustache','moustache','chin hair','underarm','underarms','armpit','armpits','bikini','brazilian','legs','leg','arms','arm','back hair','chest hair','stomach hair','neck hair','ear hair','shoulder','men laser','beard line',
+  'ليزر','ليزر الوجه','ليزر الجسم','ازالة الشعر','إزالة الشعر','شعر الوجه','شارب','شوارب','الذقن','ابط','الإبط','بكيني','ساقين','رجلين','ذراعين','شعر الظهر','شعر الصدر','ليزر رجالي',
+  'لەیزەر','لێزەر','لابردنی موو','لابردنی مووی لەش','مووی ڕوو','سمێڵ','چەناگە','بن باڵ','بنباڵ','بیکینی','قاچ','باسک','پشت','سنگ','لەیزەری پیاوان'],terms:['laser','full body','face','bikini','under arms','mustache','leg','arm','back','neck','stomach','cheeks','chin','shoulder','ear']});
+aiTeach('hairloss',{keys:['hair loss','hairloss','hair fall','falling hair','thinning','thin hair','bald','balding','receding hairline','alopecia','prp','prp hair','plasma hair','exosome','exosomes','biosomes','dermaheal','stem cell hair','reyu hair','hair regrowth','hair growth',
+  'تساقط','تساقط الشعر','قلة الشعر','خفة الشعر','صلع','بلازما','بلازما الشعر','اكسوزوم','إكسوزوم','نمو الشعر',
+  'وەرینی قژ','قژ وەرین','کەمبوونەوەی قژ','کەچەڵی','کەچەڵ','پلازما','پلازمای قژ','گەشەی قژ'],terms:['prp','exosomes','biosomes','dermaheal','reyu','hair']});
+aiTeach('gyn',{keys:['votiva','forma v','vaginal','vaginal rejuvenation','vaginal tightening','intimate','intimate area','feminine','pink peel','intimate whitening','intimate lightening','bikini lightening','after birth',
+  'تجميل نسائي','نسائية','المنطقة الحساسة','المناطق الحساسة','تفتيح المناطق الحساسة','شد مهبلي','تضييق','فوتيفا','بينك بيل',
+  'ناوچەی هەستیار','جوانکاری ئافرەتان','سپیکردنەوەی ناوچەی هەستیار'],terms:['votiva','pink peel','vaginal']});
+aiTeach('wellness',{keys:['iv','iv drip','iv therapy','drip','drips','infusion','vitamin drip','vitamins','vitamin','hydration drip','dehydrated','hangover','immunity','immune','detox','nad','nad+','glutathione','biotin','vitamin d','booster shot','shot','energy','tired all the time','fatigue','low energy','anti aging drip','age delay','royal flush','power drip',
+  'مغذي','مغذيات','دريب','محلول','فيتامين','فيتامينات','فيتامين د','بايوتين','بيوتين','ترطيب','ديتوكس','مناعة','ارهاق','إرهاق','طاقة','خمول',
+  'سێروم','دڵۆپ','ڤیتامین','ڤیتامینەکان','ڤیتامینی دی','بایۆتین','وزە','ماندوویی','بەرگری','دیتۆکس'],terms:['iv therapy','drip','booster','vitamin','biotin','nad','energy','power','detox','hydration']});
+aiTeach('spa',{keys:['hot stone','stones','thai','swedish','shirodhara','oil massage','back massage','lymphatic','lymphatic drainage','drainage','bloating','water retention','scrub','body scrub','moroccan','moroccan bath','hammam','exfoliation','body wrap','body packing','spray tan','tan','tanning','bronze','sun kissed',
+  'مساج','تدليك','مساج حجارة','الحجارة الساخنة','تايلندي','سويدي','تصريف لمفاوي','لمفاوي','احتباس السوائل','سكراب','تقشير الجسم','حمام مغربي','مغربي','حمام','تان','تسمير','سبراي تان','برونزي',
+  'مەساج','مەساجی بەرد','بەردی گەرم','تایلەندی','سویدی','لیمفاوی','سکراب','حەمامی مەغریبی','مەغریبی','حەمام','تان','ڕەنگی خۆر'],terms:['massage','hot stone','thai','swedish','shirodhara','lymphatic','scrub','moroccan','spray tan','body packing']});
+aiTeach('nails',{keys:['manicure','mani','pedicure','pedi','gel','gel nails','gel polish','shellac','acrylic','extensions','nail extension','french','french nails','chrome','ombre nails','nail art','nail design','nail repair','broken nail','gel removal','paraffin','paraffin wax','medical pedicure','ingrown','cracked heels','hard skin','men manicure','men pedicure',
+  'مانيكير','مناكير','باديكير','بديكير','جل','اظافر جل','طلاء جل','اكريليك','اظافر صناعية','تركيب اظافر','فرنش','كروم','رسم اظافر','تصليح الاظافر','بارافين','باديكير طبي','تشقق الكعب',
+  'مانیکیور','پێدیکیور','پدیکیور','جێڵ','نینۆکی جێڵ','نینۆکی دەستکرد','فرێنچ','کرۆم','نەخشی نینۆک','پارافین','پێدیکیوری پزیشکی'],terms:['manicure','pedicure','gel','french','chrome','ombre','extension','paraffin','nail art','repair','medical','removal']});
+aiTeach('hair',{keys:['haircut','hair cut','cut','trim','blow dry','blowdry','blowout','blow out','wash','waves','wavy','curls','curly','hairstyle','hair style','updo','keratin','protein','hair botox','smoothing','straightening','frizz','frizzy','color','colour','hair color','dye','highlights','balayage','ombre','babylights','roots','root color','grey hair','gray hair','bleach','stripping','toner','rinse','rinsage','hair mask','hair treatment','damaged hair','dry hair',
+  'قص','قصة','قص الشعر','سشوار','استشوار','تمويج','كيرلي','تسريحة','كيراتين','بروتين','بوتوكس الشعر','فرد','فرد الشعر','صبغ','صبغة','صبغ الشعر','هايلايت','بالياج','اومبري','جذور','شيب','سحب لون','ماسك شعر','حمام زيت','شعر تالف',
+  'قژبڕین','بڕینی قژ','سشوار','شەپۆل','قژی شەپۆلاوی','تەسریحە','کێراتین','پرۆتین','بۆتۆکسی قژ','ڕاستکردنەوەی قژ','بۆیەی قژ','بۆیەکردن','هایلایت','ڕەگ','مووی سپی','ماسکی قژ','قژی تێکچوو'],terms:['cut','blow','wavy','keratin','botox','color','highlights','ombre','root','mask','rinsage','stripping','style']});
+aiTeach('lashes',{keys:['lash','lashes','eyelash','eyelashes','lash extension','lash extensions','eyelash extensions','classic lashes','hybrid','2d','3d','volume lashes','mega volume','refill','lash refill','lash lift','lash lifting','lash tint','lash removal',
+  'رموش','تركيب رموش','رموش كلاسيك','فوليوم','رفع الرموش','ليفت رموش','صبغ الرموش','تعبئة رموش','ازالة الرموش',
+  'برژانگ','درێژکردنەوەی برژانگ','بەرزکردنەوەی برژانگ','ڕەنگکردنی برژانگ'],terms:['set','refill','volume','hybrid','2d','lash lifting','lash tint','removal']});
+aiTeach('brows',{keys:['brow','brows','eyebrow','eyebrows','brow lamination','brow lift','brow lifting','brow tint','eyebrow tint','brow shaping',
+  'حواجب','حاجب','رفع الحواجب','لاميناشن','صبغ الحواجب','تشقير','برۆ','برۆکان','بەرزکردنەوەی برۆ','ڕەنگکردنی برۆ'],terms:['brow lifting','brow tint']});
+aiTeach('makeup',{keys:['makeup','make up','make-up','glam','full glam','soft glam','natural makeup','engagement','engagement makeup','nikah','henna','henna night','graduation','photoshoot','event makeup','evening makeup',
+  'مكياج','مکیاج','ميك اب','ميكب','خطوبة','الخطوبة','ملكة','حنة','ليلة الحنة','تخرج','سهرة',
+  'مەکیاج','مێکئەپ','دەستگیرانی','ماره','خەنەبەندان','دەرچوون','ئاهەنگ'],terms:['makeup','engagement','glam']});
+aiTeach('reformer',{keys:['reformer','reformer pilates','pilates','pilatis','pilates class','group class','classes','class','strength','posture','core strength','toning',
+  'ريفورمر','بيلاتس','بيلاتيس','كلاس','حصة','قوام','ريفۆرمەر','پیلاتس','پیلاتیس','کلاس','وانە'],terms:['reformer','pilates','group']});
+aiTeach('mat',{keys:['mat pilates','mat class','floor pilates','بيلاتس ارضي','ماتي','پیلاتسی سەر زەوی'],terms:['mat']});
+aiTeach('yoga',{keys:['yoga','yogaa','yoga class','stretching','flexibility','meditation','breathing','mindfulness','يوغا','يوجا','تأمل','تمدد','یۆگا','یوگا','ئارامی','هەناسەدان'],terms:['yoga']});
+aiTeach('private',{keys:['private','private session','private class','one to one','1 to 1','1:1','personal trainer','personal training','coach','duet','couple','couples','with my friend','with a friend','with my sister','with my husband','partner','two people','together',
+  'خاص','حصة خاصة','مدرب شخصي','مدربة','ثنائي','لشخصين','مع صديقتي','مع اختي','مع زوجي','زوجين',
+  'تایبەت','ڕاهێنەری تایبەت','وانەی تایبەت','دوو کەس','لەگەڵ هاوڕێکەم','لەگەڵ خوشکەکەم','جووت'],terms:['private','duet']});
+aiTeach('wedding',{cats:['Makeup','Hair','Nails','Facials','Skin boosters','Lashes'],keys:['bride','bridal','wedding','getting married','my wedding','big day','عروس','عرس','زفاف','زواج','بووک','زەماوەند','هاوسەرگیری']});
+
+AI_TOPICS.push(
+  {id:'tightening',brand:'dolce',cats:['Dermatology'],
+   keys:['skin tightening','tightening','tighten','sagging','saggy','loose skin','lifting','face lift','facelift','non surgical lift','jowls','jowl','neck lines','turkey neck','firming','morpheus','morpheus8','morpheus 8','rf microneedling','radiofrequency','radio frequency','hifu','ultraformer','ultherapy','reyu','electro lifting',
+     'شد البشرة','شد الوجه','شد الرقبة','ترهل','ترهلات','ترهل الوجه','مورفيس','مورفيوس','هايفو','الترددات الراديوية','رفع الوجه',
+     'توندکردنی پێست','توندکردنەوەی پێست','شلبوونی پێست','شل بوون','مۆرفیەس','هایفۆ','بەرزکردنەوەی ڕوو','توندکردنەوەی ملی'],
+   terms:['morpheus8','hifu','ultraformer','reyu','lifting'],
+   say:{en:'For firmer, lifted skin without surgery, these are our strongest options.',ar:'لبشرة مشدودة ومرفوعة بدون جراحة، هذه أقوى خياراتنا.',ku:'بۆ پێستێکی توندتر و بەرزکراوە بەبێ نەشتەرگەری، ئەمانە بەهێزترین هەڵبژاردنەکانمانن.'}},
+  {id:'fat',brand:'dolce',cats:['Dermatology'],
+   keys:['double chin','fat','fat dissolving','fat dissolve','dissolve fat','lemon bottle','stubborn fat','belly fat','love handles','body contouring','contouring','slimming injection','fat injection','chin fat',
+     'غبغب','الغبب','لغلوغ','دهون','اذابة الدهون','إذابة الدهون','حقن اذابة الدهون','ليمون بوتل','دهون البطن','نحت الجسم','نحت',
+     'دوو چەناگە','چەوری','توانەوەی چەوری','دەرزی توانەوەی چەوری','لیمۆن بۆتڵ','چەوری سک','شێوەدانی لەش'],
+   terms:['lemon bottle','double chin','body'],
+   say:{en:'For a double chin or stubborn fat, these are the treatments to look at.',ar:'للغبب أو الدهون العنيدة، هذه العلاجات المناسبة.',ku:'بۆ دوو چەناگە یان چەوری سەرسەخت، ئەمانە چارەسەرە گونجاوەکانن.'}},
+  {id:'scars',brand:'dolce',cats:['Dermatology'],
+   keys:['scar','scars','acne scars','acne marks','stretch marks','stretchmarks','striae','co2','co 2','fractional','fractional laser','resurfacing','carboxy','carboxytherapy','texture','skin texture','large pores','pores','open pores','dermapen','microneedling','micro needling',
+     'ندبات','ندب','اثار حب الشباب','آثار حب الشباب','علامات التمدد','خطوط التمدد','تشققات','سترتش','فراكشنال','كاربوكسي','مسامات','مسام واسعة','ديرمابن','ابر دقيقة',
+     'شوێنەوار','شوێنی زیپکە','شوێنەواری زیپکە','هێڵی درێژبوونەوە','هێڵی درێژبوونەوەی پێست','درێژبوونەوەی پێست','کونیلە','کونیلەکان','دێرماپێن'],
+   terms:['co2','fractional','carboxy','stretch','dermapen','morpheus8'],
+   say:{en:'For scars, stretch marks and skin texture, these treatments give the best results.',ar:'للندبات وعلامات التمدد وملمس البشرة، هذه العلاجات تعطي أفضل النتائج.',ku:'بۆ شوێنەوار و هێڵی درێژبوونەوە و ڕووکاری پێست، ئەم چارەسەرانە باشترین ئەنجام دەدەن.'}},
+  {id:'moles',brand:'dolce',cats:['Dermatology'],
+   keys:['mole','moles','mole removal','remove mole','skin tag','skin tags','wart','warts','plasma pen','plasma','beauty spot',
+     'شامة','شامات','ازالة الشامات','إزالة الشامات','زوائد جلدية','زائدة جلدية','ثآليل','ثؤلول','بلازما بن','بلازما',
+     'لابردنی خاڵ','خاڵی ڕەش','خاڵی سەر پێست','زیادەی پێست','باڵوو','پلازما پێن'],
+   terms:['plasma pen','mole'],
+   say:{en:'Moles and skin tags can be removed quickly with Plasma Pen.',ar:'يمكن إزالة الشامات والزوائد الجلدية بسرعة بجهاز بلازما بن.',ku:'خاڵ و زیادەی پێست بە خێرایی بە پلازما پێن لادەبرێن.'}},
+  {id:'undereye',brand:'dolce',cats:['Skin boosters','Dermatology'],
+   keys:['dark circles','dark circle','under eye','under-eye','undereye','under eyes','eye bags','puffy eyes','tired eyes','tear trough','hollow eyes','eye wrinkles','crows feet','crow feet',
+     'هالات','هالات سوداء','الهالات','تحت العين','تحت العيون','انتفاخ العين','اكياس العين','عيون متعبة',
+     'ڕەشی ژێر چاو','ژێر چاو','ژیر چاو','ڕەشایی ژێر چاو','ئاوسانی چاو','چاوی ماندوو'],
+   terms:['under-eye','undereye','under eye','eye'],
+   say:{en:'For dark circles and tired-looking eyes, these under-eye treatments work beautifully.',ar:'للهالات السوداء والعيون المتعبة، علاجات تحت العين هذه رائعة.',ku:'بۆ ڕەشی ژێر چاو و چاوی ماندوو، ئەم چارەسەرانەی ژێر چاو زۆر باشن.'}},
+  {id:'weightloss',brand:'dolce',cats:['Wellness'],
+   keys:['weight loss','lose weight','losing weight','weightloss','slimming','slim down','diet','appetite','ozempic','mounjaro','wegovy','semaglutide','tirzepatide','retatrutide','glp','glp-1','peptide','peptides','peptide pen','copper peptide','fat loss',
+     'تنزيل الوزن','تنزيل وزن','نزول الوزن','خسارة الوزن','انقاص الوزن','إنقاص الوزن','رجيم','تخسيس','تنحيف','ابرة التنحيف','إبرة التنحيف','ابر التنحيف','اوزمبيك','أوزمبيك','مونجارو','ببتيد','ببتايد',
+     'کەمکردنەوەی کێش','کێش کەمکردنەوە','دابەزینی کێش','لاوازبوون','لاوازی','لاغربوون','ڕێجیم','دەرزی لاوازی','پێپتاید'],
+   terms:['weight loss','peptide','retatrutide','copper'],
+   say:{en:'For weight-loss support, these doctor-led peptide programmes are the place to start.',ar:'لدعم خسارة الوزن، برامج الببتيد هذه بإشراف الطبيب هي البداية المناسبة.',ku:'بۆ یارمەتیدانی کەمکردنەوەی کێش، ئەم بەرنامانەی پێپتاید بە سەرپەرشتی پزیشک باشترین سەرەتان.'}},
+  {id:'testing',brand:'dolce',cats:['Testing'],
+   keys:['blood test','blood tests','test','tests','lab','lab test','check up','checkup','check-up','analysis','hormone','hormones','hormone test','thyroid','deficiency','vitamin test','body composition','body analysis','body scan','inbody','visbody','full checkup',
+     'تحليل','تحاليل','تحليل دم','تحاليل دم','فحص','فحص دم','فحص شامل','هرمونات','الغدة','نقص فيتامين','تحليل الجسم','قياس الجسم',
+     'پشکنین','پشکنینی خوێن','شیکاری خوێن','تاقیکردنەوە','هۆرمۆن','هۆرمۆنەکان','کەمی ڤیتامین','شیکردنەوەی لەش','پشکنینی گشتی'],
+   terms:['blood test','visbody','hormones','vitamins'],
+   say:{en:'To know your body better, these tests and analyses give a clear picture.',ar:'لمعرفة جسمك أكثر، هذه التحاليل تعطيك صورة واضحة.',ku:'بۆ ئەوەی لەشت باشتر بناسیت، ئەم پشکنینانە وێنەیەکی ڕوون دەدەن.'}}
+);
+
+/* Words that mean the same thing — any language (used when matching names). */
+const AI_SYN=[
+  ['bruxism','grinding','clenching','صرير','ریکردن'],['masseter','jaw','فك','شەویلگە'],['salmon','polynucleotides','polynucleotide','pdrn','سلمون','سالمۆن'],
+  ['plasma','skintag','tag','زوائد','زیادە'],['gel','جل','جێل'],['cut','haircut','قص','بڕین'],
+  ['duet','friend','partner','صديق','صديقتي','هاوڕێ','هاوڕێکەم'],['under','undereye','ژێر','تحت'],
+  ['hydrafacial','hydra facial','hydro facial','هيدرافيشل','هيدرا فيشل','هايدرافيشل','هایدرافەیشەڵ','هیدرافەیشەڵ'],['morpheus8','morpheus','مورفيس','مۆرفیەس'],['hifu','هايفو','هایفۆ'],
+  ['profhilo','بروفايلو','پرۆفایلۆ'],['paraffin','بارافين','پارافین'],['keratin','كيراتين','کێراتین'],['nails','nail','اظافر','نینۆک'],
+
+  ['tan','tanning','spray tan','تان','تسمير'],['scrub','سكراب','سکراب','تقشير'],['moroccan','مغربي','مەغریبی'],
+  ['vitamin','vitamins','فيتامين','ڤیتامین','فیتامین'],['biotin','بايوتين','بیوتین','بایۆتین'],['weight','وزن','کێش'],
+  ['blood','دم','خوێن'],['test','تحليل','فحص','پشکنین'],['hormones','hormone','هرمونات','هۆرمۆن'],
+  ['massage','مساج','تدليك','مەساج'],['stone','حجارة','بەرد'],['keratin','كيراتين','کێراتین','کیراتین'],
+  ['highlights','balayage','babylights','هايلايت','بالياج','هایلایت'],['blow','blowdry','blowout','سشوار','استشوار'],
+  ['cut','haircut','trim','قص','قصة','بڕین','قژبڕین'],['color','colour','dye','صبغ','بۆیە'],['mask','ماسك','ماسک'],
+  ['makeup','make up','مكياج','مکیاج','میکاپ','مەکیاج'],['engagement','خطوبة','دەستگیرانی'],
+  ['lifting','lift','رفع','بەرزکردنەوە'],['tint','صبغ','ڕەنگ'],['removal','remove','ازالة','إزالة','لابردن'],
+  ['mole','moles','شامة','شامات','خاڵ'],['stretch','تمدد','درێژبوونەوە'],['under eye','under-eye','undereye','تحت العين','ژێر چاو'],
+  ['double chin','غبغب','غبب','دوو چەناگە'],['sweaty','sweat','sweating','تعرق','ئارەق'],['migraine','صداع','شقيقة','سەرئێشە','شەقیقە'],
+  ['manicure','مانيكير','مانیکیور'],['pedicure','باديكير','بديكير','پێدیکیور'],['paraffin','بارافين','پارافین'],
+  ['private','خاص','تایبەت'],['duet','couple','ثنائي','زوجين','جووت'],['group','جماعي','گروپ'],
+  ['face','وجه','ڕوو','دەموچاو'],['body','جسم','لەش'],['legs','leg','ساق','قاچ'],['arms','arm','ذراع','باسک'],['underarms','under arms','armpit','ابط','بن باڵ'],
+  ['mustache','moustache','شارب','سمێڵ'],['bikini','بكيني','بیکینی'],['back','ظهر','پشت'],['neck','رقبة','مل'],
+  ['nad','nad+','ناد'],['detox','ديتوكس','دیتۆکس'],['hydration','ترطيب','شێداری'],['energy','طاقة','وزە'],
+  ['acne','pimples','حب الشباب','زیپکە'],['pigmentation','تصبغات','پەڵە'],['rosacea','وردية','سووربوونەوە']
+];
+/* Product words (EN / AR / KU) → words in the product names. */
+const AI_PROD_SYN=[
+  [['دژە خۆر','دژه خور','خۆر','واقي شمس','واقي الشمس','sunblock'],['spf','sunscreen','sun']],
+  [['sunscreen','sun cream','sunblock','spf','واقي شمس','واقي الشمس','كريم شمس','کرێمی دژە خۆر','دژە خۆر','کرێمی خۆر'],['sunscreen','spf']],
+  [['serum','سيروم','سێرۆم','سیرۆم'],['serum']],[['vitamin c','فيتامين سي','ڤیتامین سی'],['c e ferulic','c-tetra','vitamin c']],
+  [['toner','تونر','تۆنەر'],['toner']],[['moisturiser','moisturizer','cream','مرطب','كريم','کرێم','شێدارکەرەوە'],['cream','moisturizer']],
+  [['shampoo','شامبو','شامپۆ'],['shampoo']],[['conditioner','بلسم','کۆندیشنەر'],['conditioner']],[['hair perfume','عطر شعر','بۆنی قژ'],['hair perfume']],
+  [['yoga mat','mat','حصيرة','مات','ڕایەخی یۆگا'],['mat']],[['leggings','ليقنز','ليغنز','لێگینز'],['leggings']],[['sports bra','bra','براء','ستیانی وەرزشی'],['bra']],
+  [['top','t-shirt','tshirt','تيشيرت','بلوزة','تیشێرت'],['top','t-shirt','sweatshirt']],[['brush','brushes','فرشاة','فرش','فڵچە'],['brush','blender']],
+  [['makeup products','palette','contour','كونتور','پالێت'],['palette','contour','setting spray']],[['lash serum','سيروم رموش','سیرۆمی برژانگ'],['lash']],
+  [['oura','ring','خاتم','ئەڵقە'],['oura']],[['deodorant','مزيل عرق','بۆنخۆشکەر'],['deodorant']],[['body lotion','lotion','لوشن','لۆشن'],['lotion']]
+];
+AI_PRODUCT_KEYS.push('sunscreen','spf','yoga mat','leggings','sports bra','oura','brushes','palette','conditioner','hair perfume','deodorant','lotion',
+  'واقي شمس','حصيرة يوغا','ليقنز','فرشاة مكياج','عطر شعر','لوشن','کرێمی دژە خۆر','ڕایەخی یۆگا','لێگینز','فڵچەی مەکیاج');
+
+aiUnteach('acne',['skin tag','skin tags','stretch mark','stretch marks']); aiUnteach('boosters',['شد البشرة','tightening']);
 function aiNorm(s){
-  return String(s||'').toLowerCase()
+  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()   // é → e (Juvéderm = juvederm)
+    .replace(/[®™©]/g,' ')
+    // Kurdish letters often typed with the Arabic keyboard: treat them as the same letter
+    .replace(/ڕ/g,'ر').replace(/ڵ/g,'ل').replace(/ێ/g,'ی').replace(/ۆ/g,'و').replace(/ڤ/g,'ف').replace(/ە/g,'ه').replace(/ؤ/g,'و').replace(/ئ/g,'ی')
     .replace(/[ً-ٰٟ]/g,'')              // Arabic diacritics
     .replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ی').replace(/ي/g,'ی').replace(/ك/g,'ک')
     .replace(/ة/g,'ه').replace(/ۀ/g,'ە').replace(/[’'`]/g,"'")
@@ -9325,8 +9475,31 @@ const AI_STOPWORDS=new Set(['the','and','for','with','that','this','have','has',
   'من','في','على','الى','إلى','عن','مع','هذا','هذه','اريد','أريد','ابي','ممكن','لو','ما','شو','هل','انا','عندي','كيف',
   'لە','بۆ','لەگەڵ','ئەم','ئەوە','دەمەوێت','من','چی','چۆن','ئایا','هەیە','تکایە']);
 /* Does the (normalised) message contain this key? Short Latin keys must match a whole word. */
+/* Small typing slips are forgiven for single words of 4+ letters ("manicur",
+   "pilatis", "fillr", "lazer"): 1 letter, or 2 in words of 8+ letters. */
+function aiLev(a,b,max){
+  if(Math.abs(a.length-b.length)>max) return max+1;
+  let prev=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){
+    const cur=[i]; let best=i;
+    for(let j=1;j<=b.length;j++){ cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); if(cur[j]<best) best=cur[j]; }
+    if(best>max) return max+1; prev=cur;
+  }
+  return prev[b.length];
+}
+function aiNear(w,k){
+  if(w===k) return true;
+  if(k.length<4||w.length<4||w[0]!==k[0]) return false;
+  const max=k.length>=9?2:1;
+  return aiLev(w,k,max)<=max;
+}
 function aiHas(text,key){
   const k=aiNorm(key); if(!k) return false;
+  if(aiHasExact(text,k)) return true;
+  if(k.includes(' ')||k.length<5) return false;
+  return text.split(' ').some(w=>w.length>=4&&aiNear(w,k));
+}
+function aiHasExact(text,k){
   if(/^[a-z0-9' ]+$/.test(k) && k.length<=4) return new RegExp(`(^| )${k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}( |$)`).test(text);
   if(k.length<=4){   // short Arabic/Kurdish words must start a word ("سک" shouldn't match inside "ماسک")
     const h=' '+text;
@@ -9334,7 +9507,8 @@ function aiHas(text,key){
   }
   return text.includes(k);
 }
-function aiWords(text){ return aiNorm(text).split(' ').filter(w=>w.length>=3 && !AI_STOPWORDS.has(w)); }
+// Short Arabic/Kurdish words like "قص" (cut) or "جل" (gel) still count.
+function aiWords(text){ return aiNorm(text).split(' ').filter(w=>(w.length>=3||(w.length===2&&!/^[a-z0-9]/.test(w))) && !AI_STOPWORDS.has(w)); }
 function aiLang(){ return (lang==='ar'||lang==='ku')?lang:'en'; }
 
 /* Score every live service & product against the chosen topics + the message words. */
@@ -9347,40 +9521,86 @@ function aiIn(hay,t){
   if(t.startsWith('ال') && t.length>4 && h.includes(' '+t.slice(2))) return true;   // Arabic "the"
   return h.includes(' ال'+t);
 }
+/* Words that mean the same thing (any language) — used to widen a search. */
+// "الوجه" / "للوجه" → "وجه"; Kurdish "سەرئێشەی" → "سەرئێشە" (the words without the little prefixes/endings).
+function aiStems(w){
+  const out=new Set([w]);
+  if(!/^[a-z0-9]/.test(w)){
+    [/^(بال|وال|لل|ال|و|ب|ل)/].forEach(re=>{ const x=w.replace(re,''); if(x.length>=3) out.add(x); });
+    [...out].forEach(v=>{ const x=v.replace(/(هکان|کان|ان|ها|ی|ه)$/,''); if(x.length>=3) out.add(x); });
+  } else if(w.length>4 && w.endsWith('s')) out.add(w.slice(0,-1));
+  return [...out];
+}
+let _aiSynGroups=null;
+function aiSynonyms(w){
+  if(!_aiSynGroups) _aiSynGroups=((typeof SR_SYN!=='undefined'?SR_SYN:[]).concat(AI_SYN)).map(g=>g.map(aiNorm).filter(Boolean));
+  const stems=aiStems(w), out=new Set(stems);
+  _aiSynGroups.forEach(ng=>{
+    if(stems.some(v=>ng.includes(v)||ng.some(x=>x.length>=4&&!x.includes(' ')&&v.startsWith(x)))) ng.forEach(x=>{ if(x.length>=2) out.add(x); });
+  });
+  return [...out];
+}
+// Does a list of words contain w (whole word, a word starting with it, or a near-spelling)?
+function aiWordIn(hayWords,hayText,w){
+  if(w.includes(' ')) return (' '+hayText+' ').includes(' '+w+' ');
+  return hayWords.some(h=>h===w||(w.length>=3&&h.startsWith(w))||(w.length>=5&&h.length>=5&&aiNear(w,h)));
+}
+// Everyday words ("skin", "face") are in many names, so alone they shouldn't decide the answer.
+const AI_GENERIC=new Set(['skin','face','body','treatment','treatments','session','بشره','وجه','جسم','علاج','پیست','روو','دەم','لەش','چارەسەر'].map(w=>aiNorm(w)));
 function aiFind(text,topics){
+  const norm=aiNorm(text);
   const words=aiWords(text);
-  const cats=new Set(), terms=[];
-  topics.forEach(tp=>{ tp.cats.forEach(c=>cats.add(c.toLowerCase())); terms.push(...tp.terms); });
+  const wordSets=words.map(w=>aiSynonyms(w));
+  const gen=words.map(w=>aiStems(w).some(v=>AI_GENERIC.has(v)));
+  // The topic named most clearly leads: its categories and words count more.
+  const catW={}, catOrder=[];
+  topics.forEach((tp,i)=>tp.cats.forEach(c=>{ const lc=c.toLowerCase(); if(catW[lc]==null) catW[lc]=i===0?5:3; if(!catOrder.includes(lc)) catOrder.push(lc); }));
+  const cats={has:(c)=>catW[c]!=null};
+  const termSets=topics.map((tp,i)=>({w:i===0?2:1,t:tp.terms}));
+  // Two words typed apart that a name writes as one ("hydra facial" → HydraFacial).
+  const nw0=aiNorm(text).split(' '); const joined=[]; for(let i=0;i+1<nw0.length;i++) joined.push(nw0[i]+nw0[i+1]);
+  // The client's own words in a NAME count most, then the category, then the description.
+  const scoreItem=(name,cat,desc)=>{
+    const nh=aiNorm(name), dh=aiNorm(desc), ch=aiNorm(cat);
+    const nw=nh.split(' '), cw=ch.split(' '), dw=dh.split(' ');
+    let sc=0;
+    termSets.forEach(({w,t})=>{ if(t.some(x=>aiIn(nh,x))) sc+=w; else if(t.some(x=>aiIn(dh,x))) sc+=w/2; });
+    wordSets.forEach((set,i)=>{
+      if(set.some(w=>aiWordIn(nw,nh,w))) sc+=gen[i]?2:6;
+      else if(set.some(w=>aiWordIn(cw,ch,w))) sc+=2;
+      else if(set.some(w=>w.length>=4&&dw.includes(w))) sc+=1;
+    });
+    if(joined.some(j=>j.length>=6&&nw.includes(j))) sc+=8;
+    return sc;
+  };
   const svc=[];
   Object.keys(BRANDS).forEach(b=>{
-    svcList(b).forEach(s=>{
-      const hay=aiNorm([s.n,s.cat,s.desc,(s.points||[]).join(' ')].join(' '));
-      let sc=0;
-      if(cats.has(String(s.cat||'').toLowerCase())) sc+=5;
-      terms.forEach(t=>{ if(aiIn(hay,t)) sc+=2; });
-      words.forEach(w=>{ if(aiIn(hay,w)) sc+=1; });
+    (svcList(b)||[]).forEach(s=>{
+      let sc=scoreItem(s.n,s.cat||'',[s.desc,(s.points||[]).join(' ')].join(' '));
+      sc+=catW[String(s.cat||'').toLowerCase()]||0;
       topics.forEach(tp=>{ if(tp.brand===b) sc+=1; });
       if(sc>=2) svc.push({kind:'svc',b,id:s.id,s,sc:sc+(hasDiscount(s)?.5:0)});
     });
   });
   const prod=[];
   (STORE.products||[]).filter(p=>p.active!==false).forEach(p=>{
-    const hay=aiNorm([p.n,p.category,p.desc].join(' '));
-    let sc=0;
-    terms.forEach(t=>{ if(aiIn(hay,t)) sc+=2; });
-    words.forEach(w=>{ if(aiIn(hay,w)) sc+=1.5; });
+    let sc=scoreItem(p.n,p.category||'',p.desc||'');
+    const ph=aiNorm(p.n+' '+(p.category||''));
+    AI_PROD_SYN.forEach(([ks,ts])=>{ if(ks.some(k=>aiHas(norm,k)) && ts.some(t=>aiIn(ph,t))) sc+=9; });
     topics.forEach(tp=>{ if(tp.brand&&tp.brand===p.brand) sc+=.5; });
-    if(sc>=1.5 && numOr0(p.stock)>0) prod.push({kind:'prod',p,sc});
+    if(sc>=2 && numOr0(p.stock)>0) prod.push({kind:'prod',p,sc});
   });
   svc.sort((a,b)=>b.sc-a.sc); prod.sort((a,b)=>b.sc-a.sc);
-  // For multi-part plans (wedding, party…) take the best of each category first.
+  // Multi-part plans (wedding, party…): the best of each category first, in the topic's own order.
   let pickedSvc=svc;
-  if(topics.some(tp=>tp.multi)){
-    const seen=new Set(), first=[], rest=[];
-    svc.forEach(x=>{ const c=String(x.s.cat||'').toLowerCase(); if(!seen.has(c)){ seen.add(c); first.push(x); } else rest.push(x); });
+  const multi=topics.some(tp=>tp.multi);
+  if(multi){
+    const best={}, rest=[];
+    svc.forEach(x=>{ const c=String(x.s.cat||'').toLowerCase(); if(!best[c]) best[c]=x; else rest.push(x); });
+    const first=Object.keys(best).sort((a,b)=>{ const ia=catOrder.indexOf(a), ib=catOrder.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); }).map(c=>best[c]);
     pickedSvc=[...first,...rest];
   }
-  return {svc:pickedSvc.slice(0,topics.some(tp=>tp.multi)?5:3), prod:prod.slice(0,3), allSvc:pickedSvc, allProd:prod};
+  return {svc:pickedSvc.slice(0,multi?5:3), prod:prod.slice(0,3), allSvc:pickedSvc, allProd:prod};
 }
 
 /* ======================= Search (client app) =======================
@@ -10114,6 +10334,95 @@ function aiFill(s,vars){ return String(s).replace(/\{(\w+)\}/g,(m,k)=>vars&&vars
 /* Text for a bot bubble: escaped, with line breaks kept. */
 function aiTextHtml(s){ return esc(s).replace(/\n/g,'<br>'); }
 /* Conversation keys match whole words (short keys) or the start of a word (longer keys). */
+/* ---------- More ways people talk ---------- */
+function aiTalk(id,words){ if(AI_CHAT[id]) AI_CHAT[id].push(...words); }
+aiTalk('greet',['hey there','hi there','hello there','good night','gm','peace be upon you','salam alaikum','assalamualaikum','hallo','hola','bonjour',
+  'هلا والله','اهلا وسهلا','أهلاً','مرحباً','هلو','شلونكم','السلام','صباحو','مساء النور','صباح النور',
+  'سڵاو لێتان','سڵاوتان لێ بێت','بەخێربێن','شەو باش','ئێوارەتان باش','بەیانیتان باش','هەڵۆ']);
+aiTalk('howru',['how are u doing','how have you been','are you ok','you good','how is everything',
+  'شلونكم','شخباركم','كيف الحال','كيفكم','كيف الاحوال','شو اخبارك','شو الاخبار',
+  'چۆنن','چۆنیت','باشیت','چۆنی ئەمڕۆ','چ باسە','هیچ نییە']);
+aiTalk('thanks',['thank you so much','thanks a lot','thanks so much','tq','tnx','ty so much','merci','appreciate it',
+  'شكرا جزيلا','شكراً جزيلاً','تسلمين','ممنونة','ممنون','الله يخليك','يعطيكم العافية','مشكورين',
+  'زۆر سوپاس','سوپاس بۆ تۆ','دەستت خۆش','زۆر زۆر سوپاس','ماندوو نەبیت','خوا بتپارێزێت']);
+aiTalk('bye',['goodbye','good bye','bye bye','see you','see ya','later','talk later','take care','have a nice day','gn',
+  'مع السلامة','باي','الى اللقاء','نشوفك','بأمان الله','تصبح على خير','تصبحين على خير',
+  'خوات لەگەڵ','خوا حافیز','خواحافیز','بەخێر بچیت','دواتر دەبینمەوە','شەوت باش']);
+aiTalk('compliment',['love it','love this','amazing','awesome','perfect','beautiful','so nice','very helpful','you are smart','good job','well done',
+  'رائع','حلو','جميل','ممتاز','تجنن','واو','ذكي','احسنت','حلوة',
+  'زۆر جوانە','نایابە','زۆر باشە','زیرەکی','دەستخۆش','عالی']);
+aiTalk('who',['are you a robot','are you human','are you real','are you a bot','are you ai','what are you','who made you','who created you','your name',
+  'انت روبوت','انت انسان','مين انت','من انت','شو اسمك','ما اسمك',
+  'تۆ ڕۆبۆتیت','تۆ مرۆڤیت','تۆ کێیت','ناوت چییە']);
+aiTalk('help',['what can you do','what do you do','how can you help','help me','i need help','can you help','options','menu',
+  'شو تقدر تسوي','ممكن تساعدني','ساعدني','احتاج مساعدة','القائمة',
+  'چی دەکەیت','دەتوانیت یارمەتیم بدەیت','یارمەتیم بدە','پێویستم بە یارمەتییە','لیست']);
+aiTalk('unsure',["i don't know",'dont know','not sure','no idea','recommend','recommend something','suggest','surprise me',"what's popular",'whats popular','best seller','bestseller','most popular',"i'm bored",'bored',
+  'ما ادري','مو متأكدة','مش عارفة','اقترح','اقترحي','شو تنصح','شو تنصحين','الاكثر طلبا','الأكثر طلباً','ملل','زهقانة',
+  'نازانم','دڵنیا نیم','پێشنیار بکە','چی پێشنیار دەکەیت','بەناوبانگترین','زۆرترین داواکراو','بێزارم']);
+aiTalk('price',['price list','prices','cost','costs','how much is it','how much does it cost','fees','rate',
+  'الاسعار','قائمة الاسعار','بكم','كم سعره','كم السعر','شكد','بيش',
+  'نرخەکان','لیستی نرخ','بە چەندە','نرخی چەندە','چەندە']);
+aiTalk('hours',['open today','are you open','what time do you open','what time do you close','closing time','working hours','timing',
+  'متى تفتحون','متى تسكرون','دوام','اوقات الدوام','مفتوحين اليوم',
+  'کەی دەکەنەوە','کەی دادەخەن','کاتی دەوام','ئەمڕۆ کراوەن']);
+aiTalk('location',['address','where are you','location','directions','map','how to get there','near',
+  'وين','وين مكانكم','العنوان','موقعكم','الموقع','خريطة',
+  'لە کوێن','ناونیشان','شوێنتان','نەخشە','لە کوێیە']);
+
+/* New conversation topics: birthdays, home visits, events, men, first visit, parking… */
+Object.assign(AI_CHAT,{
+  birthday:["it's my birthday",'its my birthday','my birthday','birthday','bday','birthday gift','birthday present','birthday offer',
+    'عيد ميلادي','عيد ميلاد','ميلادي','هدية عيد ميلاد','ڕۆژی لەدایکبوونم','ڕۆژی لەدایکبوون','جەژنی لەدایکبوون','دیاری ڕۆژی لەدایکبوون'],
+  homevisit:['home service','home services','at home','at my home','home visit','come to my house','come to my home','to my house','house call','mobile service',
+    'خدمة منزلية','خدمات منزلية','في البيت','بالبيت','زيارة منزلية','تجون البيت','للبيت','في المنزل',
+    'خزمەتگوزاری ماڵەوە','لە ماڵەوە','بۆ ماڵەوە','سەردانی ماڵ','دێنە ماڵەوە'],
+  events:['event','events','upcoming events','workshop','run club','community','activities','whats new',"what's new",
+    'فعالية','فعاليات','نشاطات','ورشة','الجديد','شو الجديد','چالاکی','چالاکییەکان','وۆرکشۆپ','چی نوێ هەیە'],
+  firsttime:['first time','first visit','never been','new client','new here','beginner','i am new',"i'm new",
+    'اول مرة','أول مرة','زيارة اولى','جديدة','مبتدئة','یەکەم جار','یەکەمجار','نوێم','سەرەتایی'],
+  parking:['parking','park','where to park','can i park','park my car','car park','باركنج','موقف','مواقف سيارات','پارکینگ','شوێنی ئۆتۆمبێل'],
+  kids:['kids','children','child','my daughter','my son','teen','teenager','age limit','how old',
+    'اطفال','أطفال','بنتي','ابني','مراهقة','عمر','منداڵ','منداڵەکان','کچەکەم','کوڕەکەم','تەمەن'],
+  pain:['does it hurt','is it painful','pain','painful','hurt','anesthesia','numbing',
+    'يوجع','مؤلم','الم','ألم','بنج','ئازار','ئازاری هەیە','بەنج'],
+  results:['how long does it last','how long will it last','results','when will i see','downtime','recovery','side effects',
+    'كم يدوم','متى النتيجة','النتائج','فترة التعافي','اعراض جانبية','چەند دەمێنێتەوە','ئەنجام','کاریگەری لاوەکی','چاکبوونەوە']
+});
+Object.assign(AI_CHAT_TEXT.en,{
+  birthday:["Happy birthday{n}! 🎂🎉 Our team usually has a little birthday treat — mention it when you book. Here are some lovely ways to celebrate:"],
+  homevisit:["Yes! We come to you 🏠 Tap the Home Services card on the home screen, choose Dolce, Polished or CORE, and you'll see everything we offer at home with home prices."],
+  events:["Here's what's coming up ✨"],
+  noEvents:["There are no events listed right now — new ones appear on the home screen under “Upcoming events & offers”."],
+  firsttime:["Welcome{n}! 💛 For a first visit, our team will guide you. A good start is a facial at Dolce, a manicure at Polished or a single class at CORE — tell me what you'd like and I'll show you."],
+  parking:["For parking and directions, our team can send you the exact location on WhatsApp 👇"],
+  kids:["Some treatments have age limits — our team will tell you what's suitable. Ask us on WhatsApp 👇"],
+  pain:["Most treatments are very comfortable, and numbing is used where it helps. Your specialist will explain everything before starting — ask our team on WhatsApp for details 👇"],
+  results:["Results and how long they last depend on the treatment and your skin. Your specialist explains this at your visit — or ask our team on WhatsApp 👇"]
+});
+Object.assign(AI_CHAT_TEXT.ar,{
+  birthday:["عيد ميلاد سعيد{n}! 🎂🎉 عادةً لدى فريقنا هدية صغيرة لعيد الميلاد — اذكريها عند الحجز. وهذه أفكار جميلة للاحتفال:"],
+  homevisit:["نعم! نأتي إليكِ 🏠 اضغطي على بطاقة «الخدمات المنزلية» في الصفحة الرئيسية، اختاري Dolce أو Polished أو CORE، وسترين كل ما نقدمه في المنزل بأسعار الخدمة المنزلية."],
+  events:["هذا ما هو قادم ✨"],
+  noEvents:["لا توجد فعاليات حالياً — تظهر الجديدة في الصفحة الرئيسية تحت «الفعاليات والعروض القادمة»."],
+  firsttime:["أهلاً بكِ{n}! 💛 في الزيارة الأولى سيرشدك فريقنا. بداية جميلة: فيشل في Dolce أو مانيكير في Polished أو حصة واحدة في CORE — أخبريني بما تحبين وسأريكِ."],
+  parking:["لمعرفة مكان الوقوف والاتجاهات، يمكن لفريقنا إرسال الموقع على واتساب 👇"],
+  kids:["بعض العلاجات لها حد عمري — سيخبرك فريقنا بالمناسب. اسألينا على واتساب 👇"],
+  pain:["معظم العلاجات مريحة جداً، ويُستخدم المخدر الموضعي عند الحاجة. سيشرح لكِ المختص كل شيء قبل البدء — اسألي فريقنا على واتساب 👇"],
+  results:["النتائج ومدتها تختلف حسب العلاج وبشرتك. يشرح المختص ذلك في الزيارة — أو اسألي فريقنا على واتساب 👇"]
+});
+Object.assign(AI_CHAT_TEXT.ku,{
+  birthday:["ڕۆژی لەدایکبوونت پیرۆز بێت{n}! 🎂🎉 تیمەکەمان زۆرجار دیارییەکی بچووکی ڕۆژی لەدایکبوونی هەیە — کاتی نۆرەگرتن باسی بکە. ئەمانەش بیرۆکەی جوانن بۆ ئاهەنگگێڕان:"],
+  homevisit:["بەڵێ! ئێمە دێینە لات 🏠 لە پەڕەی سەرەکی کارتی «خزمەتگوزاریی ماڵەوە» دابگرە، Dolce یان Polished یان CORE هەڵبژێرە، هەموو ئەوەی لە ماڵەوە پێشکەشی دەکەین بە نرخی ماڵەوە دەبینیت."],
+  events:["ئەمە ئەوەیە کە دێت ✨"],
+  noEvents:["ئێستا هیچ چالاکییەک نییە — نوێکان لە پەڕەی سەرەکی لە ژێر «چالاکی و ئۆفەرە داهاتووەکان» دەردەکەون."],
+  firsttime:["بەخێربێیت{n}! 💛 لە یەکەم سەردان تیمەکەمان ڕێنماییت دەکات. سەرەتایەکی جوان: فەیشەڵ لە Dolce، مانیکیور لە Polished یان یەک وانە لە CORE — پێم بڵێ چیت دەوێت و نیشانت دەدەم."],
+  parking:["بۆ شوێنی ئۆتۆمبێل و ڕێنمایی، تیمەکەمان دەتوانێت شوێنەکە لە واتساپ بنێرێت 👇"],
+  kids:["هەندێک چارەسەر سنووری تەمەنیان هەیە — تیمەکەمان پێت دەڵێت کامە گونجاوە. لە واتساپ پرسیارمان لێ بکە 👇"],
+  pain:["زۆربەی چارەسەرەکان زۆر ئاسوودەن و لە کاتی پێویستدا بەنجی ناوچەیی بەکاردێت. پسپۆڕەکە پێش دەستپێکردن هەموو شتێک ڕوون دەکاتەوە — لە واتساپ لە تیمەکەمان بپرسە 👇"],
+  results:["ئەنجام و ماوەکەی بەپێی چارەسەر و پێستت جیاوازە. پسپۆڕەکە لە سەردانەکەدا ڕوونی دەکاتەوە — یان لە واتساپ لە تیمەکەمان بپرسە 👇"]
+});
+
 function aiSaid(norm,key){
   const k=aiNorm(key); if(!k) return false;
   const h=' '+norm+' ';
@@ -10375,6 +10684,16 @@ function aiReply(text){
   if(facts.length && (I.has('greet')||I.has('howru'))) bot(say('greetShort'));
   facts.forEach(id=>{ const h=aiFact(id,L); if(h) bot(h); });
   if(facts.length && !fresh) return;
+  // 5b) Questions about pain, results, age, parking — honest answer + a person to ask
+  const notes=['pain','results','kids','parking'].filter(id=>I.has(id));
+  if(notes.length) bot(say(notes[0])+aiWaLinks(T));
+  if(notes.length && !fresh) return;
+  // 5c) Home visits, events, first visit, birthdays
+  if(I.has('homevisit')){ bot(say('homevisit')+aiHomeBtn(L)); if(!fresh) return; }
+  // These answer first even when a treatment word was also mentioned; treatments follow after.
+  if(I.has('events')){ aiShowEvents(L,T); if(!fresh) return; }
+  if(I.has('firsttime') && !info){ bot(say('firsttime')); if(!fresh) return; }
+  if(I.has('birthday') && !info){ bot(say('birthday')); if(!fresh){ showTopics(AI_TOPICS.filter(tp=>tp.id==='spa'||tp.id==='facials')); return; } }
   // 6) Small talk (only when no treatment, product or question was mentioned)
   if(!fresh && !facts.length && !info){
     if(I.has('notgood')){ bot(say('notgood')); showTopics(AI_TOPICS.filter(tp=>tp.id==='spa'||tp.id==='yoga')); return; }
@@ -10402,6 +10721,7 @@ function aiReply(text){
   if(fresh && I.has('notgood')) bot(say('notgoodShort'));
 
   if(info && info.kind==='deals' && !topics.length){
+    const hadEvents=aiShowEvents(L,T,true);
     const deals=[];
     Object.keys(BRANDS).forEach(b=>svcList(b).forEach(s=>{ if(hasDiscount(s)) deals.push({kind:'svc',b,id:s.id,s}); }));
     const dprods=(STORE.products||[]).filter(p=>p.active!==false&&hasDiscount(p)).map(p=>({kind:'prod',p}));
@@ -10411,7 +10731,7 @@ function aiReply(text){
       aiShowRecs(deals.slice(0,4),dprods.slice(0,3),T);
     } else {
       const fav=aiFavourites();
-      bot(esc(T.noDeals));
+      if(!hadEvents) bot(esc(T.noDeals));
       aiRemember([],aiAllSvc(),aiAllProd());
       aiShowRecs(fav.svc,fav.prod,T);
     }
@@ -10441,6 +10761,24 @@ function aiReply(text){
   if(!res.svc.length && !res.prod.length){ bot(esc(T.none)+aiWaLinks(T)); return; }
   aiRemember(topics,res.allSvc,res.allProd);
   aiShowRecs(res.svc,res.prod,T);
+}
+/* Live offers and events (Admin → Offers): tapping one opens that business's Offers tab. */
+function aiShowEvents(L,T,quiet){
+  const list=(STORE.offers||[]).filter(o=>o.kind!=='curated'&&isLiveItem(o)).sort(byDisplayOrder);
+  if(!list.length){ if(!quiet) aiBubble('bot',aiTextHtml(aiSay(L,'noEvents'))); return false; }
+  const lines=list.slice(0,5).map(o=>{ const br=BRANDS[o.brand]?BRANDS[o.brand].name:''; const d=fmtRange(o.start,o.end);
+    return `<li><span class="rec-item" data-ai-offer="${attr(o.brand||'')}">${esc(o.t)}</span> <span style="color:var(--muted);">— ${esc(br)}${d?', '+esc(d):''}</span></li>`; }).join('');
+  aiBubble('bot',`${aiTextHtml(aiSay(L,'events'))}<ol>${lines}</ol><span style="font-size:13px;color:var(--muted);">${esc(T.tapHint)}</span>`);
+  const chat=document.getElementById('aiChat'); const last=(aiHold&&aiHold[aiHold.length-1])||(chat&&chat.lastElementChild);
+  if(last) last.querySelectorAll('[data-ai-offer]').forEach(el=>el.addEventListener('click',()=>{
+    document.getElementById('aiOverlay').classList.remove('open');
+    if(BRANDS[el.dataset.aiOffer]) openLink('offers:'+el.dataset.aiOffer);
+  }));
+  return true;
+}
+function aiHomeBtn(L){
+  const lbl=t('homeServices');
+  return `<br><a class="rec-btn" href="#" data-ai-home onclick="event.preventDefault();document.getElementById('aiOverlay').classList.remove('open');navTo('welcome');setTimeout(()=>{const h=document.getElementById('hsOne');if(h)h.scrollIntoView({block:'center',behavior:'smooth'});},450);">🏠 ${esc(lbl)}</a>`;
 }
 function aiWaLinks(T){
   const b=currentBrand&&BRAND_WHATSAPP[currentBrand]?currentBrand:'dolce';
