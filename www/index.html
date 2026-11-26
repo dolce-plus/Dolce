@@ -6975,7 +6975,11 @@ function backTarget(){
    To reuse for another client app, copy this block and change AGENCY / the
    app name + version passed in. */
 const SIENA_URL = '';          // ← set SIENA's website or social page here (e.g. 'https://siena.agency'). Empty = not a link.
-const APP_VERSION = '1.0.1';
+let APP_VERSION = '1.0.3';   // fallback; inside the iOS/Android app the real store version is read below
+(function(){ try{ const C=window.Capacitor, A=C&&C.Plugins&&C.Plugins.App;
+  if(A&&A.getInfo&&C.isNativePlatform&&C.isNativePlatform()) A.getInfo().then(i=>{ if(i&&i.version){ APP_VERSION=i.version;
+    document.querySelectorAll('.ac-app').forEach(el=>{ el.textContent=el.textContent.replace(/v[0-9.]+$/,'v'+i.version); }); } }).catch(()=>{});
+}catch(e){} })();
 const AGENCY = {
   name: 'SIENA',
   tagline: 'Solutions',
