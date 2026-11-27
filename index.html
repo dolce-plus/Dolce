@@ -12898,7 +12898,9 @@ function renderAdminBookings(){
   });
   rows.innerHTML=ordered.map((bk)=>{
     const i=esc(String(bk.id));   // the booking's id — the list is refreshed and re-ordered behind the screen
-    const advance=nextStatus[bk.status];
+    let advance=nextStatus[bk.status];
+    // A visit can't be completed before its day — stops a mistaken tap on a future booking.
+    if(advance==='Completed'){ const t=tOf(bk); const eod=new Date(); eod.setHours(23,59,59,999); if(t!==null && t>eod.getTime()) advance=''; }
     const locked=isDateBrandClosed(bk.date,bk.brand);
     const actions = locked
       ? `<span style="font-size:13px;color:var(--muted);">🔒 Day closed</span>`
@@ -12908,6 +12910,7 @@ function renderAdminBookings(){
         ${(bk.status==='Requested'||bk.status==='Confirmed')?`<button class="btn btn-ghost btn-sm" data-move-booking="${i}">Reschedule</button>`:''}
         ${(bk.status==='Requested'||bk.status==='Confirmed')?`<button class="btn btn-danger btn-sm" data-cancel-booking="${i}">Cancel</button>`:''}
         ${bk.status==='Completed'?`<button class="btn btn-ghost btn-sm" data-refund-booking="${i}">Refund</button>`:''}
+        ${bk.status==='Completed'&&!(bk.refundedUsd>0)?`<button class="btn btn-ghost btn-sm" data-undo-complete="${i}" title="Marked Completed by mistake? Put it back to Confirmed">Undo complete</button>`:''}
         ${bk.status==='Completed'&&aftercareReady(bk)?`<button class="btn btn-ghost btn-sm" data-aftercare-booking="${i}" title="Open the aftercare note for this client in WhatsApp">Aftercare</button>`:''}
       </div>` : '');
     const ptsBtn=(bk.status==='Completed' && loyaltyReady===true && !earnedBookingIds.has(String(bk.id)))
@@ -12941,6 +12944,19 @@ function renderAdminBookings(){
     // First the D+ points for the visit, then the aftercare note.
     if(bk.status==='Completed') offerPoints(bk,()=>offerAftercare(bk));
     if(bk.status==='Confirmed') offerWhatsApp(bk,'confirm');
+  }));
+  rows.querySelectorAll('[data-undo-complete]').forEach(b=>b.addEventListener('click',()=>{
+    const bk=STORE.bookings[idxById(STORE.bookings,b.dataset.undoComplete)];
+    if(!bk || bk.status!=='Completed'){ renderAdminBookings(); return; }
+    if(earnedBookingIds.has(String(bk.id))){
+      toast(`Points were already added for this visit. First remove them in Loyalty (search ${bk.clientName||'the client'}, type a minus number, reason "completed by mistake"), then tap Undo again.`,'err');
+      return;
+    }
+    if(!confirmTap(b,'Back to Confirmed?')) return;
+    bk.status='Confirmed'; saveStore(); cloudSave('bookings',bk.id); renderAdminBookings();
+    const pp=document.getElementById('pointsPanel'); if(pp){ pp.classList.remove('open'); pp.innerHTML=''; }
+    toast(`${bk.clientName}'s booking is Confirmed again. Reminders are back on.`);
+    if(currentScreen==='bookings') render();
   }));
   rows.querySelectorAll('[data-noshow-booking]').forEach(b=>b.addEventListener('click',()=>{
     const bk=STORE.bookings[idxById(STORE.bookings,b.dataset.noshowBooking)];
