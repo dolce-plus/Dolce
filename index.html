@@ -12899,13 +12899,16 @@ function renderAdminBookings(){
   rows.innerHTML=ordered.map((bk)=>{
     const i=esc(String(bk.id));   // the booking's id — the list is refreshed and re-ordered behind the screen
     let advance=nextStatus[bk.status];
-    // A visit can't be completed before its day — stops a mistaken tap on a future booking.
-    if(advance==='Completed'){ const t=tOf(bk); const eod=new Date(); eod.setHours(23,59,59,999); if(t!==null && t>eod.getTime()) advance=''; }
+    // A visit can't be completed before its start time — stops a mistaken tap
+    // (e.g. a double-click on "Mark Confirmed") on an upcoming booking.
+    const notYet = advance==='Completed' && (()=>{ const t=tOf(bk); return t!==null && t>Date.now(); })();
+    if(notYet) advance='';
     const locked=isDateBrandClosed(bk.date,bk.brand);
     const actions = locked
       ? `<span style="font-size:13px;color:var(--muted);">🔒 Day closed</span>`
       : (canEdit ? `<div class="rowbtns">
         ${advance?`<button class="btn btn-ghost btn-sm" data-advance-booking="${i}">Mark ${advance}</button>`:''}
+        ${notYet?`<span style="font-size:12px;color:var(--muted);" title="Mark Completed appears when the appointment time comes">Complete from ${esc(bk.time||'start time')}</span>`:''}
         ${(bk.status==='Confirmed' && !(bookingTime(bk)>Date.now()))?`<button class="btn btn-ghost btn-sm" data-noshow-booking="${i}">No-show</button>`:''}
         ${(bk.status==='Requested'||bk.status==='Confirmed')?`<button class="btn btn-ghost btn-sm" data-move-booking="${i}">Reschedule</button>`:''}
         ${(bk.status==='Requested'||bk.status==='Confirmed')?`<button class="btn btn-danger btn-sm" data-cancel-booking="${i}">Cancel</button>`:''}
@@ -12936,6 +12939,10 @@ function renderAdminBookings(){
   rows.querySelectorAll('[data-advance-booking]').forEach(b=>b.addEventListener('click',()=>{
     const bk=STORE.bookings[idxById(STORE.bookings,b.dataset.advanceBooking)];
     if(!bk || !nextStatus[bk.status]){ renderAdminBookings(); return; }
+    // Ignore a second tap that lands right after a status change (double-click).
+    if(Date.now()-(window._lastAdvanceAt||0)<1500) return;
+    if(nextStatus[bk.status]==='Completed'){ const t=tOf(bk); if(t!==null && t>Date.now()){ toast('This appointment hasn\'t started yet — you can complete it from its start time.','err'); renderAdminBookings(); return; } }
+    window._lastAdvanceAt=Date.now();
     bk.status=nextStatus[bk.status]; saveStore(); cloudSave('bookings',bk.id); renderAdminBookings();
     toast(`${bk.clientName}'s booking marked ${bk.status}.`);
     if(currentScreen==='bookings') render();
