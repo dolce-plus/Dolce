@@ -5178,7 +5178,7 @@ function renderBooking(){
   const area=atHome&&!rec?homeAreaById(currentBrand,hd.areaId):null;
   const quote=atHome&&!rec&&hd.areaId==='__other';
   const svcPrice=atHome?homePriceOf(s):effectivePrice(s), fee=area?area.fee:0;
-  const waHref=`https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(bookingWaText(s,dateStr,selectedTime,null))}`;
+  const waHref=`https://api.whatsapp.com/send?phone=${BRAND_WHATSAPP[currentBrand]}&text=${encodeURIComponent(bookingWaText(s,dateStr,selectedTime,null))}`;
   const homeInput="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:16px;box-sizing:border-box;font-family:inherit;background:#fff;";
   const lbl="font-size:13px;font-weight:700;color:var(--ink-soft);display:block;margin:12px 0 6px;";
   const quoteMsg=t('homeQuoteMsg').replace('{name}',s.n).replace('{brand}',b.name).replace('{area}',hd.other||'…');
@@ -5209,7 +5209,7 @@ function renderBooking(){
       </select>`}
       ${quote?`<div class="home-quote"><b>${t('homeQuoteTitle')}</b><div>${t('homeQuoteBody')}</div>
         <input id="homeOther" type="text" maxlength="80" value="${attr(hd.other)}" placeholder="${attr(t('homeOtherAreaPh'))}" style="${homeInput}margin-top:8px;">
-        <a class="wa-btn" id="homeQuoteWA" href="https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(quoteMsg)}" target="_blank" rel="noopener">💬 ${t('homeQuoteBtn')}</a>
+        <a class="wa-btn" id="homeQuoteWA" href="https://api.whatsapp.com/send?phone=${BRAND_WHATSAPP[currentBrand]}&text=${encodeURIComponent(quoteMsg)}" target="_blank" rel="noopener">💬 ${t('homeQuoteBtn')}</a>
         <div id="homeQuoteNote" class="home-small" style="display:none;">${t('waOpened')}</div></div>`
       :`<label for="homeAddress" style="${lbl}">${t('homeAddress')}</label>
       <textarea id="homeAddress" rows="3" maxlength="300" autocomplete="street-address" placeholder="${attr(t('homeAddressPh'))}" style="${homeInput}resize:vertical;">${esc(hd.address)}</textarea>
@@ -5988,7 +5988,7 @@ async function placeBrandOrder(brand,btn){
 }
 function placedOrderHtml(b){
   const o=basketPlaced[b]; if(!o) return '';
-  const wa=`https://wa.me/${BRAND_WHATSAPP[b]||BRAND_WHATSAPP.dolce}?text=${encodeURIComponent(o.text+'\n\n'+t('orderRef')+': '+o.ref)}`;
+  const wa=`https://api.whatsapp.com/send?phone=${BRAND_WHATSAPP[b]||BRAND_WHATSAPP.dolce}&text=${encodeURIComponent(o.text+'\n\n'+t('orderRef')+': '+o.ref)}`;
   return `<div class="bs-group bs-placed">
     <div class="bs-brand"><i style="background:${BRANDS[b].c1||'var(--gold)'}"></i>${esc(BRANDS[b].name)}</div>
     <div class="bs-ok">✓ ${esc(t('orderSaved').replace('{ref}',o.ref))}</div>
@@ -8727,7 +8727,7 @@ function bindScreen(){
     if(ot) ot.addEventListener('input',()=>{ hd.other=ot.value; });
     if(qw) qw.addEventListener('click',()=>{
       const s=svcList(currentBrand).find(x=>x.id===currentService);
-      qw.href=`https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(t('homeQuoteMsg').replace('{name}',s?s.n:'').replace('{brand}',BRANDS[currentBrand].name).replace('{area}',(hd.other||'').trim()||'…'))}`;
+      qw.href=`https://api.whatsapp.com/send?phone=${BRAND_WHATSAPP[currentBrand]}&text=${encodeURIComponent(t('homeQuoteMsg').replace('{name}',s?s.n:'').replace('{brand}',BRANDS[currentBrand].name).replace('{area}',(hd.other||'').trim()||'…'))}`;
       const n=document.getElementById('homeQuoteNote'); if(n) n.style.display='block';
     });
   }
@@ -8850,7 +8850,7 @@ function bindScreen(){
     const dateStr=fmtDate(selectedDateObj);
     let waHome=null;
     if(bookAtHome && svcHomeOk(currentBrand,s)){ waHome=readHomeAddr(s); if(!waHome){ e.preventDefault(); return; } }
-    sendWA.href=`https://wa.me/${BRAND_WHATSAPP[currentBrand]}?text=${encodeURIComponent(bookingWaText(s,dateStr,selectedTime,waHome))}`;
+    sendWA.href=`https://api.whatsapp.com/send?phone=${BRAND_WHATSAPP[currentBrand]}&text=${encodeURIComponent(bookingWaText(s,dateStr,selectedTime,waHome))}`;
     const waHomeFields=homeFieldsOf(waHome);
     const who=waGuest?waGuest.phone:loggedInClient.id, key=reqKeyOf(dateStr,selectedTime,waHome,who);
     const already=!!sameRequestId(key) || STORE.bookings.some(bk=>bk.brand===currentBrand&&bk.date===dateStr&&bk.time===selectedTime
@@ -13013,7 +13013,7 @@ function renderCoreWaiting(all){
           ${bk.clientNote?`<div class="cw-note">“${esc(bk.clientNote)}”</div>`:'<div class="cw-note muted">No preferred time given.</div>'}</div>
         <div class="rowbtns">
           <button class="btn btn-primary btn-sm" data-core-settime="${i}">Set time</button>
-          ${ph?`<a class="btn btn-ghost btn-sm" href="https://wa.me/${ph}?text=${encodeURIComponent('Hello '+(bk.clientName||'')+', this is CORE about your request: '+(bk.serviceName||'')+'. Which day and time suit you?')}" target="_blank" rel="noopener">WhatsApp</a>`:''}
+          ${ph?`<a class="btn btn-ghost btn-sm" href="https://api.whatsapp.com/send?phone=${ph}&text=${encodeURIComponent('Hello '+(bk.clientName||'')+', this is CORE about your request: '+(bk.serviceName||'')+'. Which day and time suit you?')}" target="_blank" rel="noopener">WhatsApp</a>`:''}
           <button class="btn btn-danger btn-sm" data-core-cancel="${i}">Cancel</button>
         </div></div>`; }).join('')}
   </div>`;
@@ -13111,7 +13111,7 @@ function offerAftercare(booking){
   const close=()=>{ wrap.classList.remove('open'); wrap.innerHTML=''; };
   document.getElementById('ac_skip').addEventListener('click',close);
   document.getElementById('ac_send').addEventListener('click',()=>{
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(body)}`,'_blank','noopener');
+    window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(body)}`,'_blank','noopener');
     close();
     toast('Aftercare note opened in WhatsApp.');
   });
@@ -13665,7 +13665,7 @@ function birthdayList(range){
 function bdayWaHref(c){
   const ph=normalizedPhone(c.phone||c.contactPhone||''); if(!ph) return '';
   const first=String(c.name||'').trim().split(/\s+/)[0]||'';
-  return `https://wa.me/${ph}?text=${encodeURIComponent(bdayMsg().replace(/\{name\}/g,first))}`;
+  return `https://api.whatsapp.com/send?phone=${ph}&text=${encodeURIComponent(bdayMsg().replace(/\{name\}/g,first))}`;
 }
 function bdayWhen(i){ return i.days===0?'<b style="white-space:nowrap;">Today 🎂</b>':i.days===1?'Tomorrow':i.next.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
 function birthdaysPanelHtml(){
@@ -14244,7 +14244,7 @@ function offerWhatsApp(bk,kind){
     document.getElementById('wa_skip').addEventListener('click',()=>{ if(kind==='r12'||kind==='r1') markWaSent(bk,kind,'skipped'); close(); renderReminders(); });
     document.getElementById('wa_send').addEventListener('click',()=>{
       const text=document.getElementById('wa_text').value;
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`,'_blank','noopener');
+      window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`,'_blank','noopener');
       markWaSent(bk,kind); close(); renderReminders();
       toast('Message opened in WhatsApp.');
     });
@@ -14498,7 +14498,7 @@ function bindNotifRows(root,after){
     const p=n.payload||{};
     const text=waTemplate(L,k).replace(/\{name\}/g,p.name||'').replace(/\{brand\}/g,BRANDS[n.brand]?BRANDS[n.brand].name:'')
       .replace(/\{service\}/g,p.service||'').replace(/\{date\}/g,p.date||'').replace(/\{time\}/g,p.time||'');
-    window.open(`https://wa.me/${String(n.to_phone).replace(/\D/g,'')}?text=${encodeURIComponent(text)}`,'_blank','noopener');
+    window.open(`https://api.whatsapp.com/send?phone=${String(n.to_phone).replace(/\D/g,'')}&text=${encodeURIComponent(text)}`,'_blank','noopener');
     // Recorded as "opened by hand" — WhatsApp does not tell us it was sent.
     const {error}=await supa.rpc('staff_notification_action',{p_id:n.id,p_action:'manual'});
     if(error) toast('Opened, but could not record it: '+error.message);
@@ -14999,7 +14999,7 @@ function mindbodyOn(){ return mbCfg().enabled; }
 const DAILY_CAT='__daily_classes';
 // CORE's confirmed reception number, set in Admin → Classes. No placeholder: without it the button is disabled.
 function coreReceptionWa(){ const n=String(mbCfg().reception_wa||'').replace(/\D/g,''); return n.length>=8?n:''; }
-function coreWaHref(text){ return `https://wa.me/${coreReceptionWa()}?text=${encodeURIComponent(text)}`; }
+function coreWaHref(text){ return `https://api.whatsapp.com/send?phone=${coreReceptionWa()}&text=${encodeURIComponent(text)}`; }
 function coreContactHtml(s){
   const group=mbGroupIds().includes(String(s.id));
   const msg=t(group?'corePkgMsg':'coreSessionMsg').replace('{name}',s.n);
