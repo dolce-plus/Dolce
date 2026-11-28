@@ -12423,7 +12423,7 @@ function openServiceForm(editId){
       <div class="field"><label>Price ($)</label><input id="sf_price" type="number" min="0" step="1" value="${s.price}"></div>
       <div class="field"><label>Discount % (optional)</label><input id="sf_discount" type="number" min="0" max="99" step="1" placeholder="0 — no discount" value="${s.discount||''}"></div>
       ${discDatesHtml('sf',s)}
-      <div class="field"><label>Staff who can do this service</label><input id="sf_staff" type="number" min="1" max="20" step="1" inputmode="numeric" value="${svcCap(s)}">
+      <div class="field"><label>Staff who can do this service</label><input id="sf_staff" type="number" min="1" max="20" step="1" inputmode="numeric" value="${s&&s.staffCount!=null?svcCap(s):3}">
         <div class="rem-meta" style="margin-top:6px;">How many clients can book this service at the same time. 3 = three clients can book 11:00; the 4th sees it as taken.</div></div>
       ${s.homeOk===true||hasHomePrice(s)?`<div class="field full" style="grid-column:1/-1;"><div class="note">🏠 Also a home service${hasHomePrice(s)?` — home price ${fmtMoney(homePriceOf(s))}`:''}${s.homeOk===true?'':' (paused)'}. Change it in <b>Home Services</b>.</div></div>`:''}
       <div class="field full" style="grid-column:1/-1;"><label>Description</label><textarea id="sf_desc" rows="6" placeholder="Short client-facing description">${esc(s.desc||'')}</textarea>
