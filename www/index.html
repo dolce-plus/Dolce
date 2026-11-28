@@ -14171,23 +14171,26 @@ function bindLoyaltyOwner(){
    The owner edits the wording in Admin → Overview → WhatsApp messages, in
    English, Arabic and Kurdish. By default the messages do not name the
    treatment — a phone's lock screen is read over shoulders. */
-const WA_KINDS={confirm:'Booking confirmed',r12:'Reminder · long (3 hours or more before)',r1:'Reminder · short (under 3 hours before)',cancel:'Cancellation confirmed',moved:'New time'};
+const WA_KINDS={confirm:'Booking confirmed',r12:'Reminder · long (3 hours or more before)',r1:'Reminder · short (under 3 hours before)',cancel:'Cancellation confirmed',moved:'New time',ask:'Ask the client about a new time'};
 const DEFAULT_WA_TEMPLATES={
   en:{confirm:"Hi {name}, your appointment at {brand} is confirmed ✅\n✨ {service}\n📅 {date} at {time}\n\nIf you need to change it, just reply to this message. See you soon!",
       r12:"Hi {name}, a friendly reminder of your appointment at {brand}:\n✨ {service}\n📅 {date} at {time}\n\nReply here if you need to change it.",
       r1:"Hi {name}, see you in about an hour at {brand} — {time}. 🌿\n✨ {service}",
       cancel:"Hi {name}, your appointment at {brand} on {date} at {time} has been cancelled.\n✨ {service}\n\nReply here if you would like a new time.",
-      moved:"Hi {name}, your appointment at {brand} has a new time ✅\n✨ {service}\n📅 {date} at {time}\n\nReply here if this does not suit you."},
+      moved:"Hi {name}, your appointment at {brand} has a new time ✅\n✨ {service}\n📅 {date} at {time}\n\nReply here if this does not suit you.",
+      ask:"Hi {name}, this is {brand}. We'd like to move your appointment:\n✨ {service}\n📅 Would {date} at {time} work for you?\n\nPlease reply yes, or tell us a time that suits you better."},
   ar:{confirm:"مرحباً {name}، تم تأكيد موعدك في {brand} ✅\n✨ {service}\n📅 {date} الساعة {time}\n\nإذا أردت تغييره، فقط ردّ على هذه الرسالة. نراك قريباً!",
       r12:"مرحباً {name}، تذكير بموعدك في {brand}:\n✨ {service}\n📅 {date} الساعة {time}\n\nردّ هنا إذا أردت تغييره.",
       r1:"مرحباً {name}، نراك بعد ساعة تقريباً في {brand} — الساعة {time}. 🌿\n✨ {service}",
       cancel:"مرحباً {name}، تم إلغاء موعدك في {brand} يوم {date} الساعة {time}.\n✨ {service}\n\nردّ هنا إذا أردت موعداً جديداً.",
-      moved:"مرحباً {name}، تم تغيير موعدك في {brand} ✅\n✨ {service}\n📅 {date} الساعة {time}\n\nردّ هنا إذا لم يناسبك."},
+      moved:"مرحباً {name}، تم تغيير موعدك في {brand} ✅\n✨ {service}\n📅 {date} الساعة {time}\n\nردّ هنا إذا لم يناسبك.",
+      ask:"مرحباً {name}، معك {brand}. نودّ تغيير موعدك:\n✨ {service}\n📅 هل يناسبك {date} الساعة {time}؟\n\nيرجى الرد بـ نعم، أو أخبرنا بوقت يناسبك أكثر."},
   ku:{confirm:"سڵاو {name}، کاتەکەت لە {brand} پشتڕاستکرایەوە ✅\n✨ {service}\n📅 {date} کاتژمێر {time}\n\nئەگەر پێویستت بە گۆڕینی هەیە، تەنها وەڵامی ئەم نامەیە بدەرەوە. بەم زووانە دەتبینین!",
       r12:"سڵاو {name}، بیرخستنەوەی کاتەکەت لە {brand}:\n✨ {service}\n📅 {date} کاتژمێر {time}\n\nئەگەر پێویستت بە گۆڕینی هەیە لێرە وەڵام بدەرەوە.",
       r1:"سڵاو {name}، نزیکەی یەک کاتژمێری تر لە {brand} دەتبینین — {time}. 🌿\n✨ {service}",
       cancel:"سڵاو {name}، کاتەکەت لە {brand} لە {date} کاتژمێر {time} هەڵوەشێنرایەوە.\n✨ {service}\n\nئەگەر کاتێکی نوێت دەوێت لێرە وەڵام بدەرەوە.",
-      moved:"سڵاو {name}، کاتەکەت لە {brand} گۆڕدرا ✅\n✨ {service}\n📅 {date} کاتژمێر {time}\n\nئەگەر گونجاو نییە لێرە وەڵام بدەرەوە."}
+      moved:"سڵاو {name}، کاتەکەت لە {brand} گۆڕدرا ✅\n✨ {service}\n📅 {date} کاتژمێر {time}\n\nئەگەر گونجاو نییە لێرە وەڵام بدەرەوە.",
+      ask:"سڵاو {name}، ئێمە {brand}ین. دەمانەوێت کاتەکەت بگۆڕین:\n✨ {service}\n📅 ئایا {date} کاتژمێر {time} بۆت گونجاوە؟\n\nتکایە بە بەڵێ وەڵام بدەرەوە، یان کاتێکی گونجاوترمان پێ بڵێ."}
 };
 function waTemplate(L,kind){
   const own=STORE.waTemplates&&STORE.waTemplates[L]&&STORE.waTemplates[L][kind];
@@ -15576,7 +15579,7 @@ function openRescheduleForm(bk){
       <label>${firstTime?'Date':'New date'}<input id="rs_date" type="date" value="${iso}"></label>
       <label>${firstTime?'Time':'New time'}<input id="rs_time" type="time" step="300" value="${String(hh).padStart(2,'0')}:${mm}"></label>
       <div class="full warn" id="rs_warn"></div>
-      <div class="full rowbtns"><button class="btn btn-ghost btn-sm" id="rs_cancel">Back</button><button class="btn btn-primary btn-sm" id="rs_save">${firstTime?'Set time & confirm':'Save new time'}</button></div>
+      <div class="full rowbtns"><button class="btn btn-ghost btn-sm" id="rs_cancel">Back</button><button class="btn btn-ghost btn-sm" id="rs_ask" title="Opens WhatsApp asking the client if this time suits them. Nothing is changed until you save.">Ask client first (WhatsApp)</button><button class="btn btn-primary btn-sm" id="rs_save">${firstTime?'Set time & confirm':'Save new time'}</button></div>
     </div>`;
   const read=()=>{
     const dv=document.getElementById('rs_date').value, tv=document.getElementById('rs_time').value;
@@ -15595,6 +15598,12 @@ function openRescheduleForm(bk){
   ['rs_date','rs_time'].forEach(id=>document.getElementById(id).addEventListener('input',check));
   check();
   document.getElementById('rs_cancel').addEventListener('click',()=>{ wrap.innerHTML=''; });
+  // Ask first: WhatsApp the client the proposed time; the booking is not changed.
+  document.getElementById('rs_ask').addEventListener('click',()=>{
+    const v=check(); if(!v){ toast('Pick a date and a time.'); return; }
+    offerWhatsApp({...bk,date:v.date,time:v.time},'ask');
+    toast('Nothing changed yet — when the client agrees, press Save new time.');
+  });
   let forceArm=false;
   document.getElementById('rs_save').addEventListener('click',async(e)=>{
     const btn=e.currentTarget;
