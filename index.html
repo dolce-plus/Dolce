@@ -15590,7 +15590,9 @@ function openRescheduleForm(bk){
   };
   const check=()=>{
     const v=read(), w=document.getElementById('rs_warn'); if(!v){ w.textContent=''; return null; }
-    const clash=STORE.bookings.find(x=>x.id!==bk.id&&x.brand===bk.brand&&x.date===v.date&&x.time===v.time&&!['Cancelled','No-show'].includes(x.status));
+    // Only the same service blocks a time, and only when all its staff are busy.
+    const same=STORE.bookings.filter(x=>x.id!==bk.id&&x.brand===bk.brand&&x.date===v.date&&x.time===v.time&&String(x.serviceId)===String(bk.serviceId)&&!['Cancelled','No-show'].includes(x.status));
+    const clash=same.length>=svcCapOf(bk.brand,bk.serviceId)?same[0]:null;
     const off=!dayHours(bk.brand,v.dObj);
     w.textContent=clash?`${clash.clientName||'Another client'} is already booked at ${v.time} on ${v.date}.`:(off?`${BRANDS[bk.brand].name} is closed that day.`:'');
     return {...v,clash,off};
