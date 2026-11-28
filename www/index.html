@@ -14173,21 +14173,21 @@ function bindLoyaltyOwner(){
    treatment — a phone's lock screen is read over shoulders. */
 const WA_KINDS={confirm:'Booking confirmed',r12:'Reminder · long (3 hours or more before)',r1:'Reminder · short (under 3 hours before)',cancel:'Cancellation confirmed',moved:'New time'};
 const DEFAULT_WA_TEMPLATES={
-  en:{confirm:"Hi {name}, your appointment at {brand} is confirmed ✅\n📅 {date} at {time}\n\nIf you need to change it, just reply to this message. See you soon!",
-      r12:"Hi {name}, a friendly reminder of your appointment at {brand}:\n📅 {date} at {time}\n\nReply here if you need to change it.",
-      r1:"Hi {name}, see you in about an hour at {brand} — {time}. 🌿",
-      cancel:"Hi {name}, your appointment at {brand} on {date} at {time} has been cancelled.\n\nReply here if you would like a new time.",
-      moved:"Hi {name}, your appointment at {brand} has a new time ✅\n📅 {date} at {time}\n\nReply here if this does not suit you."},
-  ar:{confirm:"مرحباً {name}، تم تأكيد موعدك في {brand} ✅\n📅 {date} الساعة {time}\n\nإذا أردت تغييره، فقط ردّ على هذه الرسالة. نراك قريباً!",
-      r12:"مرحباً {name}، تذكير بموعدك في {brand}:\n📅 {date} الساعة {time}\n\nردّ هنا إذا أردت تغييره.",
-      r1:"مرحباً {name}، نراك بعد ساعة تقريباً في {brand} — الساعة {time}. 🌿",
-      cancel:"مرحباً {name}، تم إلغاء موعدك في {brand} يوم {date} الساعة {time}.\n\nردّ هنا إذا أردت موعداً جديداً.",
-      moved:"مرحباً {name}، تم تغيير موعدك في {brand} ✅\n📅 {date} الساعة {time}\n\nردّ هنا إذا لم يناسبك."},
-  ku:{confirm:"سڵاو {name}، کاتەکەت لە {brand} پشتڕاستکرایەوە ✅\n📅 {date} کاتژمێر {time}\n\nئەگەر پێویستت بە گۆڕینی هەیە، تەنها وەڵامی ئەم نامەیە بدەرەوە. بەم زووانە دەتبینین!",
-      r12:"سڵاو {name}، بیرخستنەوەی کاتەکەت لە {brand}:\n📅 {date} کاتژمێر {time}\n\nئەگەر پێویستت بە گۆڕینی هەیە لێرە وەڵام بدەرەوە.",
-      r1:"سڵاو {name}، نزیکەی یەک کاتژمێری تر لە {brand} دەتبینین — {time}. 🌿",
-      cancel:"سڵاو {name}، کاتەکەت لە {brand} لە {date} کاتژمێر {time} هەڵوەشێنرایەوە.\n\nئەگەر کاتێکی نوێت دەوێت لێرە وەڵام بدەرەوە.",
-      moved:"سڵاو {name}، کاتەکەت لە {brand} گۆڕدرا ✅\n📅 {date} کاتژمێر {time}\n\nئەگەر گونجاو نییە لێرە وەڵام بدەرەوە."}
+  en:{confirm:"Hi {name}, your appointment at {brand} is confirmed ✅\n✨ {service}\n📅 {date} at {time}\n\nIf you need to change it, just reply to this message. See you soon!",
+      r12:"Hi {name}, a friendly reminder of your appointment at {brand}:\n✨ {service}\n📅 {date} at {time}\n\nReply here if you need to change it.",
+      r1:"Hi {name}, see you in about an hour at {brand} — {time}. 🌿\n✨ {service}",
+      cancel:"Hi {name}, your appointment at {brand} on {date} at {time} has been cancelled.\n✨ {service}\n\nReply here if you would like a new time.",
+      moved:"Hi {name}, your appointment at {brand} has a new time ✅\n✨ {service}\n📅 {date} at {time}\n\nReply here if this does not suit you."},
+  ar:{confirm:"مرحباً {name}، تم تأكيد موعدك في {brand} ✅\n✨ {service}\n📅 {date} الساعة {time}\n\nإذا أردت تغييره، فقط ردّ على هذه الرسالة. نراك قريباً!",
+      r12:"مرحباً {name}، تذكير بموعدك في {brand}:\n✨ {service}\n📅 {date} الساعة {time}\n\nردّ هنا إذا أردت تغييره.",
+      r1:"مرحباً {name}، نراك بعد ساعة تقريباً في {brand} — الساعة {time}. 🌿\n✨ {service}",
+      cancel:"مرحباً {name}، تم إلغاء موعدك في {brand} يوم {date} الساعة {time}.\n✨ {service}\n\nردّ هنا إذا أردت موعداً جديداً.",
+      moved:"مرحباً {name}، تم تغيير موعدك في {brand} ✅\n✨ {service}\n📅 {date} الساعة {time}\n\nردّ هنا إذا لم يناسبك."},
+  ku:{confirm:"سڵاو {name}، کاتەکەت لە {brand} پشتڕاستکرایەوە ✅\n✨ {service}\n📅 {date} کاتژمێر {time}\n\nئەگەر پێویستت بە گۆڕینی هەیە، تەنها وەڵامی ئەم نامەیە بدەرەوە. بەم زووانە دەتبینین!",
+      r12:"سڵاو {name}، بیرخستنەوەی کاتەکەت لە {brand}:\n✨ {service}\n📅 {date} کاتژمێر {time}\n\nئەگەر پێویستت بە گۆڕینی هەیە لێرە وەڵام بدەرەوە.",
+      r1:"سڵاو {name}، نزیکەی یەک کاتژمێری تر لە {brand} دەتبینین — {time}. 🌿\n✨ {service}",
+      cancel:"سڵاو {name}، کاتەکەت لە {brand} لە {date} کاتژمێر {time} هەڵوەشێنرایەوە.\n✨ {service}\n\nئەگەر کاتێکی نوێت دەوێت لێرە وەڵام بدەرەوە.",
+      moved:"سڵاو {name}، کاتەکەت لە {brand} گۆڕدرا ✅\n✨ {service}\n📅 {date} کاتژمێر {time}\n\nئەگەر گونجاو نییە لێرە وەڵام بدەرەوە."}
 };
 function waTemplate(L,kind){
   const own=STORE.waTemplates&&STORE.waTemplates[L]&&STORE.waTemplates[L][kind];
@@ -14401,7 +14401,7 @@ function renderWaTemplates(){
       <div class="wa-langs" style="margin-bottom:10px;">${[['en','English'],['ar','عربي'],['ku','کوردی']].map(([k,l])=>`<button class="btn btn-sm ${k===L?'btn-primary':'btn-ghost'}" data-wat-lang="${k}">${l}</button>`).join('')}</div>
       ${Object.keys(WA_KINDS).map(k=>`<div class="field full" style="grid-column:1/-1;"><label>${WA_KINDS[k]}</label>
         <textarea id="wat_${k}" rows="4" dir="auto">${esc(waTemplate(L,k))}</textarea></div>`).join('')}
-      <div style="font-size:13px;color:var(--muted);margin:4px 0 12px;">Use {name}, {brand}, {date} and {time}. {service} also works, but it shows on the phone's lock screen.</div>
+      <div style="font-size:13px;color:var(--muted);margin:4px 0 12px;">Use {name}, {brand}, {service}, {date} and {time}. Note: {service} (the treatment name) shows on the phone's lock screen.</div>
       <div style="display:flex;gap:8px;"><button class="btn btn-primary btn-sm" id="wat_save">Save</button><button class="btn btn-ghost btn-sm" id="wat_reset">Back to default wording</button></div>
     </div>
     <div style="margin-bottom:22px;"></div>`;
